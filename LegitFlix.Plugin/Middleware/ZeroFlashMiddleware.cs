@@ -1,3 +1,4 @@
+#if false
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -82,3 +83,4 @@ namespace LegitFlix.Plugin.Middleware
         }
     }
 }
+#endif

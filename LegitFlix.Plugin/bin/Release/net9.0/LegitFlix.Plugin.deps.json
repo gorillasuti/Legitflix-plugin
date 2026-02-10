@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "LegitFlix.Plugin/1.0.0": {
+        "runtime": {
+          "LegitFlix.Plugin.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "LegitFlix.Plugin/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

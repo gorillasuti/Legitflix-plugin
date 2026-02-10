@@ -5,6 +5,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Plugins;
+using MediaBrowser.Controller.Configuration;
 
 namespace LegitFlix.Plugin
 {
