@@ -1,31 +1,93 @@
 import { Jellyfin } from '@jellyfin/sdk';
+import { UserApi } from '@jellyfin/sdk/lib/generated-client/api/user-api';
+import { UserLibraryApi } from '@jellyfin/sdk/lib/generated-client/api/user-library-api';
+import { UserViewsApi } from '@jellyfin/sdk/lib/generated-client/api/user-views-api';
+import { ItemsApi } from '@jellyfin/sdk/lib/generated-client/api/items-api';
+import { TvShowsApi } from '@jellyfin/sdk/lib/generated-client/api/tv-shows-api';
+import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
 
 class JellyfinService {
     constructor() {
         this.jellyfin = new Jellyfin({
-            clientInfo: { name: 'LegitFlix Client', version: '1.0.0' },
+            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.10' },
             deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
         });
-
-        // Use relative path for proxy to work, or env var if provided (but proxy handles relative)
-        // Actually, sdk needs full URL usually?
-        // If we use proxy, we can just use current origin if deployed, or localhost:5173 which proxies.
-        // But SDK might try to detect.
-        // Let's use the standard creating method.
         this.api = null;
     }
 
-    initialize() {
-        // If we are in development, we might use the proxy. 
-        // We can just point to / and let vite proxy handle it?
-        // But SDK constructs URLs.
-        // If we pass empty string, it might work relative.
-        this.api = this.jellyfin.createApi('');
+    initialize(accessToken = null) {
+        // Create base API
+        // If accessToken is provided, use current origin, otherwise empty (proxy/dev)
+        this.api = this.jellyfin.createApi(
+            accessToken ? window.location.origin : '',
+            accessToken
+        );
+
+        // Attach specific APIs to `this.api` to match existing usage
+        // This allows `this.api.user.getUser(...)` to work
+        this.api.user = new UserApi(this.api.configuration);
+        this.api.userLibrary = new UserLibraryApi(this.api.configuration);
+        this.api.userViews = new UserViewsApi(this.api.configuration);
+        this.api.items = new ItemsApi(this.api.configuration);
+        this.api.tvShows = new TvShowsApi(this.api.configuration);
+        this.api.library = new LibraryApi(this.api.configuration);
+
+        console.log("[LegitFlix] API Initialized. Access Token present:", !!accessToken);
+    }
+
+    async getCurrentUser() {
+        // 1. Try Window API (in case we are ever injected)
+        if (window.ApiClient) {
+            try {
+                return await window.ApiClient.getCurrentUser();
+            } catch (e) {
+                console.warn("Failed to get current user from window.ApiClient", e);
+            }
+        }
+
+        // 2. Try LocalStorage (Same Origin) / Re-auth
+        if (!this.api || !this.api.accessToken) {
+            const storedCreds = localStorage.getItem('jellyfin_credentials');
+            if (storedCreds) {
+                try {
+                    const parsed = JSON.parse(storedCreds);
+                    if (parsed.Servers && parsed.Servers.length > 0) {
+                        const activeServer = parsed.Servers.find(s => s.AccessToken && s.UserId);
+                        if (activeServer) {
+                            console.log("[LegitFlix] Found credentials in localStorage", activeServer);
+                            this.initialize(activeServer.AccessToken);
+                            return this.api.user.getUser(activeServer.UserId);
+                        }
+                    }
+                } catch (e) {
+                    console.error("[LegitFlix] Failed to parse jellyfin_credentials", e);
+                }
+            }
+        }
+
+        // 3. Already initialized?
+        if (this.api && this.api.accessToken) {
+            // We return null here because we need the User ID to fetch the user.
+            // But we don't store it.
+            // If we initiated from localStorage, we returned above.
+            return null;
+        }
+
+        // 4. Fallback (Dev/Public)
+        if (!this.api) this.initialize();
+
+        try {
+            const users = await this.api.user.getPublicUsers();
+            if (users.data && users.data.length > 0) return users.data[0];
+        } catch (e) {
+            console.warn("[LegitFlix] Failed to get public users", e);
+        }
+
+        return null;
     }
 
     async getItem(userId, itemId) {
         if (!this.api) this.initialize();
-        // SDK uses axios or fetch. Proxy key is setup in vite.
         return this.api.userLibrary.getItem({ userId, itemId });
     }
 
@@ -36,8 +98,6 @@ class JellyfinService {
 
     async getItems(userId, query) {
         if (!this.api) this.initialize();
-        // The SDK might have different signatures, let's use the generic getItems
-        // query is an object matching the API params
         return this.api.items.getItems({ userId, ...query });
     }
 
@@ -46,54 +106,6 @@ class JellyfinService {
         return this.api.tvShows.getNextUp({ userId, seriesId, limit: 1 });
     }
 
-    async getCurrentUser() {
-        if (!this.api) this.initialize();
-
-        // 1. Try Window API (in case we are ever injected)
-        if (window.ApiClient) {
-            try {
-                return await window.ApiClient.getCurrentUser();
-            } catch (e) {
-                console.warn("Failed to get current user from window.ApiClient", e);
-            }
-        }
-
-        // 2. Try LocalStorage (Same Origin)
-        const storedCreds = localStorage.getItem('jellyfin_credentials');
-        if (storedCreds) {
-            try {
-                const parsed = JSON.parse(storedCreds);
-                if (parsed.Servers && parsed.Servers.length > 0) {
-                    // Find the first server with an access token (usually the active one)
-                    const activeServer = parsed.Servers.find(s => s.AccessToken && s.UserId);
-                    if (activeServer) {
-                        console.log("[LegitFlix] Found credentials in localStorage", activeServer);
-
-                        // Re-initialize API with the token
-                        this.jellyfin = new Jellyfin({
-                            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.9' },
-                            deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
-                        });
-
-                        // Create API with the token!
-                        this.api = this.jellyfin.createApi(
-                            window.location.origin, // Use current origin
-                            activeServer.AccessToken
-                        );
-
-                        // Fetch the user object
-                        return this.api.user.getUser(activeServer.UserId);
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to parse jellyfin_credentials", e);
-            }
-        } else {
-            console.warn("[LegitFlix] No credentials found in localStorage. Please login to Jellyfin first.");
-        }
-
-        return null;
-    }
     async getUserViews(userId) {
         if (!this.api) this.initialize();
         return this.api.userViews.getUserViews({ userId });
@@ -101,7 +113,6 @@ class JellyfinService {
 
     async getSeasons(userId, seriesId) {
         if (!this.api) this.initialize();
-        // SDK: tvShows.getSeasons({ seriesId, userId, fields: ... })
         return this.api.tvShows.getSeasons({
             userId,
             seriesId,
@@ -121,7 +132,6 @@ class JellyfinService {
 
     async getSeries(userId, seriesId) {
         if (!this.api) this.initialize();
-        // Fetch specific fields for the series detail page
         const fields = ['Overview', 'Genres', 'Studios', 'OfficialRating', 'CommunityRating', 'ImageTags', 'BackdropImageTags', 'People', 'RemoteTrailers', 'ChildCount', 'MediaSources'];
         return this.api.userLibrary.getItem({
             userId,
