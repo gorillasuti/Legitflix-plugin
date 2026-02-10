@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { jellyfinService } from '../services/jellyfin';
 import SettingsModal from './SettingsModal';
+import SearchModal from './SearchModal/SearchModal';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -11,6 +12,7 @@ const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [user, setUser] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
+    const [showSearch, setShowSearch] = useState(false);
     const [showMenu, setShowMenu] = useState(false); // For 3-dot dropdown
     const navigate = useNavigate();
 
@@ -63,15 +65,15 @@ const Navbar = () => {
                 </div>
 
                 <div className="nav-right">
-                    <button className="nav-icon-btn" title="Search">
+                    <button className="icon-button" onClick={() => setShowSearch(true)}> {/* Updated class and added onClick */}
                         <span className="material-icons">search</span>
                     </button>
 
-                    <button className="nav-icon-btn" title="Notifications">
+                    <button className="icon-button" title="Notifications"> {/* Updated class */}
                         <span className="material-icons">notifications</span>
                     </button>
 
-                    <div className="nav-item nav-profile">
+                    <div className="nav-item nav-profile" onClick={() => navigate('/profile')}>
                         {user && (
                             <img
                                 src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90`}
@@ -93,7 +95,7 @@ const Navbar = () => {
 
                         {showMenu && (
                             <div className="nav-dropdown-menu">
-                                <button onClick={() => setShowSettings(true)}>
+                                <button onClick={() => navigate('/profile')}>
                                     <span className="material-icons">settings</span> Settings
                                 </button>
                                 <button onClick={() => window.location.reload()}>
@@ -110,6 +112,7 @@ const Navbar = () => {
             </nav>
 
             <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+            <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
         </>
     );
 };

@@ -5,6 +5,7 @@ import { UserViewsApi } from '@jellyfin/sdk/lib/generated-client/api/user-views-
 import { ItemsApi } from '@jellyfin/sdk/lib/generated-client/api/items-api';
 import { TvShowsApi } from '@jellyfin/sdk/lib/generated-client/api/tv-shows-api';
 import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
+import { SubtitleApi } from '@jellyfin/sdk/lib/generated-client/api/subtitle-api';
 
 class JellyfinService {
     constructor() {
@@ -27,6 +28,7 @@ class JellyfinService {
         this.api.items = new ItemsApi(this.api.configuration);
         this.api.tvShows = new TvShowsApi(this.api.configuration);
         this.api.library = new LibraryApi(this.api.configuration);
+        this.api.subtitle = new SubtitleApi(this.api.configuration);
 
         console.log("[LegitFlix] API Initialized. Access Token present:", !!accessToken);
     }
@@ -50,7 +52,6 @@ class JellyfinService {
                         if (activeServer) {
                             console.log("[LegitFlix] Found credentials in localStorage", activeServer);
                             this.initialize(activeServer.AccessToken);
-                            // FIX: Use getUserById with object param, and unwrap .data
                             const response = await this.api.user.getUserById({ userId: activeServer.UserId });
                             return response.data;
                         }
@@ -61,13 +62,9 @@ class JellyfinService {
             }
         }
 
-        // REMOVED: Early return that blocked localStorage lookup if API was partially init
-        // if (this.api && this.api.accessToken) { return null; }
-
         if (!this.api) this.initialize();
 
         try {
-            // FIX: Unwrap .data
             const users = await this.api.user.getPublicUsers();
             if (users.data && users.data.length > 0) return users.data[0];
         } catch (e) {
@@ -79,66 +76,54 @@ class JellyfinService {
 
     async getItem(userId, itemId) {
         if (!this.api) this.initialize();
-        // FIX: Unwrap .data
         const response = await this.api.userLibrary.getItem({ userId, itemId });
         return response.data;
     }
 
     async getSimilarItems(userId, itemId) {
         if (!this.api) this.initialize();
-        // FIX: Unwrap .data
         const response = await this.api.library.getSimilarItems({ userId, itemId, limit: 12 });
         return response.data;
     }
 
     async getItems(userId, query) {
         if (!this.api) this.initialize();
-        // FIX: Unwrap .data
         const response = await this.api.items.getItems({ userId, ...query });
+        return response.data;
+    }
+
+    async getSeasons(userId, seriesId) {
+        if (!this.api) this.initialize();
+        const response = await this.api.tvShows.getSeasons({ userId, seriesId });
+        return response.data;
+    }
+
+    async getEpisodes(userId, seriesId, seasonId) {
+        if (!this.api) this.initialize();
+        const response = await this.api.tvShows.getEpisodes({
+            userId,
+            seriesId,
+            seasonId,
+            fields: ['MediaSources', 'RunTimeTicks', 'UserData', 'Overview', 'Path']
+        });
         return response.data;
     }
 
     async getNextUp(userId, seriesId) {
         if (!this.api) this.initialize();
-        // FIX: Unwrap .data
         const response = await this.api.tvShows.getNextUp({ userId, seriesId, limit: 1 });
         return response.data;
     }
 
     async getUserViews(userId) {
         if (!this.api) this.initialize();
-        // FIX: Unwrap .data
         const response = await this.api.userViews.getUserViews({ userId });
-        return response.data;
-    }
-
-    async getSeasons(userId, seriesId) {
-        if (!this.api) this.initialize();
-        // FIX: Unwrap .data
-        const response = await this.api.tvShows.getSeasons({
-            userId,
-            seriesId,
-            fields: ['ItemCounts', 'PrimaryImageAspectRatio']
-        });
-        return response.data;
-    }
-
-    async getEpisodes(userId, seriesId, seasonId) {
-        if (!this.api) this.initialize();
-        // FIX: Unwrap .data
-        const response = await this.api.tvShows.getEpisodes({
-            userId,
-            seriesId,
-            seasonId,
-            fields: ['Overview', 'PrimaryImageAspectRatio', 'UserData', 'RunTimeTicks', 'MediaSources']
-        });
         return response.data;
     }
 
     async getSeries(userId, seriesId) {
         if (!this.api) this.initialize();
         const fields = ['Overview', 'Genres', 'Studios', 'OfficialRating', 'CommunityRating', 'ImageTags', 'BackdropImageTags', 'People', 'RemoteTrailers', 'ChildCount', 'MediaSources'];
-        // FIX: Unwrap .data
         const response = await this.api.userLibrary.getItem({
             userId,
             itemId: seriesId,
@@ -146,9 +131,9 @@ class JellyfinService {
         });
         return response.data;
     }
+
     async getResumeItems(userId, limit = 12) {
         if (!this.api) this.initialize();
-        // Uses getItems with filters
         const response = await this.getItems(userId, {
             filters: ['IsResumable'],
             sortBy: ['DatePlayed'],
@@ -157,14 +142,11 @@ class JellyfinService {
             recursive: true,
             includeItemTypes: ['Movie', 'Episode']
         });
-        return response; // getItems already unwraps .data
+        return response;
     }
+
     async markFavorite(userId, itemId, isFavorite) {
         if (!this.api) this.initialize();
-        // Uses updateUserItemRating for favorites (likes) check SDK or network tab
-        // Actually SDK has markFavoriteItem / unmarkFavoriteItem usually, or updateUserItemRating
-        // definition shows: updateUserItemRating(itemId, userId, likes)
-        // Also markFavoriteItem(itemId, userId)
         if (isFavorite) {
             return await this.api.userLibrary.markFavoriteItem({ userId, itemId });
         } else {
@@ -172,12 +154,19 @@ class JellyfinService {
         }
     }
 
+    async markPlayed(userId, itemId, isPlayed) {
+        if (!this.api) this.initialize();
+        if (isPlayed) {
+            return await this.api.userLibrary.markPlayedItem({ userId, itemId });
+        } else {
+            return await this.api.userLibrary.markUnplayedItem({ userId, itemId });
+        }
+    }
+
     async getItemDetails(userId, itemId) {
         if (!this.api) this.initialize();
-        // Uses getItems with filters to fetch a single item with extended fields
-        // Or specific `getItem` from UserLibraryApi
         try {
-            const fields = ['RemoteTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData'];
+            const fields = ['RemoteTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData', 'MediaSources'];
             const response = await this.api.userLibrary.getItem({
                 userId,
                 itemId,
@@ -193,25 +182,65 @@ class JellyfinService {
     async getLatestItems(userId, parentId, limit = 12) {
         if (!this.api) this.initialize();
         try {
-            const fields = ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks'];
-            // Using ItemsApi.getLatestItems is cleaner if available, but getItems with sort is more flexible
-            // Let's use getItems with sorting for "Latest" behavior
             const response = await this.api.items.getItems({
                 userId,
                 parentId,
                 limit,
-                fields: fields,
-                includeItemTypes: ['Movie', 'Series', 'Episode'],
                 sortBy: ['DateCreated'],
                 sortOrder: ['Descending'],
-                recursive: true
+                includeItemTypes: ['Movie', 'Episode', 'Series'],
+                recursive: true,
+                fields: ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks']
             });
             return response.data;
         } catch (error) {
             console.error('getLatestItems failed', error);
-            return { Items: [] }; // Return empty structure on fail
+            return { Items: [] };
         }
+    }
+
+    getImageUrl(item, type = 'Primary', options = {}) {
+        if (!item || !item.Id) return '';
+        const { maxWidth = 800, quality = 90 } = options;
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        const tag = item.ImageTags && item.ImageTags[type] ? `&tag=${item.ImageTags[type]}` : '';
+        return `${baseUrl}/Items/${item.Id}/Images/${type}?maxWidth=${maxWidth}&quality=${quality}${tag}`;
+    }
+
+    async deleteSubtitle(itemId, index) {
+        if (!this.api) this.initialize();
+        const response = await this.api.subtitle.deleteSubtitle({ itemId, index });
+        return response.data;
+    }
+
+    async searchRemoteSubtitles(itemId, language) {
+        if (!this.api) this.initialize();
+        const response = await this.api.subtitle.searchRemoteSubtitles({
+            itemId,
+            language,
+            isPerfectMatch: false
+        });
+        return response.data;
+    }
+
+    async downloadRemoteSubtitles(itemId, subtitleId) {
+        if (!this.api) this.initialize();
+        const response = await this.api.subtitle.downloadRemoteSubtitles({
+            itemId,
+            subtitleId
+        });
+        return response.data;
+    }
+
+    async getMediaStreams(userId, itemId) {
+        if (!this.api) this.initialize();
+        const item = await this.getItemDetails(userId, itemId);
+        if (item && item.MediaSources && item.MediaSources[0]) {
+            return item.MediaSources[0].MediaStreams || [];
+        }
+        return [];
     }
 }
 
-export const jellyfinService = new JellyfinService();
+export default new JellyfinService();

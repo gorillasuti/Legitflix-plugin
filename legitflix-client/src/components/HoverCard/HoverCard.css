@@ -1,0 +1,203 @@
+/* HoverCard.css */
+
+/* --- HOVER CARD OVERLAY (Glass + 5 Rows) --- */
+.legitflix-hover-overlay {
+    position: absolute;
+    /* Center over the card with slight scale */
+    top: -5%;
+    left: -2.5%;
+    width: 105%;
+    min-height: 105%;
+    z-index: 9999 !important;
+    /* Above everything */
+
+    /* Glass Effect */
+    background: rgba(25, 25, 25, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    color: white;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0;
+    transform: scale(0.96) translateY(10px);
+    /* Start slightly smaller */
+
+    /* Rounding from card - Enforce overflow to clip content */
+    border-radius: var(--rounding, 10px) !important;
+    overflow: hidden !important;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    /* Always interactive */
+    transform-origin: center center;
+
+    /* Border stroke for definition */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Open State */
+.legitflix-hover-overlay.is-loaded {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    /* Reset to normal size */
+}
+
+/* Content Layout (5 Rows) */
+.hover-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    /* Use gap for row spacing */
+    gap: 0.35rem;
+    flex: 1;
+    /* Push footer down */
+}
+
+.hover-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #fff;
+    margin-bottom: 0.3rem;
+    /* Extra Gap after title */
+
+    /* Full Wrap */
+    display: block;
+    white-space: normal;
+    overflow-wrap: break-word;
+    height: auto;
+    max-height: none;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+}
+
+/* Rows */
+.hover-row {
+    font-size: 0.8rem;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hover-rating {
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.hover-rating .material-icons {
+    font-size: 14px;
+    color: #ffd700;
+}
+
+.hover-seasons {
+    font-weight: 600;
+    color: #ddd;
+}
+
+.hover-unplayed {
+    color: #f47521;
+    /* Highlight unplayed count */
+    font-weight: 600;
+}
+
+.hover-desc {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #bbb;
+    margin: 0.5rem 0 0 0;
+
+    /* Ensure wrapping */
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+
+    /* Clamp to 5 Lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-weight: 400;
+}
+
+/* Footer & Actions */
+.hover-footer {
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: row;
+    /* Changed to row for compact layout */
+    gap: 8px;
+    align-content: center;
+    flex-wrap: wrap;
+}
+
+.hover-native-btn-slot {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.hover-btn-primary {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hover-btn-primary:hover {
+    background: white;
+    color: black;
+    border-color: white;
+    transform: scale(1.1);
+}
+
+.hover-icon-row {
+    display: flex;
+    gap: 8px;
+}
+
+.hover-icon-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.hover-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+    transform: scale(1.1);
+}
+
+.hover-icon-btn .material-icons {
+    font-size: 18px;
+}

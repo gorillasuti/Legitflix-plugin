@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { jellyfinService } from '../services/jellyfin';
+import MediaCard from './MediaCard/MediaCard';
 import './MediaRow.css';
 
 const MediaRow = ({ title, libraryId, onCardClick }) => {
@@ -41,16 +42,11 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
 
                 <div className="media-row-scroll" ref={rowRef}>
                     {items.map(item => (
-                        <div key={item.Id} className="media-card" onClick={() => onCardClick(item)}>
-                            <div className="media-card-image">
-                                <img
-                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=300&fillWidth=200&quality=90`}
-                                    alt={item.Name}
-                                    loading="lazy"
-                                />
-                            </div>
-                            <div className="media-card-title">{item.Name}</div>
-                        </div>
+                        <MediaCard
+                            key={item.Id}
+                            item={item}
+                            onClick={onCardClick}
+                        />
                     ))}
                 </div>
 
