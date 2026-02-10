@@ -243,4 +243,6 @@ class JellyfinService {
     }
 }
 
-export default new JellyfinService();
+const jellyfinService = new JellyfinService();
+export { jellyfinService };
+export default jellyfinService;

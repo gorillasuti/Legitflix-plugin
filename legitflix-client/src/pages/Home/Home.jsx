@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import HeroCarousel from '../components/HeroCarousel';
-import MediaRow from '../components/MediaRow';
-import InfoModal from '../components/InfoModal';
-import JellyseerrCard from '../components/JellyseerrCard';
-import Navbar from '../components/Navbar';
-import { jellyfinService } from '../services/jellyfin';
+import HeroCarousel from '../../components/HeroCarousel';
+import MediaRow from '../../components/MediaRow';
+import InfoModal from '../../components/InfoModal';
+import JellyseerrCard from '../../components/JellyseerrCard';
+import Navbar from '../../components/Navbar';
+import { jellyfinService } from '../../services/jellyfin';
 import './Home.css';
 
 const Home = () => {

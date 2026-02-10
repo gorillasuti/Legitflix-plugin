@@ -1,161 +1,297 @@
+/* ===== HERO CAROUSEL ===== */
+
 .hero-carousel-container {
     position: relative;
     width: 100%;
     height: 90vh;
-    /* Taller to push content down */
     min-height: 700px;
     overflow: hidden;
     margin-bottom: -150px;
-    /* Deep overlap for gradient blend */
     z-index: 1;
 }
 
-/* ... slide & backdrop ... */
+/* --- SLIDES --- */
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(1.02);
+    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 8s ease-out;
+    z-index: 1;
+    pointer-events: none;
+}
 
+.hero-slide.active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 8s ease-out;
+    z-index: 2;
+    pointer-events: auto;
+}
+
+/* --- BACKDROP --- */
+.hero-backdrop {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: 80% center;
+    transition: transform 10s ease;
+}
+
+.hero-slide.active .hero-backdrop {
+    transform: scale(1.05);
+}
+
+/* --- OVERLAY --- */
 .hero-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* Stronger bottom gradient to merge with dark background */
-    background: linear-gradient(to top, #141414 15%, rgba(20, 20, 20, 0.8) 35%, rgba(20, 20, 20, 0) 60%),
+    background:
+        linear-gradient(to top, #141414 15%, rgba(20, 20, 20, 0.8) 35%, rgba(20, 20, 20, 0) 60%),
         linear-gradient(to right, #141414 0%, rgba(20, 20, 20, 0.5) 40%, transparent 80%);
 }
 
+/* --- CONTENT --- */
 .hero-content {
     position: absolute;
-    bottom: 35%;
-    /* Lifted to leave room for indicators below */
+    top: 42.5%;
     left: 4%;
-    width: 45%;
-    max-width: 700px;
-    z-index: 2;
+    transform: translateY(-50%);
+    width: 40%;
+    max-width: 600px;
+    z-index: 3;
+    padding-right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    color: white;
     text-align: left;
+}
+
+/* --- LOGO & TITLE --- */
+.hero-logo {
+    height: 180px;
+    width: 100%;
+    max-width: 450px;
+    object-fit: contain;
+    object-position: bottom left;
+    display: block;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0;
     color: white;
 }
 
-/* ... logo, title, meta ... */
-
-.btn-hero-primary {
+/* --- METADATA LINE --- */
+.hero-meta-line {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: linear-gradient(135deg, #ff7e00 0%, #e55e00 100%);
-    /* Orange Gradient */
-    color: white;
-    /* Text white on orange */
-    border: none;
-    padding: 0.8rem 2.2rem;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 1rem;
+    color: #e5e5e5;
+    font-weight: 400;
+}
+
+.hero-badge-age {
+    background: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
     border-radius: 4px;
-    font-size: 1.1rem;
-    font-weight: 800;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #e5e5e5;
+}
+
+.hero-meta-divider {
+    color: var(--clr-accent, #ff7e00);
+    font-size: 0.8em;
+}
+
+.hero-meta-text {
+    color: #e5e5e5;
+}
+
+/* --- DESCRIPTION --- */
+.hero-desc {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #d2d2d2;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 100%;
+    margin: 0;
+}
+
+/* --- ACTIONS (BUTTONS) --- */
+.hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 0.5rem;
+}
+
+.btn-hero-primary {
+    background: var(--clr-accent, #ff7e00) !important;
+    color: white !important;
+    border: none;
+    border-radius: var(--radius-pill, 50px);
+    padding: 12px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, background 0.2s;
+    letter-spacing: 0.5px;
     box-shadow: 0 4px 15px rgba(229, 94, 0, 0.4);
 }
 
 .btn-hero-primary:hover {
     transform: scale(1.05);
+    filter: brightness(1.1);
     box-shadow: 0 6px 20px rgba(229, 94, 0, 0.6);
 }
 
+.btn-hero-primary .material-icons {
+    font-size: 1.4rem;
+}
+
 .btn-hero-bookmark {
-    background-color: rgba(30, 30, 30, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    width: 55px;
-    height: 55px;
-    /* Circular-ish */
-    border-radius: 50%;
-    /* Circle */
+    background: transparent;
+    border: 2px solid var(--clr-accent, #ff7e00);
+    color: var(--clr-accent, #ff7e00);
+    border-radius: var(--radius-pill, 50px);
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+    backdrop-filter: blur(4px);
 }
 
 .btn-hero-bookmark:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 165, 0, 0.1);
+    transform: scale(1.05);
+    color: white;
     border-color: white;
 }
 
 .btn-hero-bookmark.active {
-    color: #ff7e00;
-    /* Orange highlight */
-    border-color: #ff7e00;
+    background-color: rgba(255, 126, 0, 0.1);
+    color: var(--clr-accent, #ff7e00);
+    border-color: var(--clr-accent, #ff7e00);
 }
 
 .hero-button-info {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 55px;
-    height: 55px;
-    background-color: rgba(30, 30, 30, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    border-radius: 50%;
-    /* Circle */
+    width: 48px;
+    height: 48px;
+    background: transparent;
+    border: 2px solid var(--clr-accent, #ff7e00);
+    color: var(--clr-accent, #ff7e00);
+    border-radius: var(--radius-pill, 50px);
     cursor: pointer;
     transition: all 0.2s;
     padding: 0;
-    /* Override padding since it's an icon button now */
+    backdrop-filter: blur(4px);
 }
 
 .hero-button-info:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 165, 0, 0.1);
+    transform: scale(1.05);
+    color: white;
     border-color: white;
 }
 
+/* --- INDICATORS --- */
 .hero-indicators {
     position: absolute;
-    bottom: 180px;
-    /* Positioned just above the gradient cutoff/content start */
     left: 4%;
+    bottom: 20%;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     z-index: 20;
 }
 
 .hero-indicator {
-    width: 40px;
-    /* Longer dashes */
-    height: 4px;
-    /* Thinner */
+    width: 32px;
+    height: 8px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 0;
-    /* sharp or slightly rounded */
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
     cursor: pointer;
+    transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+        background 0.3s ease;
 }
 
-.hero-indicator.active .fill {
-    background: #ff7e00;
-    /* Orange fill */
+.hero-indicator:hover {
+    background: var(--clr-accent, #ff7e00);
 }
 
+.hero-indicator.active {
+    width: 56px;
+}
+
+.hero-indicator .fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: var(--clr-accent, #ff7e00);
+    transition: width 0s;
+}
 
 .hero-indicator.completed .fill {
     width: 100%;
-    height: 100%;
-    background: white;
+    background: rgba(255, 255, 255, 0.6);
+    transition: width 0.3s ease !important;
 }
 
-@keyframes fillProgress {
-    from {
-        width: 0;
-    }
-
-    to {
-        width: 100%;
-    }
+.hero-indicator.active .fill {
+    width: 100%;
+    transition: width 8s linear;
 }
 
+/* --- PAUSED STATE --- */
+.carousel-paused .hero-indicator.active .fill {
+    width: 100% !important;
+    background: var(--clr-accent, #ff7e00);
+    transition: none !important;
+}
+
+.carousel-paused .hero-indicator.active {
+    width: 56px;
+}
+
+/* --- RESPONSIVE --- */
 @media (max-width: 768px) {
     .hero-content {
         width: 80%;
-        bottom: 15%;
+        top: 50%;
     }
 
     .hero-title {
@@ -164,5 +300,10 @@
 
     .hero-logo {
         max-width: 250px;
+        height: 120px;
+    }
+
+    .hero-desc {
+        -webkit-line-clamp: 2;
     }
 }
