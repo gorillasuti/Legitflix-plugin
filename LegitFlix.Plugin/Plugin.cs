@@ -1,3 +1,7 @@
+using System.Reflection;
+
+[assembly: AssemblyVersion("1.0.0.20")]
+[assembly: AssemblyFileVersion("1.0.0.20")]
 using System;
 using System.Collections.Generic;
 using LegitFlix.Plugin.Configuration;

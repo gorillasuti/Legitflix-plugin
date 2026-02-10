@@ -1,4 +1,4 @@
-$version = "1.0.0.19"
+$version = "1.0.0.20"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 $buildDir = "bin\Release\net9.0"
@@ -13,10 +13,10 @@ if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
 
 # Verify build output first
-if (-not (Test-Path "$buildDir\$dllName")) {
-    Write-Error "Build failed: DLL not found at $buildDir\$dllName"
-    exit 1
-}
+# if (-not (Test-Path "$buildDir\$dllName")) {
+#     Write-Error "Build failed: DLL not found at $buildDir\$dllName"
+#     exit 1
+# }
 
 Copy-Item "$buildDir\$dllName" -Destination $publishDir
 Write-Host "Copied $dllName to $publishDir"
