@@ -1,0 +1,56 @@
+.jellyseerr-card {
+    display: block;
+    width: 300px;
+    height: 169px;
+    /* 16:9 like backdrop */
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    margin: 10px;
+}
+
+.jellyseerr-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+}
+
+.jellyseerr-image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.jellyseerr-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+}
+
+.jellyseerr-content {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: white;
+}
+
+.card-icon {
+    font-size: 24px;
+}
+
+.card-label {
+    font-weight: 600;
+    font-size: 1rem;
+}

@@ -1,0 +1,60 @@
+.lf-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #141414;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease;
+    pointer-events: all;
+}
+
+.lf-loader-logo {
+    width: 120px;
+    height: auto;
+    animation: lf-pulse 2s infinite ease-in-out;
+    margin-bottom: 20px;
+}
+
+.lf-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #E50914;
+    /* Accent Color */
+    border-radius: 50%;
+    animation: lf-spin 1s linear infinite;
+}
+
+@keyframes lf-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+}
+
+@keyframes lf-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

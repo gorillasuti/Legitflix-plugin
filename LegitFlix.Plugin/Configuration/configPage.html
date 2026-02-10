@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>LegitFlix Configuration</title>
+</head>
+
+<body>
+    <div data-role="page" class="type-interior pluginConfigurationPage"
+        data-require="emby-button,emby-checkbox,emby-input">
+        <div data-role="content">
+            <div class="content-primary">
+                <h1>LegitFlix Configuration</h1>
+                <p>Ensure the plugin is enabled to replace the default UI.</p>
+                <div style="margin: 20px 0;">
+                    <a href="/LegitFlix/Client/index.html" class="raised button-submit block emby-button">
+                        Open LegitFlix UI
+                    </a>
+                </div>
+                <form id="legitflixConfigForm">
+                    <div class="checkboxContainer">
+                        <label>
+                            <input type="checkbox" is="emby-checkbox" id="chkEnableCustomUI" />
+                            <span>Enable Custom UI</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

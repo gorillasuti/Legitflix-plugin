@@ -1,0 +1,11 @@
+{
+    "category": "User Interface",
+    "guid": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "name": "LegitFlix UI",
+    "description": "Total UI replacement for Jellyfin.",
+    "owner": "LegitFlix",
+    "overview": "A complete overhaul of the Jellyfin web interface.",
+    "supportUrl": "https://legitflix.eu",
+    "version": "1.0.0.1",
+    "imageUrl": "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png"
+}

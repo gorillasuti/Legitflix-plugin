@@ -1,0 +1,62 @@
+.home-page {
+    background-color: #141414;
+    min-height: 100vh;
+    padding-bottom: 50px;
+}
+
+.home-content-container {
+    position: relative;
+    z-index: 2;
+    padding: 20px 4% 0;
+    margin-top: -100px;
+    /* Overlap Hero */
+    background: linear-gradient(to bottom, transparent, #141414 100px);
+}
+
+.section-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #e5e5e5;
+    text-align: left;
+}
+
+.libraries-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.library-card {
+    width: 200px;
+    height: 110px;
+    background: #333;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.library-card:hover {
+    transform: scale(1.05);
+    background: #444;
+}
+
+.library-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #e5e5e5;
+}
+
+.library-icon {
+    font-size: 32px;
+}
+
+.library-name {
+    font-weight: 500;
+}

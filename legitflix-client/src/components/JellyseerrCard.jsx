@@ -1,0 +1,31 @@
+import React from 'react';
+import { useTheme } from '../context/ThemeContext';
+import './JellyseerrCard.css';
+
+const JellyseerrCard = () => {
+    const { config } = useTheme();
+
+    if (!config.enableJellyseerr) return null;
+
+    return (
+        <a
+            href={config.jellyseerrUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="jellyseerr-card"
+        >
+            <div
+                className="jellyseerr-image"
+                style={{ backgroundImage: `url('https://belginux.com/content/images/size/w1200/2024/03/jellyseerr-1.webp')` }}
+            >
+                <div className="jellyseerr-overlay"></div>
+                <div className="jellyseerr-content">
+                    <span className="material-icons card-icon">add_circle_outline</span>
+                    <span className="card-label">Request Music/Movies</span>
+                </div>
+            </div>
+        </a>
+    );
+};
+
+export default JellyseerrCard;

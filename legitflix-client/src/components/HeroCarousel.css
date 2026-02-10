@@ -1,0 +1,208 @@
+.hero-carousel-container {
+    position: relative;
+    width: 100%;
+    height: 85vh;
+    /* Adjustable */
+    min-height: 600px;
+    overflow: hidden;
+    margin-bottom: -100px;
+    /* Overlap with next section */
+    z-index: 1;
+}
+
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.hero-slide.active {
+    opacity: 1;
+    z-index: 1;
+    pointer-events: all;
+}
+
+.hero-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center top;
+    transform: scale(1);
+    transition: transform 12s ease;
+}
+
+.hero-slide.active .hero-backdrop {
+    transform: scale(1.1);
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, #141414 5%, transparent 60%),
+        linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, transparent 60%);
+}
+
+.hero-content {
+    position: absolute;
+    bottom: 25%;
+    left: 5%;
+    width: 45%;
+    max-width: 700px;
+    z-index: 2;
+    text-align: left;
+    color: white;
+}
+
+.hero-logo {
+    max-width: 400px;
+    max-height: 180px;
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.hero-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.2rem;
+    font-size: 1.1rem;
+    color: #e5e5e5;
+}
+
+.hero-badge-age {
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.hero-desc {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #ccc;
+    margin-bottom: 2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.hero-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-hero-primary {
+    background: white;
+    color: black;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-hero-primary:hover {
+    background: #e5e5e5;
+    transform: scale(1.05);
+}
+
+.btn-hero-bookmark,
+.hero-button-info {
+    background: rgba(100, 100, 100, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-hero-bookmark:hover,
+.hero-button-info:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+    transform: scale(1.1);
+}
+
+.hero-indicators {
+    position: absolute;
+    bottom: 20px;
+    right: 40px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.hero-indicator {
+    width: 30px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.hero-indicator.active .fill {
+    width: 100%;
+    height: 100%;
+    background: white;
+    /* Animation for timer */
+    animation: fillProgress 8s linear;
+}
+
+@keyframes fillProgress {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        width: 80%;
+        bottom: 15%;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-logo {
+        max-width: 250px;
+    }
+}
