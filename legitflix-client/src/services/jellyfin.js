@@ -48,8 +48,8 @@ class JellyfinService {
 
     async getCurrentUser() {
         if (!this.api) this.initialize();
-        // In a real plugin scenario, window.ApiClient is available.
-        // In dev, we might need to fetch public users or use env.
+
+        // 1. Try Window API (in case we are ever injected)
         if (window.ApiClient) {
             try {
                 return await window.ApiClient.getCurrentUser();
@@ -57,14 +57,41 @@ class JellyfinService {
                 console.warn("Failed to get current user from window.ApiClient", e);
             }
         }
-        // Fallback for dev: try to get public users or just use the first one
-        // This is a bit hacky for dev but necessary if we don't have a login flow yet.
-        try {
-            const users = await this.api.user.getPublicUsers();
-            if (users.data && users.data.length > 0) return users.data[0];
-        } catch (e) {
-            console.warn("Failed to get public users", e);
+
+        // 2. Try LocalStorage (Same Origin)
+        const storedCreds = localStorage.getItem('jellyfin_credentials');
+        if (storedCreds) {
+            try {
+                const parsed = JSON.parse(storedCreds);
+                if (parsed.Servers && parsed.Servers.length > 0) {
+                    // Find the first server with an access token (usually the active one)
+                    const activeServer = parsed.Servers.find(s => s.AccessToken && s.UserId);
+                    if (activeServer) {
+                        console.log("[LegitFlix] Found credentials in localStorage", activeServer);
+
+                        // Re-initialize API with the token
+                        this.jellyfin = new Jellyfin({
+                            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.9' },
+                            deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
+                        });
+
+                        // Create API with the token!
+                        this.api = this.jellyfin.createApi(
+                            window.location.origin, // Use current origin
+                            activeServer.AccessToken
+                        );
+
+                        // Fetch the user object
+                        return this.api.user.getUser(activeServer.UserId);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse jellyfin_credentials", e);
+            }
+        } else {
+            console.warn("[LegitFlix] No credentials found in localStorage. Please login to Jellyfin first.");
         }
+
         return null;
     }
     async getUserViews(userId) {
