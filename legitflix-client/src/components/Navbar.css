@@ -1,0 +1,153 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 68px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4%;
+    /* Match global padding */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 10%, transparent);
+    transition: background-color 0.4s;
+    font-size: 0.9rem;
+}
+
+.navbar.scrolled {
+    background-color: #141414;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.nav-logo {
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #E50914;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    height: 35px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-logo img {
+    height: 100%;
+    object-fit: contain;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    color: #e5e5e5;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: #b3b3b3;
+}
+
+.nav-links a.active {
+    font-weight: bold;
+    color: white;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-icon-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+.nav-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    object-fit: cover;
+    margin-right: 5px;
+}
+
+.nav-profile {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.nav-caret {
+    border-color: #fff transparent transparent;
+    border-style: solid;
+    border-width: 5px 5px 0;
+    height: 0;
+    width: 0;
+    margin-left: 5px;
+    transition: transform 0.2s;
+}
+
+/* Dropdown Menu */
+.nav-menu-container {
+    position: relative;
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 10px 0;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-dropdown-menu button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 10px 15px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.nav-dropdown-menu button:hover {
+    text-decoration: underline;
+}
+
+.menu-divider {
+    height: 1px;
+    background: #333;
+    margin: 5px 0;
+}
+
+/* Responsive */
+@media (max-width: 850px) {
+    .nav-links {
+        display: none;
+        /* Add mobile menu later */
+    }
+}

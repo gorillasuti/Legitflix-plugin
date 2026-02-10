@@ -4,7 +4,7 @@ import { jellyfinService } from '../services/jellyfin';
 import { useTheme } from '../context/ThemeContext';
 import './HeroCarousel.css';
 
-const HeroCarousel = () => {
+const HeroCarousel = ({ onInfoClick }) => {
     const { config } = useTheme();
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
@@ -260,7 +260,7 @@ const HeroCarousel = () => {
                                         {isFav ? 'bookmark' : 'bookmark_border'}
                                     </span>
                                 </button>
-                                <button className="hero-button-info" onClick={() => navigate(`/details/${item.Id}`)}>
+                                <button className="hero-button-info" onClick={() => onInfoClick(item.Id)} title="More Info">
                                     <span className="material-icons-outlined">info</span>
                                 </button>
                             </div>

@@ -9,7 +9,7 @@ import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
 class JellyfinService {
     constructor() {
         this.jellyfin = new Jellyfin({
-            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.13' },
+            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.16' },
             deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
         });
         this.api = null;
@@ -171,6 +171,47 @@ class JellyfinService {
             return await this.api.userLibrary.markFavoriteItem({ userId, itemId });
         } else {
             return await this.api.userLibrary.unmarkFavoriteItem({ userId, itemId });
+        }
+    }
+
+    async getItemDetails(userId, itemId) {
+        if (!this.api) this.initialize();
+        // Uses getItems with filters to fetch a single item with extended fields
+        // Or specific `getItem` from UserLibraryApi
+        try {
+            const fields = ['RemoteTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData'];
+            const response = await this.api.userLibrary.getItem({
+                userId,
+                itemId,
+                fields: fields
+            });
+            return response.data;
+        } catch (error) {
+            console.error('getItemDetails failed', error);
+            return null;
+        }
+    }
+
+    async getLatestItems(userId, parentId, limit = 12) {
+        if (!this.api) this.initialize();
+        try {
+            const fields = ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks'];
+            // Using ItemsApi.getLatestItems is cleaner if available, but getItems with sort is more flexible
+            // Let's use getItems with sorting for "Latest" behavior
+            const response = await this.api.items.getItems({
+                userId,
+                parentId,
+                limit,
+                fields: fields,
+                includeItemTypes: ['Movie', 'Series', 'Episode'],
+                sortBy: ['DateCreated'],
+                sortOrder: ['Descending'],
+                recursive: true
+            });
+            return response.data;
+        } catch (error) {
+            console.error('getLatestItems failed', error);
+            return { Items: [] }; // Return empty structure on fail
         }
     }
 }

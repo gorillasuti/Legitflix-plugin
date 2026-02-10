@@ -1,0 +1,121 @@
+.settings-modal-overlay {
+    z-index: 10000;
+}
+
+.settings-modal-content {
+    max-width: 600px;
+    /* Smaller than info modal */
+    height: auto;
+    max-height: 80vh;
+    padding: 0;
+}
+
+.settings-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #333;
+}
+
+.settings-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.settings-body {
+    padding: 30px;
+}
+
+.settings-section {
+    margin-bottom: 30px;
+}
+
+.settings-section h3 {
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: #ccc;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #ddd;
+}
+
+.settings-input {
+    width: 100%;
+    padding: 10px;
+    background: #333;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.settings-input:focus {
+    outline: none;
+    border-color: #E50914;
+    /* Netflix Red */
+    background: #444;
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.help-text {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 5px;
+}
+
+.settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    border-top: 1px solid #333;
+    padding-top: 20px;
+}
+
+.btn-primary {
+    background: #E50914;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background: #f40612;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #ccc;
+    border: 1px solid #444;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    color: white;
+    border-color: white;
+}
