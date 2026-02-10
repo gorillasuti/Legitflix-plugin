@@ -117,7 +117,78 @@
     gap: 15px;
 }
 
-/* ... existing button styles ... */
+.hero-button-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-hero-primary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: white;
+    color: black;
+    border: none;
+    padding: 0.8rem 2rem;
+    /* Netflix-like sizing */
+    border-radius: 4px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-hero-primary:hover {
+    background-color: rgba(255, 255, 255, 0.75);
+}
+
+.btn-hero-primary i {
+    font-size: 2rem;
+}
+
+.btn-hero-bookmark {
+    background-color: rgba(109, 109, 110, 0.7);
+    color: white;
+    border: none;
+    width: 60px;
+    /* Square/Circle ish */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-hero-bookmark:hover {
+    background-color: rgba(109, 109, 110, 0.4);
+}
+
+.btn-hero-bookmark.active {
+    color: #E50914;
+    /* Netflix Red logic if favored? Or just white filled? */
+    /* Netflix doesn't highlight button bg, just icon usually. */
+}
+
+.hero-button-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(109, 109, 110, 0.7);
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.hero-button-info:hover {
+    background-color: rgba(109, 109, 110, 0.4);
+}
 
 .hero-indicators {
     position: absolute;

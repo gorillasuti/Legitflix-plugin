@@ -9,7 +9,7 @@ import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
 class JellyfinService {
     constructor() {
         this.jellyfin = new Jellyfin({
-            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.16' },
+            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.17' },
             deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
         });
         this.api = null;
@@ -61,10 +61,8 @@ class JellyfinService {
             }
         }
 
-        if (this.api && this.api.accessToken) {
-            // We can't easily get the current user without ID if we only have token here (unless stored)
-            return null;
-        }
+        // REMOVED: Early return that blocked localStorage lookup if API was partially init
+        // if (this.api && this.api.accessToken) { return null; }
 
         if (!this.api) this.initialize();
 

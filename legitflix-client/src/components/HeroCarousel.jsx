@@ -22,10 +22,11 @@ const HeroCarousel = ({ onInfoClick }) => {
             try {
                 const user = await jellyfinService.getCurrentUser();
                 if (!user) {
-                    console.error("No user found for HeroCarousel");
+                    console.error("No user found for HeroCarousel. jellyfinService.api:", jellyfinService.api);
                     setLoading(false);
                     return;
                 }
+                console.log("[HeroCarousel] User found:", user.Name, user.Id);
 
                 const query = {
                     includeItemTypes: config.heroMediaTypes,
