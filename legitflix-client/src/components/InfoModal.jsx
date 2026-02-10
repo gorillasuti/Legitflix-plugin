@@ -18,6 +18,14 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
         const fetchData = async () => {
             setIsVisible(true);
             const user = await jellyfinService.getCurrentUser();
+            // --- HELPER FUNCTIONS ---
+            const getYoutubeId = (url) => {
+                if (!url) return null;
+                if (url.includes('v=')) return url.split('v=')[1].split('&')[0];
+                if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
+                if (url.includes('embed/')) return url.split('embed/')[1].split('?')[0];
+                return null;
+            };
             if (user) {
                 const data = await jellyfinService.getItemDetails(user.Id, itemId);
                 setDetails(data);
@@ -90,13 +98,7 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
     if (!isOpen || !details) return null;
 
     // --- HELPER FUNCTIONS ---
-    const getYoutubeId = (url) => {
-        if (!url) return null;
-        if (url.includes('v=')) return url.split('v=')[1].split('&')[0];
-        if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
-        if (url.includes('embed/')) return url.split('embed/')[1].split('?')[0];
-        return null;
-    };
+
 
     const handlePlay = () => {
         // Basic Navigation Fallback for now

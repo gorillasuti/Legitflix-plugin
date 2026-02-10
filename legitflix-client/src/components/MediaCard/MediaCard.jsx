@@ -4,19 +4,16 @@ import HoverCard from '../HoverCard/HoverCard';
 import './MediaCard.css';
 
 const MediaCard = ({ item, onClick }) => {
-    const [isHovered, setIsHovered] = useState(false);
     const [showHover, setShowHover] = useState(false);
     const hoverTimeoutRef = useRef(null);
 
     const handleMouseEnter = () => {
-        setIsHovered(true);
         hoverTimeoutRef.current = setTimeout(() => {
             setShowHover(true);
         }, 600); // 600ms delay before showing hover card
     };
 
     const handleMouseLeave = () => {
-        setIsHovered(false);
         setShowHover(false);
         if (hoverTimeoutRef.current) {
             clearTimeout(hoverTimeoutRef.current);

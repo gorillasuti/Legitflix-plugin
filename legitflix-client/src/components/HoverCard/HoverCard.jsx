@@ -6,7 +6,7 @@ const HoverCard = ({ item, isVisible, onPlay, onDetails }) => {
     const [details, setDetails] = useState(item);
 
     useEffect(() => {
-        if (isVisible && !item.Overview) { // Fetch if detail missing
+        if (isVisible && !item.Overview) {
             const fetchDetails = async () => {
                 try {
                     const fullerItem = await jellyfinService.getItem(item.Id);
@@ -16,10 +16,10 @@ const HoverCard = ({ item, isVisible, onPlay, onDetails }) => {
                 }
             };
             fetchDetails();
-        } else {
+        } else if (isVisible && item.Id !== details.Id) {
             setDetails(item);
         }
-    }, [isVisible, item]);
+    }, [isVisible, item, details.Id]);
 
     if (!isVisible) return null;
 
