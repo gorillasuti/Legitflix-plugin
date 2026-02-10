@@ -35,7 +35,7 @@ const HeroCarousel = () => {
                 };
 
                 const response = await jellyfinService.getItems(user.Id, query);
-                let fetchedItems = response.data.Items || [];
+                let fetchedItems = response.Items || [];
 
                 // Filter items that actually have backdrops
                 fetchedItems = fetchedItems.filter(i => i.BackdropImageTags && i.BackdropImageTags.length > 0);
@@ -49,8 +49,8 @@ const HeroCarousel = () => {
                     if (item.Type === 'Series') {
                         try {
                             const nextUp = await jellyfinService.getNextUp(user.Id, item.Id);
-                            if (nextUp.data.Items && nextUp.data.Items.length > 0) {
-                                item._nextUp = nextUp.data.Items[0];
+                            if (nextUp.Items && nextUp.Items.length > 0) {
+                                item._nextUp = nextUp.Items[0];
                             }
                         } catch (e) {
                             console.warn('Failed to fetch Next Up', e);

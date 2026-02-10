@@ -19,7 +19,7 @@ export default function MovieDetail() {
                 const movieId = id || TEST_MOVIE_ID;
 
                 const response = await jellyfinService.getItem(TEST_USER_ID, movieId);
-                setItem(response.data);
+                setItem(response);
             } catch (error) {
                 console.error("Failed to fetch movie:", error);
             } finally {

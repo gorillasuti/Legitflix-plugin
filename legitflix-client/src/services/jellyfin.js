@@ -9,7 +9,7 @@ import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
 class JellyfinService {
     constructor() {
         this.jellyfin = new Jellyfin({
-            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.11' },
+            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.12' },
             deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
         });
         this.api = null;
@@ -147,6 +147,19 @@ class JellyfinService {
             fields: fields
         });
         return response.data;
+    }
+    async getResumeItems(userId, limit = 12) {
+        if (!this.api) this.initialize();
+        // Uses getItems with filters
+        const response = await this.getItems(userId, {
+            filters: ['IsResumable'],
+            sortBy: ['DatePlayed'],
+            sortOrder: ['Descending'],
+            limit: limit,
+            recursive: true,
+            includeItemTypes: ['Movie', 'Episode']
+        });
+        return response; // getItems already unwraps .data
     }
 }
 

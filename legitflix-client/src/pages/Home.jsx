@@ -16,10 +16,10 @@ const Home = () => {
                 const user = await jellyfinService.getCurrentUser();
                 if (user) {
                     const res = await jellyfinService.getUserViews(user.Id);
-                    setLibraries(res.data.Items || []);
+                    setLibraries(res.Items || []);
 
                     const resume = await jellyfinService.getResumeItems(user.Id);
-                    setResumeItems(resume.data.Items || []);
+                    setResumeItems(resume.Items || []);
                 }
             } catch (e) {
                 console.error("Failed to fetch data", e);
