@@ -37,7 +37,8 @@
     margin-bottom: 30px;
     border-radius: 8px;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     color: white;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
 }

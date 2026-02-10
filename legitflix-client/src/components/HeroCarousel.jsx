@@ -9,6 +9,7 @@ const HeroCarousel = ({ onInfoClick }) => {
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [fillKey, setFillKey] = useState(0);
     const [loading, setLoading] = useState(true);
     // Track previous index to handle "completed" state logic if needed, 
     // but standard comparison index < currentIndex is enough for rendering.
@@ -84,10 +85,12 @@ const HeroCarousel = ({ onInfoClick }) => {
             setCurrentIndex(prev => (prev + 1) % currentItems.length);
             return currentItems;
         });
+        setFillKey(k => k + 1);
     };
 
     const goToSlide = (index) => {
         setCurrentIndex(index);
+        setFillKey(k => k + 1);
         resetTimer();
     };
 
@@ -280,7 +283,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                             className={`hero-indicator ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
                             onClick={() => goToSlide(index)}
                         >
-                            <div className="fill"></div>
+                            <div className="fill" key={`fill-${index}-${fillKey}`}></div>
                         </div>
                     );
                 })}

@@ -10,6 +10,7 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
     const [isMuted, setIsMuted] = useState(true);
     const [isIdle, setIsIdle] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
+    const [userId, setUserId] = useState(null);
 
     // Fetch Details on Open
     useEffect(() => {
@@ -27,6 +28,7 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                 return null;
             };
             if (user) {
+                setUserId(user.Id);
                 const data = await jellyfinService.getItemDetails(user.Id, itemId);
                 setDetails(data);
 
@@ -99,6 +101,24 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
 
     // --- HELPER FUNCTIONS ---
 
+    const toggleFavorite = async () => {
+        if (!userId || !details) return;
+        const newFav = !details.UserData?.IsFavorite;
+        // Optimistic update
+        setDetails(prev => ({
+            ...prev,
+            UserData: { ...prev.UserData, IsFavorite: newFav }
+        }));
+        try {
+            await jellyfinService.markFavorite(userId, details.Id, newFav);
+        } catch (err) {
+            // Revert on failure
+            setDetails(prev => ({
+                ...prev,
+                UserData: { ...prev.UserData, IsFavorite: !newFav }
+            }));
+        }
+    };
 
     const handlePlay = () => {
         // Basic Navigation Fallback for now
@@ -166,7 +186,7 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                             <button className="btn-play-hero" onClick={handlePlay}>
                                 <span className="material-icons">play_arrow</span> Play
                             </button>
-                            <button className="btn-my-list" onClick={() => jellyfinService.markFavorite(details.UserData.UserId, details.Id, !details.UserData.IsFavorite)}>
+                            <button className="btn-my-list" onClick={toggleFavorite}>
                                 <span className="material-icons">{details.UserData?.IsFavorite ? 'check' : 'add'}</span> My List
                             </button>
                         </div>

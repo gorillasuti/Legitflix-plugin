@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { jellyfinService } from '../services/jellyfin';
-import SettingsModal from './SettingsModal';
 import SearchModal from './SearchModal/SearchModal';
 import './Navbar.css';
 
@@ -11,9 +10,8 @@ const Navbar = () => {
     const { config } = useTheme();
     const [isScrolled, setIsScrolled] = useState(false);
     const [user, setUser] = useState(null);
-    const [showSettings, setShowSettings] = useState(false);
     const [showSearch, setShowSearch] = useState(false);
-    const [showMenu, setShowMenu] = useState(false); // For 3-dot dropdown
+    const [showMenu, setShowMenu] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -55,34 +53,12 @@ const Navbar = () => {
                             <span className="logo-text">{config.appName}</span>
                         )}
                     </div>
-
-                    <ul className="nav-links">
-                        <li><NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>Home</NavLink></li>
-                        <li><NavLink to="/movies" className={({ isActive }) => isActive ? 'active' : ''}>Movies</NavLink></li>
-                        <li><NavLink to="/series" className={({ isActive }) => isActive ? 'active' : ''}>Series</NavLink></li>
-                        <li><NavLink to="/favorites" className={({ isActive }) => isActive ? 'active' : ''}>My List</NavLink></li>
-                    </ul>
                 </div>
 
                 <div className="nav-right">
-                    <button className="icon-button" onClick={() => setShowSearch(true)}> {/* Updated class and added onClick */}
+                    <button className="nav-icon-btn" onClick={() => setShowSearch(true)} title="Search">
                         <span className="material-icons">search</span>
                     </button>
-
-                    <button className="icon-button" title="Notifications"> {/* Updated class */}
-                        <span className="material-icons">notifications</span>
-                    </button>
-
-                    <div className="nav-item nav-profile" onClick={() => navigate('/profile')}>
-                        {user && (
-                            <img
-                                src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90`}
-                                alt={user.Name}
-                                className="nav-avatar"
-                            />
-                        )}
-                        <span className="nav-caret"></span>
-                    </div>
 
                     {/* 3-Dot Menu */}
                     <div className="nav-menu-container">
@@ -95,23 +71,41 @@ const Navbar = () => {
 
                         {showMenu && (
                             <div className="nav-dropdown-menu">
-                                <button onClick={() => navigate('/profile')}>
-                                    <span className="material-icons">settings</span> Settings
+                                {/* Search row */}
+                                <div className="dropdown-search-row">
+                                    <span className="material-icons">search</span>
+                                    <span>Search</span>
+                                </div>
+
+                                <button onClick={() => { setShowMenu(false); }}>
+                                    <span className="material-icons">cast</span> Cast to Device
+                                    <span className="dropdown-badge">Search</span>
                                 </button>
-                                <button onClick={() => window.location.reload()}>
-                                    <span className="material-icons">refresh</span> Reload
+                                <button onClick={() => { setShowMenu(false); }}>
+                                    <span className="material-icons">sync</span> SyncPlay
                                 </button>
-                                <div className="menu-divider"></div>
-                                <button className="logout-btn">
-                                    <span className="material-icons">logout</span> Sign out
+                                <button onClick={() => { setShowMenu(false); }}>
+                                    <span className="material-icons">play_circle</span> Player
+                                </button>
+                                <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/dashboard'; }}>
+                                    <span className="material-icons">dashboard</span> Dashboard
                                 </button>
                             </div>
+                        )}
+                    </div>
+
+                    <div className="nav-avatar-container" onClick={() => navigate('/profile')}>
+                        {user && (
+                            <img
+                                src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90`}
+                                alt={user.Name}
+                                className="nav-avatar"
+                            />
                         )}
                     </div>
                 </div>
             </nav>
 
-            <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
             <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
         </>
     );

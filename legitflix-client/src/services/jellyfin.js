@@ -241,6 +241,68 @@ class JellyfinService {
         }
         return [];
     }
+
+    // --- Account Settings Methods ---
+
+    async updatePassword(userId, currentPw, newPw) {
+        if (!this.api) this.initialize();
+        const response = await fetch(`${this.api.basePath}/Users/${userId}/Password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `MediaBrowser Token="${this.api.accessToken}"`
+            },
+            body: JSON.stringify({
+                CurrentPw: currentPw,
+                NewPw: newPw
+            })
+        });
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(err || 'Failed to update password');
+        }
+        return true;
+    }
+
+    async updateUserConfiguration(userId, config) {
+        if (!this.api) this.initialize();
+        const response = await fetch(`${this.api.basePath}/Users/${userId}/Configuration`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `MediaBrowser Token="${this.api.accessToken}"`
+            },
+            body: JSON.stringify(config)
+        });
+        if (!response.ok) throw new Error('Failed to update user configuration');
+        return true;
+    }
+
+    async getAllBackdrops(userId, limit = 50) {
+        if (!this.api) this.initialize();
+        const response = await this.api.items.getItems({
+            userId,
+            includeItemTypes: ['Movie', 'Series'],
+            imageTypes: ['Backdrop'],
+            sortBy: ['Random'],
+            limit,
+            recursive: true,
+            fields: ['BackdropImageTags']
+        });
+        return response.data?.Items || [];
+    }
+
+    async quickConnect(code) {
+        if (!this.api) this.initialize();
+        const response = await fetch(`${this.api.basePath}/QuickConnect/Authorize?Code=${code}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `MediaBrowser Token="${this.api.accessToken}"`
+            }
+        });
+        if (!response.ok) throw new Error('Quick Connect failed. Check the code.');
+        return true;
+    }
 }
 
 const jellyfinService = new JellyfinService();

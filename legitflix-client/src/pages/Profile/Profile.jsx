@@ -1,14 +1,59 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import Navbar from '../../components/Navbar';
+import BannerPickerModal from '../../components/BannerPickerModal';
 import './Profile.css';
+
+const TABS = [
+    { id: 'details', label: 'My details' },
+    { id: 'display', label: 'Display' },
+    { id: 'home', label: 'Home Screen' },
+    { id: 'playback', label: 'Playback' },
+    { id: 'subtitles', label: 'Subtitles' },
+    { id: 'quickconnect', label: 'Quick Connect' },
+    { id: 'advanced', label: 'Advanced' },
+];
 
 const Profile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [activeTab, setActiveTab] = useState('details');
     const [bannerUrl, setBannerUrl] = useState('');
+    const [showBannerPicker, setShowBannerPicker] = useState(false);
+
+    // Password state
+    const [currentPw, setCurrentPw] = useState('');
+    const [newPw, setNewPw] = useState('');
+    const [confirmPw, setConfirmPw] = useState('');
+    const [pwMsg, setPwMsg] = useState(null);
+    const [pwLoading, setPwLoading] = useState(false);
+
+    // Display settings
+    const [displayLang, setDisplayLang] = useState('en-US');
+    const [dateFormat, setDateFormat] = useState('default');
+
+    // Playback settings
+    const [audioLang, setAudioLang] = useState('');
+    const [maxBitrate, setMaxBitrate] = useState('');
+    const [subtitleMode, setSubtitleMode] = useState('Default');
+
+    // Subtitle settings
+    const [subLang, setSubLang] = useState('');
+    const [subMode, setSubMode] = useState('Default');
+
+    // Quick Connect
+    const [qcCode, setQcCode] = useState('');
+    const [qcMsg, setQcMsg] = useState(null);
+
+    // Home Screen sections
+    const [homeSections, setHomeSections] = useState([
+        { id: 'resume', label: 'Continue Watching', enabled: true },
+        { id: 'latestMedia', label: 'Latest Media', enabled: true },
+        { id: 'nextUp', label: 'Next Up', enabled: true },
+        { id: 'favorites', label: 'My Favorites', enabled: true },
+    ]);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -16,7 +61,13 @@ const Profile = () => {
             if (u) {
                 setUser(u);
 
-                // Banner Logic (Local > Item Banner > Item Backdrop)
+                // Load user configuration into state
+                const cfg = u.Configuration || {};
+                if (cfg.AudioLanguagePreference) setAudioLang(cfg.AudioLanguagePreference);
+                if (cfg.SubtitleLanguagePreference) setSubLang(cfg.SubtitleLanguagePreference);
+                if (cfg.SubtitleMode) setSubMode(cfg.SubtitleMode);
+
+                // Banner Logic
                 const localBanner = localStorage.getItem(`LegitFlix_Banner_${u.Id}`);
                 if (localBanner) {
                     setBannerUrl(localBanner);
@@ -30,31 +81,63 @@ const Profile = () => {
         loadUser();
     }, []);
 
-    const handleBannerChange = () => {
-        // Placeholder for real upload/select logic
-        const newUrl = prompt("Enter a URL for your profile banner (or leave empty to reset):", bannerUrl);
-        if (newUrl !== null) {
-            if (newUrl) {
-                localStorage.setItem(`LegitFlix_Banner_${user.Id}`, newUrl);
-                setBannerUrl(newUrl);
-            } else {
-                localStorage.removeItem(`LegitFlix_Banner_${user.Id}`);
-                setBannerUrl(''); // Should fall back to default logic on reload, or we re-run it
-                // Re-running fetch logic for simplify
-                window.location.reload();
-            }
+    // --- Handlers ---
+
+    const handleBannerSave = (url) => {
+        if (user) {
+            localStorage.setItem(`LegitFlix_Banner_${user.Id}`, url);
+            setBannerUrl(url);
         }
     };
 
-    const handleLogout = async () => {
-        // Simple logout for now - clear token and redirect
-        // Ideally use jellyfinService.logout() if it existed
-        console.log("Logging out...");
-        // Clear auth (simplified, assumes local storage logic in service)
-        // For now, redirect to login path or reload if auth is handled globally
-        // Assuming jellyfin-apiclient handles storage
-        navigate('/'); // Redirect home, assuming auth guard will catch it? 
-        // Or if simple plugin:
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+        setPwMsg(null);
+        if (newPw !== confirmPw) {
+            setPwMsg({ type: 'error', text: 'New passwords do not match.' });
+            return;
+        }
+        if (!newPw) {
+            setPwMsg({ type: 'error', text: 'New password cannot be empty.' });
+            return;
+        }
+        setPwLoading(true);
+        try {
+            await jellyfinService.updatePassword(user.Id, currentPw, newPw);
+            setPwMsg({ type: 'success', text: 'Password updated successfully!' });
+            setCurrentPw('');
+            setNewPw('');
+            setConfirmPw('');
+        } catch (err) {
+            setPwMsg({ type: 'error', text: err.message || 'Failed to update password.' });
+        } finally {
+            setPwLoading(false);
+        }
+    };
+
+    const handleQuickConnect = async () => {
+        setQcMsg(null);
+        if (!qcCode.trim()) {
+            setQcMsg({ type: 'error', text: 'Please enter a code.' });
+            return;
+        }
+        try {
+            await jellyfinService.quickConnect(qcCode.trim());
+            setQcMsg({ type: 'success', text: 'Device authorized successfully!' });
+            setQcCode('');
+        } catch (err) {
+            setQcMsg({ type: 'error', text: err.message || 'Authorization failed.' });
+        }
+    };
+
+    const toggleHomeSection = (id) => {
+        setHomeSections(prev =>
+            prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s)
+        );
+    };
+
+    const handleLogout = () => {
+        navigate('/');
         window.location.reload();
     };
 
@@ -62,60 +145,338 @@ const Profile = () => {
 
     const avatarUrl = user.PrimaryImageTag
         ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&quality=90`
-        : 'https://raw.githubusercontent.com/google/material-design-icons/master/png/action/account_circle/materialicons/48dp/2x/baseline_account_circle_white_48dp.png';
+        : null;
+
+    // --- TAB RENDERERS ---
+
+    const renderMyDetails = () => (
+        <>
+            <div className="settings-card">
+                <h3 className="settings-card-title">User Information</h3>
+                <div className="info-grid">
+                    <div className="info-item">
+                        <label>Username</label>
+                        <div className="info-value">{user.Name}</div>
+                    </div>
+                    <div className="info-item">
+                        <label>Last Login</label>
+                        <div className="info-value">
+                            {user.LastLoginDate ? new Date(user.LastLoginDate).toLocaleDateString() : '—'}
+                        </div>
+                    </div>
+                    <div className="info-item">
+                        <label>Administrator</label>
+                        <div className="info-value">{user.Policy?.IsAdministrator ? 'Yes' : 'No'}</div>
+                    </div>
+                    <div className="info-item">
+                        <label>User ID</label>
+                        <div className="info-value info-value-small">{user.Id}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="settings-card">
+                <h3 className="settings-card-title">Change Password</h3>
+                <form className="password-form" onSubmit={handlePasswordSubmit}>
+                    <div className="form-group">
+                        <label>Current Password</label>
+                        <input
+                            type="password"
+                            value={currentPw}
+                            onChange={e => setCurrentPw(e.target.value)}
+                            className="settings-input"
+                            autoComplete="current-password"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>New Password</label>
+                        <input
+                            type="password"
+                            value={newPw}
+                            onChange={e => setNewPw(e.target.value)}
+                            className="settings-input"
+                            autoComplete="new-password"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Confirm New Password</label>
+                        <input
+                            type="password"
+                            value={confirmPw}
+                            onChange={e => setConfirmPw(e.target.value)}
+                            className="settings-input"
+                            autoComplete="new-password"
+                        />
+                    </div>
+                    {pwMsg && (
+                        <div className={`form-message ${pwMsg.type}`}>
+                            <span className="material-icons">
+                                {pwMsg.type === 'success' ? 'check_circle' : 'error'}
+                            </span>
+                            {pwMsg.text}
+                        </div>
+                    )}
+                    <button type="submit" className="btn-accent" disabled={pwLoading}>
+                        {pwLoading ? 'SAVING...' : 'SAVE PASSWORD'}
+                    </button>
+                </form>
+            </div>
+        </>
+    );
+
+    const renderDisplay = () => (
+        <div className="settings-card">
+            <h3 className="settings-card-title">Display Preferences</h3>
+            <div className="form-group">
+                <label>Display Language</label>
+                <select
+                    className="settings-select"
+                    value={displayLang}
+                    onChange={e => setDisplayLang(e.target.value)}
+                >
+                    <option value="en-US">English (United States)</option>
+                    <option value="hu">Magyar (Hungarian)</option>
+                    <option value="de">Deutsch (German)</option>
+                    <option value="fr">Français (French)</option>
+                    <option value="es">Español (Spanish)</option>
+                    <option value="ja">日本語 (Japanese)</option>
+                </select>
+            </div>
+            <div className="form-group">
+                <label>Date Format</label>
+                <select
+                    className="settings-select"
+                    value={dateFormat}
+                    onChange={e => setDateFormat(e.target.value)}
+                >
+                    <option value="default">Use browser default</option>
+                    <option value="yyyy-MM-dd">YYYY-MM-DD</option>
+                    <option value="dd/MM/yyyy">DD/MM/YYYY</option>
+                    <option value="MM/dd/yyyy">MM/DD/YYYY</option>
+                </select>
+            </div>
+            <div className="setting-row">
+                <div className="setting-row-label">
+                    <span>Enable LegitFlix Theme</span>
+                    <span className="setting-hint">Use the custom gaming profile theme</span>
+                </div>
+                <label className="toggle-switch">
+                    <input type="checkbox" defaultChecked={true} />
+                    <span className="slider"></span>
+                </label>
+            </div>
+        </div>
+    );
+
+    const renderHomeScreen = () => (
+        <div className="settings-card">
+            <h3 className="settings-card-title">Home Screen Sections</h3>
+            <p className="settings-description">Choose which sections to display on your home screen.</p>
+            {homeSections.map(section => (
+                <div className="setting-row" key={section.id}>
+                    <div className="setting-row-label">
+                        <span>{section.label}</span>
+                    </div>
+                    <label className="toggle-switch">
+                        <input
+                            type="checkbox"
+                            checked={section.enabled}
+                            onChange={() => toggleHomeSection(section.id)}
+                        />
+                        <span className="slider"></span>
+                    </label>
+                </div>
+            ))}
+        </div>
+    );
+
+    const renderPlayback = () => (
+        <div className="settings-card">
+            <h3 className="settings-card-title">Playback Settings</h3>
+            <div className="form-group">
+                <label>Preferred Audio Language</label>
+                <select
+                    className="settings-select"
+                    value={audioLang}
+                    onChange={e => setAudioLang(e.target.value)}
+                >
+                    <option value="">Auto / Server Default</option>
+                    <option value="eng">English</option>
+                    <option value="hun">Hungarian</option>
+                    <option value="jpn">Japanese</option>
+                    <option value="ger">German</option>
+                    <option value="fre">French</option>
+                    <option value="spa">Spanish</option>
+                </select>
+            </div>
+            <div className="form-group">
+                <label>Max Streaming Bitrate</label>
+                <select
+                    className="settings-select"
+                    value={maxBitrate}
+                    onChange={e => setMaxBitrate(e.target.value)}
+                >
+                    <option value="">Auto</option>
+                    <option value="120000000">120 Mbps (4K)</option>
+                    <option value="80000000">80 Mbps</option>
+                    <option value="60000000">60 Mbps</option>
+                    <option value="40000000">40 Mbps</option>
+                    <option value="20000000">20 Mbps (1080p)</option>
+                    <option value="8000000">8 Mbps (720p)</option>
+                    <option value="4000000">4 Mbps</option>
+                    <option value="2000000">2 Mbps</option>
+                </select>
+            </div>
+            <div className="setting-row">
+                <div className="setting-row-label">
+                    <span>Prefer fMP4-HLS Container</span>
+                    <span className="setting-hint">Uses fMP4 container for HLS playback when available</span>
+                </div>
+                <label className="toggle-switch">
+                    <input type="checkbox" defaultChecked={false} />
+                    <span className="slider"></span>
+                </label>
+            </div>
+            <div className="setting-row">
+                <div className="setting-row-label">
+                    <span>Enable Cinema Mode</span>
+                    <span className="setting-hint">Play trailers and custom intros before the main feature</span>
+                </div>
+                <label className="toggle-switch">
+                    <input type="checkbox" defaultChecked={true} />
+                    <span className="slider"></span>
+                </label>
+            </div>
+        </div>
+    );
+
+    const renderSubtitles = () => (
+        <div className="settings-card">
+            <h3 className="settings-card-title">Subtitle Preferences</h3>
+            <div className="form-group">
+                <label>Preferred Subtitle Language</label>
+                <select
+                    className="settings-select"
+                    value={subLang}
+                    onChange={e => setSubLang(e.target.value)}
+                >
+                    <option value="">None</option>
+                    <option value="eng">English</option>
+                    <option value="hun">Hungarian</option>
+                    <option value="jpn">Japanese</option>
+                    <option value="ger">German</option>
+                    <option value="fre">French</option>
+                    <option value="spa">Spanish</option>
+                </select>
+            </div>
+            <div className="form-group">
+                <label>Subtitle Mode</label>
+                <select
+                    className="settings-select"
+                    value={subMode}
+                    onChange={e => setSubMode(e.target.value)}
+                >
+                    <option value="Default">Default</option>
+                    <option value="Always">Always Show</option>
+                    <option value="OnlyForced">Only Forced</option>
+                    <option value="None">None</option>
+                    <option value="Smart">Smart (match audio)</option>
+                </select>
+            </div>
+            <div className="setting-row">
+                <div className="setting-row-label">
+                    <span>Burn in Subtitles</span>
+                    <span className="setting-hint">Permanently render subtitles into the video stream</span>
+                </div>
+                <label className="toggle-switch">
+                    <input type="checkbox" defaultChecked={false} />
+                    <span className="slider"></span>
+                </label>
+            </div>
+        </div>
+    );
+
+    const renderQuickConnect = () => (
+        <div className="settings-card">
+            <h3 className="settings-card-title">Quick Connect</h3>
+            <p className="settings-description">
+                Enter the code displayed on your device to authorize it with your account.
+            </p>
+            <div className="qc-row">
+                <input
+                    type="text"
+                    className="settings-input qc-input"
+                    placeholder="Enter code"
+                    value={qcCode}
+                    onChange={e => setQcCode(e.target.value)}
+                    maxLength={10}
+                />
+                <button className="btn-accent" onClick={handleQuickConnect}>
+                    AUTHORIZE
+                </button>
+            </div>
+            {qcMsg && (
+                <div className={`form-message ${qcMsg.type}`} style={{ marginTop: '12px' }}>
+                    <span className="material-icons">
+                        {qcMsg.type === 'success' ? 'check_circle' : 'error'}
+                    </span>
+                    {qcMsg.text}
+                </div>
+            )}
+        </div>
+    );
+
+    const renderAdvanced = () => (
+        <div className="settings-card">
+            <h3 className="settings-card-title">Advanced</h3>
+            {user.Policy?.IsAdministrator && (
+                <button
+                    className="btn-link-row"
+                    onClick={() => window.location.href = '/web/index.html#!/dashboard'}
+                >
+                    <span className="material-icons">dashboard</span>
+                    <div>
+                        <span>Server Dashboard</span>
+                        <span className="setting-hint">Manage server settings, users, and libraries</span>
+                    </div>
+                    <span className="material-icons link-arrow">chevron_right</span>
+                </button>
+            )}
+            <button
+                className="btn-link-row"
+                onClick={() => window.location.href = '/web/index.html#!/playback/profile'}
+            >
+                <span className="material-icons">tune</span>
+                <div>
+                    <span>Playback Profiles</span>
+                    <span className="setting-hint">Configure device playback profiles</span>
+                </div>
+                <span className="material-icons link-arrow">chevron_right</span>
+            </button>
+            <button
+                className="btn-link-row"
+                onClick={() => window.location.href = '/web/index.html#!/networking'}
+            >
+                <span className="material-icons">lan</span>
+                <div>
+                    <span>Networking</span>
+                    <span className="setting-hint">Server networking and remote access settings</span>
+                </div>
+                <span className="material-icons link-arrow">chevron_right</span>
+            </button>
+        </div>
+    );
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'details':
-                return (
-                    <div className="profile-section-card">
-                        <h3 className="profile-section-title">User Information</h3>
-                        <div className="info-grid">
-                            <div className="info-item">
-                                <label>Username</label>
-                                <div className="info-value">{user.Name}</div>
-                            </div>
-                            <div className="info-item">
-                                <label>User ID</label>
-                                <div className="info-value" style={{ fontSize: '0.8rem', opacity: 0.7 }}>{user.Id}</div>
-                            </div>
-                            <div className="info-item">
-                                <label>Last Login</label>
-                                <div className="info-value">{new Date(user.LastLoginDate).toLocaleDateString()}</div>
-                            </div>
-                            <div className="info-item">
-                                <label>Administrator</label>
-                                <div className="info-value">{user.Policy?.IsAdministrator ? 'Yes' : 'No'}</div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            case 'display':
-                return (
-                    <div className="profile-section-card">
-                        <h3 className="profile-section-title">Display Settings</h3>
-                        <p style={{ color: '#999' }}>Settings are managed via the main Jellyfin configuration for now. Theme overrides can be toggled here in the future.</p>
-
-                        <div style={{ marginTop: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #333' }}>
-                                <span>Enable Gaming Profile Theme</span>
-                                <label className="toggle-switch">
-                                    <input type="checkbox" defaultChecked={true} />
-                                    <span className="slider"></span>
-                                </label>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #333' }}>
-                                <span>Blur Navbar on Scroll</span>
-                                <label className="toggle-switch">
-                                    <input type="checkbox" defaultChecked={true} />
-                                    <span className="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                );
-            default:
-                return <div className="profile-section-card"><p>Section under construction.</p></div>;
+            case 'details': return renderMyDetails();
+            case 'display': return renderDisplay();
+            case 'home': return renderHomeScreen();
+            case 'playback': return renderPlayback();
+            case 'subtitles': return renderSubtitles();
+            case 'quickconnect': return renderQuickConnect();
+            case 'advanced': return renderAdvanced();
+            default: return null;
         }
     };
 
@@ -123,70 +484,84 @@ const Profile = () => {
         <div className="profile-page">
             <Navbar />
 
-            <div className="gaming-profile-header">
-                <h1 className="profile-page-title">Account Settings</h1>
+            <div className="settings-container">
+                <h1 className="settings-page-title">Account Settings</h1>
 
                 {/* TABS */}
-                <div className="profile-nav-tabs">
+                <div className="settings-tabs">
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.id}
+                            className={`settings-tab ${activeTab === tab.id ? 'active' : ''}`}
+                            onClick={() => setActiveTab(tab.id)}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+
+                    {/* Icon buttons */}
+                    {user.Policy?.IsAdministrator && (
+                        <button
+                            className="settings-tab settings-tab-icon"
+                            onClick={() => window.location.href = '/web/index.html#!/dashboard'}
+                            title="Dashboard"
+                        >
+                            <span className="material-icons">grid_view</span>
+                        </button>
+                    )}
                     <button
-                        className={`profile-tab ${activeTab === 'details' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('details')}
+                        className="settings-tab settings-tab-icon"
+                        onClick={() => window.location.href = '/web/index.html#!/mypreferencesmenu'}
+                        title="Classic Settings"
                     >
-                        My details
-                    </button>
-                    <button
-                        className={`profile-tab ${activeTab === 'display' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('display')}
-                    >
-                        Display
-                    </button>
-                    <button
-                        className={`profile-tab ${activeTab === 'home' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('home')}
-                    >
-                        Home Screen
-                    </button>
-                    <button
-                        className={`profile-tab ${activeTab === 'playback' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('playback')}
-                    >
-                        Playback
+                        <span className="material-icons">article</span>
                     </button>
 
-                    <button className="profile-tab logout-tab" onClick={handleLogout}>
-                        <span className="material-icons">exit_to_app</span> Sign Out
+                    {/* Logout */}
+                    <button className="settings-tab settings-tab-logout" onClick={handleLogout} title="Sign Out">
+                        <span className="material-icons">exit_to_app</span>
                     </button>
                 </div>
 
                 {/* BANNER */}
                 <div
-                    className={`profile-banner ${bannerUrl ? 'has-banner' : ''}`}
+                    className={`settings-banner ${bannerUrl ? 'has-banner' : ''}`}
                     style={bannerUrl ? { backgroundImage: `url('${bannerUrl}')` } : {}}
                 >
                     <div className="banner-overlay"></div>
-                    <div className="banner-add-btn" onClick={handleBannerChange}>
+                    <div className="banner-edit-btn" onClick={() => setShowBannerPicker(true)}>
                         <span className="material-icons-outlined">
                             {bannerUrl ? 'edit' : 'add_photo_alternate'}
                         </span>
-                        <span className="banner-add-text">
-                            {bannerUrl ? 'Change profile banner' : 'Add profile banner'}
-                        </span>
+                        <span>{bannerUrl ? 'Change profile banner' : 'Add profile banner'}</span>
                     </div>
                 </div>
 
                 {/* AVATAR */}
-                <div className="profile-avatar-container">
-                    <div className="profile-avatar" style={{ backgroundImage: `url('${avatarUrl}')` }}></div>
-                    <div className="avatar-edit-icon" onClick={() => alert("Avatar uploading handled by Jellyfin. Please use the main dashboard to change your avatar for now.")}>
-                        <span className="material-icons-outlined">mode_edit</span>
+                <div className="settings-avatar-wrap">
+                    <div
+                        className="settings-avatar"
+                        style={avatarUrl ? { backgroundImage: `url('${avatarUrl}')` } : {}}
+                    >
+                        {!avatarUrl && <span className="material-icons avatar-placeholder">person</span>}
                     </div>
+                    <div className="avatar-edit-badge" title="Change avatar via Jellyfin Dashboard">
+                        <span className="material-icons">edit</span>
+                    </div>
+                </div>
+
+                {/* CONTENT */}
+                <div className="settings-content">
+                    {renderContent()}
                 </div>
             </div>
 
-            {/* CONTENT */}
-            <div className="profile-content">
-                {renderContent()}
-            </div>
+            <BannerPickerModal
+                isOpen={showBannerPicker}
+                onClose={() => setShowBannerPicker(false)}
+                onSave={handleBannerSave}
+                userId={user?.Id}
+            />
         </div>
     );
 };

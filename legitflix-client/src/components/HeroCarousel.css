@@ -100,21 +100,21 @@
 .hero-meta-line {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 6px;
-    font-size: 1rem;
-    color: #e5e5e5;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    color: #ccc;
     font-weight: 400;
 }
 
 .hero-badge-age {
     background: rgba(30, 30, 30, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #e5e5e5;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ccc;
 }
 
 .hero-meta-divider {
@@ -131,10 +131,12 @@
     font-size: 0.95rem;
     line-height: 1.5;
     color: #d2d2d2;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
     max-width: 100%;
     margin: 0;
 }
@@ -152,8 +154,8 @@
     color: white !important;
     border: none;
     border-radius: var(--radius-pill, 50px);
-    padding: 12px 32px;
-    font-size: 1rem;
+    padding: 10px 26px;
+    font-size: 0.85rem;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -161,68 +163,44 @@
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 15px rgba(229, 94, 0, 0.4);
 }
 
 .btn-hero-primary:hover {
     transform: scale(1.05);
     filter: brightness(1.1);
-    box-shadow: 0 6px 20px rgba(229, 94, 0, 0.6);
 }
 
 .btn-hero-primary .material-icons {
     font-size: 1.4rem;
 }
 
-.btn-hero-bookmark {
-    background: transparent;
-    border: 2px solid var(--clr-accent, #ff7e00);
-    color: var(--clr-accent, #ff7e00);
-    border-radius: var(--radius-pill, 50px);
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    backdrop-filter: blur(4px);
-}
-
-.btn-hero-bookmark:hover {
-    background: rgba(255, 165, 0, 0.1);
-    transform: scale(1.05);
-    color: white;
-    border-color: white;
-}
-
-.btn-hero-bookmark.active {
-    background-color: rgba(255, 126, 0, 0.1);
-    color: var(--clr-accent, #ff7e00);
-    border-color: var(--clr-accent, #ff7e00);
-}
-
+.btn-hero-bookmark,
 .hero-button-info {
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: transparent;
-    border: 2px solid var(--clr-accent, #ff7e00);
-    color: var(--clr-accent, #ff7e00);
-    border-radius: var(--radius-pill, 50px);
     cursor: pointer;
     transition: all 0.2s;
     padding: 0;
     backdrop-filter: blur(4px);
 }
 
+.btn-hero-bookmark:hover,
 .hero-button-info:hover {
-    background: rgba(255, 165, 0, 0.1);
-    transform: scale(1.05);
-    color: white;
+    background: rgba(255, 255, 255, 0.12);
     border-color: white;
+    transform: scale(1.08);
+}
+
+.btn-hero-bookmark.active {
+    color: var(--clr-accent, #ff7e00);
+    border-color: var(--clr-accent, #ff7e00);
 }
 
 /* --- INDICATORS --- */
