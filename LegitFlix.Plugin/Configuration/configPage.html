@@ -25,10 +25,64 @@
                             <span>Enable Custom UI</span>
                         </label>
                     </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel" for="txtPrimaryColor">Primary Color (Theme)</label>
+                        <input type="color" id="txtPrimaryColor" class="emby-input"
+                            style="height: 40px; width: 100%; cursor: pointer;" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel" for="txtAccentColor">Accent Color</label>
+                        <input type="color" id="txtAccentColor" class="emby-input"
+                            style="height: 40px; width: 100%; cursor: pointer;" />
+                    </div>
                 </form>
             </div>
         </div>
     </div>
+    <script type="text/javascript">
+        var LegitFlixConfig = {
+            pluginId: 'a1b2c3d4-e5f6-7890-1234-567890abcdef'
+        };
+
+        function getPluginConfiguration() {
+            return ApiClient.getPluginConfiguration(LegitFlixConfig.pluginId);
+        }
+
+        function updatePluginConfiguration(config) {
+            return ApiClient.updatePluginConfiguration(LegitFlixConfig.pluginId, config);
+        }
+
+        (function () {
+            var view = document.querySelector('.pluginConfigurationPage');
+
+            view.addEventListener('viewshow', function () {
+                var chkEnableCustomUI = view.querySelector('#chkEnableCustomUI');
+                var txtPrimaryColor = view.querySelector('#txtPrimaryColor');
+                var txtAccentColor = view.querySelector('#txtAccentColor');
+
+                getPluginConfiguration().then(function (config) {
+                    chkEnableCustomUI.checked = config.EnableCustomUI;
+                    txtPrimaryColor.value = config.PrimaryColor || '#00a4dc';
+                    txtAccentColor.value = config.AccentColor || '#ff0000';
+                });
+
+                function saveConfig() {
+                    getPluginConfiguration().then(function (config) {
+                        config.EnableCustomUI = chkEnableCustomUI.checked;
+                        config.PrimaryColor = txtPrimaryColor.value;
+                        config.AccentColor = txtAccentColor.value;
+                        updatePluginConfiguration(config).then(function () {
+                            Dashboard.processPluginConfigurationUpdateResult();
+                        });
+                    });
+                }
+
+                chkEnableCustomUI.addEventListener('change', saveConfig);
+                txtPrimaryColor.addEventListener('change', saveConfig);
+                txtAccentColor.addEventListener('change', saveConfig);
+            });
+        })();
+    </script>
 </body>
 
 </html>

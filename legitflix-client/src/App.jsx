@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Home from './pages/Home';
+import SeriesDetail from './pages/SeriesDetail';
 import MovieDetail from './pages/MovieDetail';
 import SkeletonLoader from './components/SkeletonLoader'; // Global loader? Or page level?
 // import './App.css'; // Use index.css primarily
@@ -12,6 +13,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/series/:id" element={<SeriesDetail />} />
           <Route path="/details/:id" element={<MovieDetail />} />
           {/* Fallback for legacy hash format #!/details?id=... handling? 
               React Router might strictly match /details/:id. 

@@ -71,6 +71,37 @@ class JellyfinService {
         if (!this.api) this.initialize();
         return this.api.userViews.getUserViews({ userId });
     }
+
+    async getSeasons(userId, seriesId) {
+        if (!this.api) this.initialize();
+        // SDK: tvShows.getSeasons({ seriesId, userId, fields: ... })
+        return this.api.tvShows.getSeasons({
+            userId,
+            seriesId,
+            fields: ['ItemCounts', 'PrimaryImageAspectRatio']
+        });
+    }
+
+    async getEpisodes(userId, seriesId, seasonId) {
+        if (!this.api) this.initialize();
+        return this.api.tvShows.getEpisodes({
+            userId,
+            seriesId,
+            seasonId,
+            fields: ['Overview', 'PrimaryImageAspectRatio', 'UserData', 'RunTimeTicks', 'MediaSources']
+        });
+    }
+
+    async getSeries(userId, seriesId) {
+        if (!this.api) this.initialize();
+        // Fetch specific fields for the series detail page
+        const fields = ['Overview', 'Genres', 'Studios', 'OfficialRating', 'CommunityRating', 'ImageTags', 'BackdropImageTags', 'People', 'RemoteTrailers', 'ChildCount', 'MediaSources'];
+        return this.api.userLibrary.getItem({
+            userId,
+            itemId: seriesId,
+            fields: fields
+        });
+    }
 }
 
 export const jellyfinService = new JellyfinService();

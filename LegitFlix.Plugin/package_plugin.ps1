@@ -1,4 +1,4 @@
-$version = "1.0.0.3"
+$version = "1.0.0.4"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 $buildDir = "bin\Release\net9.0"
@@ -50,7 +50,7 @@ $manifest = @{
         @{
             version   = $version
             changelog = "Initial Release"
-            targetAbi = "10.8.13.0"
+            targetAbi = "10.11.5.0"
             sourceUrl = "https://github.com/YOUR_USER/YOUR_REPO/releases/download/v$version/$zipName"
             checksum  = $checksum
             timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
