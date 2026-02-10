@@ -9,11 +9,11 @@
         "imageUrl": "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png",
         "versions": [
             {
-                "version": "1.0.0.10",
-                "changelog": "Refactored Client Authentication (SDK Fix)",
+                "version": "1.0.0.11",
+                "changelog": "Fixed SDK Method Calls (TypeError: getUser is not a function)",
                 "targetAbi": "10.11.5",
-                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.10/LegitFlix.Plugin_1.0.0.10.zip",
-                "checksum": "97f650acd6d1990fd8a3e4dc32c80737",
+                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.11/LegitFlix.Plugin_1.0.0.11.zip",
+                "checksum": "290d8f9954e30a03bb24ccefb8759332",
                 "timestamp": "2026-02-10T12:07:53Z"
             }
         ]
