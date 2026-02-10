@@ -9,7 +9,7 @@ import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
 class JellyfinService {
     constructor() {
         this.jellyfin = new Jellyfin({
-            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.17' },
+            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.18' },
             deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
         });
         this.api = null;

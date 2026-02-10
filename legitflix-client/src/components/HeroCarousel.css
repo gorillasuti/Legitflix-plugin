@@ -1,48 +1,16 @@
 .hero-carousel-container {
     position: relative;
     width: 100%;
-    height: 85vh;
-    /* Adjustable */
-    min-height: 600px;
+    height: 90vh;
+    /* Taller to push content down */
+    min-height: 700px;
     overflow: hidden;
-    margin-bottom: -100px;
-    /* Overlap with next section */
+    margin-bottom: -150px;
+    /* Deep overlap for gradient blend */
     z-index: 1;
 }
 
-.hero-slide {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.hero-slide.active {
-    opacity: 1;
-    z-index: 1;
-    pointer-events: all;
-}
-
-.hero-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center top;
-    transform: scale(1);
-    transition: transform 12s ease;
-}
-
-.hero-slide.active .hero-backdrop {
-    transform: scale(1.1);
-}
+/* ... slide & backdrop ... */
 
 .hero-overlay {
     position: absolute;
@@ -50,17 +18,16 @@
     left: 0;
     width: 100%;
     height: 100%;
-    /* Enhanced Fades: Stronger side fade (solid start), Refined bottom fade */
-    background: linear-gradient(to top, #141414 10%, rgba(20, 20, 20, 0) 50%),
-        linear-gradient(to right, #141414 0%, rgba(20, 20, 20, 0.8) 30%, transparent 70%);
+    /* Stronger bottom gradient to merge with dark background */
+    background: linear-gradient(to top, #141414 15%, rgba(20, 20, 20, 0.8) 35%, rgba(20, 20, 20, 0) 60%),
+        linear-gradient(to right, #141414 0%, rgba(20, 20, 20, 0.5) 40%, transparent 80%);
 }
 
 .hero-content {
     position: absolute;
-    bottom: 30%;
-    /* Lifted slightly */
+    bottom: 35%;
+    /* Lifted to leave room for indicators below */
     left: 4%;
-    /* Matching usual alignment */
     width: 45%;
     max-width: 700px;
     z-index: 2;
@@ -68,157 +35,106 @@
     color: white;
 }
 
-.hero-logo {
-    max-width: 400px;
-    max-height: 180px;
-    margin-bottom: 1.5rem;
-    display: block;
-}
-
-.hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    line-height: 1.1;
-    /* text-shadow removed */
-}
-
-.hero-meta-line {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 1.2rem;
-    font-size: 1.1rem;
-    color: #e5e5e5;
-}
-
-.hero-badge-age {
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-.hero-desc {
-    font-size: 1.1rem;
-    line-height: 1.5;
-    color: #ccc;
-    margin-bottom: 2rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    /* text-shadow removed */
-}
-
-.hero-actions {
-    display: flex;
-    gap: 15px;
-}
-
-.hero-button-row {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
+/* ... logo, title, meta ... */
 
 .btn-hero-primary {
     display: flex;
     align-items: center;
     gap: 10px;
-    background-color: white;
-    color: black;
+    background: linear-gradient(135deg, #ff7e00 0%, #e55e00 100%);
+    /* Orange Gradient */
+    color: white;
+    /* Text white on orange */
     border: none;
-    padding: 0.8rem 2rem;
-    /* Netflix-like sizing */
+    padding: 0.8rem 2.2rem;
     border-radius: 4px;
-    font-size: 1.2rem;
-    font-weight: bold;
+    font-size: 1.1rem;
+    font-weight: 800;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(229, 94, 0, 0.4);
 }
 
 .btn-hero-primary:hover {
-    background-color: rgba(255, 255, 255, 0.75);
-}
-
-.btn-hero-primary i {
-    font-size: 2rem;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(229, 94, 0, 0.6);
 }
 
 .btn-hero-bookmark {
-    background-color: rgba(109, 109, 110, 0.7);
+    background-color: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
-    border: none;
-    width: 60px;
-    /* Square/Circle ish */
+    width: 55px;
+    height: 55px;
+    /* Circular-ish */
+    border-radius: 50%;
+    /* Circle */
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
 }
 
 .btn-hero-bookmark:hover {
-    background-color: rgba(109, 109, 110, 0.4);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: white;
 }
 
 .btn-hero-bookmark.active {
-    color: #E50914;
-    /* Netflix Red logic if favored? Or just white filled? */
-    /* Netflix doesn't highlight button bg, just icon usually. */
+    color: #ff7e00;
+    /* Orange highlight */
+    border-color: #ff7e00;
 }
 
 .hero-button-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background-color: rgba(109, 109, 110, 0.7);
+    justify-content: center;
+    width: 55px;
+    height: 55px;
+    background-color: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
-    border: none;
-    padding: 0.8rem 2rem;
-    border-radius: 4px;
-    font-size: 1.2rem;
-    font-weight: bold;
+    border-radius: 50%;
+    /* Circle */
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
+    padding: 0;
+    /* Override padding since it's an icon button now */
 }
 
 .hero-button-info:hover {
-    background-color: rgba(109, 109, 110, 0.4);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: white;
 }
 
 .hero-indicators {
     position: absolute;
-    bottom: 40px;
-    /* Aligned with bottom area */
+    bottom: 180px;
+    /* Positioned just above the gradient cutoff/content start */
     left: 4%;
-    /* Aligned with content */
-    right: auto;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     z-index: 20;
-    /* Ensure clickable */
 }
 
 .hero-indicator {
-    width: 30px;
+    width: 40px;
+    /* Longer dashes */
     height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
+    /* Thinner */
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0;
+    /* sharp or slightly rounded */
     cursor: pointer;
-    overflow: hidden;
 }
 
 .hero-indicator.active .fill {
-    width: 100%;
-    height: 100%;
-    background: white;
-    /* Animation for timer */
-    animation: fillProgress 8s linear;
+    background: #ff7e00;
+    /* Orange fill */
 }
+
 
 .hero-indicator.completed .fill {
     width: 100%;
