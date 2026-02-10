@@ -52,21 +52,25 @@ const Home = () => {
 
             <div className="home-content-container" style={{ marginTop: '-150px', position: 'relative', zIndex: 10 }}>
                 {loading ? (
-                    <div style={{ padding: '0 4%' }}>
-                        <SkeletonLoader width="200px" height="28px" style={{ marginBottom: '20px' }} />
-                        <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '40px' }}>
-                            {[1, 2, 3, 4].map(i => (
+                    <div style={{ padding: '0 4.2%', marginTop: '40px' }}>
+                        {/* Continue Watching Row */}
+                        <SkeletonLoader width="220px" height="24px" style={{ marginBottom: '20px' }} />
+                        <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '50px' }}>
+                            {[1, 2, 3, 4, 5].map(i => (
                                 <div key={i} style={{ flex: '0 0 280px' }}>
-                                    <SkeletonLoader width="100%" height="157px" style={{ marginBottom: '10px' }} />
-                                    <SkeletonLoader width="60%" height="20px" />
+                                    <SkeletonLoader width="100%" height="157px" style={{ borderRadius: '4px', marginBottom: '8px' }} />
+                                    <SkeletonLoader width="70%" height="14px" style={{ marginBottom: '4px' }} />
+                                    <SkeletonLoader width="40%" height="12px" />
                                 </div>
                             ))}
                         </div>
-                        <SkeletonLoader width="200px" height="28px" style={{ marginBottom: '20px' }} />
+
+                        {/* Latest Media Row */}
+                        <SkeletonLoader width="180px" height="24px" style={{ marginBottom: '20px' }} />
                         <div style={{ display: 'flex', gap: '15px', overflow: 'hidden' }}>
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} style={{ flex: '0 0 200px' }}>
-                                    <SkeletonLoader width="100%" height="300px" style={{ borderRadius: '8px' }} />
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} style={{ flex: '0 0 220px' }}>
+                                    <SkeletonLoader width="100%" height="330px" style={{ borderRadius: '4px' }} />
                                 </div>
                             ))}
                         </div>

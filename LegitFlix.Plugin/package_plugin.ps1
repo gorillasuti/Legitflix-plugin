@@ -1,12 +1,15 @@
-$version = "1.0.0.22"
+$version = "1.0.0.23"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
-$buildDir = "bin\Release\net9.0"
-$publishDir = "publish"
+# Adjust build dir to be relative to the script location if running from root
+$projectDir = $PSScriptRoot
+$buildDir = Join-Path $projectDir "bin\Release\net9.0"
+$publishDir = Join-Path $projectDir "publish"
 
 # 1. Build
 Write-Host "Building Plugin..."
-dotnet build -c Release
+# Ensure we build the specific project
+dotnet build "$projectDir\LegitFlix.Plugin.csproj" -c Release
 
 # 2. Prepare Zip
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }

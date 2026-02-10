@@ -84,7 +84,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                     <input
                         ref={inputRef}
                         className="legit-search-input"
-                        placeholder="Search..."
+                        placeholder="Start typing to search..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}

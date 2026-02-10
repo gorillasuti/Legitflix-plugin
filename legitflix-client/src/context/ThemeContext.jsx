@@ -18,6 +18,7 @@ export const ThemeProvider = ({ children }) => {
         appName: 'LegitFlix',
         enableBackdrops: true,
         accentColor: '#ff7e00',
+        showNavbarCategories: true,
     });
 
     useEffect(() => {

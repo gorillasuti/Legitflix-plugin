@@ -156,8 +156,21 @@ const Profile = () => {
                         ))}
                     </div>
                     <SkeletonLoader width="100%" height="250px" style={{ margin: '20px 0', borderRadius: '12px' }} />
-                    <div style={{ display: 'flex', gap: '20px', marginTop: '-60px', paddingLeft: '40px', position: 'relative' }}>
-                        <SkeletonLoader type="circle" width="120px" height="120px" />
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '-55px', paddingLeft: '30px', position: 'relative', marginBottom: '28px' }}>
+                        <SkeletonLoader type="circle" width="110px" height="110px" style={{ border: '4px solid #0e0e0e' }} />
+                    </div>
+
+                    {/* Content Card Skeleton */}
+                    <div className="settings-card" style={{ padding: '28px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px' }}>
+                        <SkeletonLoader width="180px" height="24px" style={{ marginBottom: '24px' }} />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '18px' }}>
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i}>
+                                    <SkeletonLoader width="80px" height="14px" style={{ marginBottom: '8px' }} />
+                                    <SkeletonLoader width="140px" height="20px" />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

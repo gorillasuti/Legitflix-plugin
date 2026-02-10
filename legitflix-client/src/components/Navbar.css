@@ -8,18 +8,50 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 4%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 10%, transparent);
+    background: transparent;
     transition: background-color 0.4s;
     font-size: 0.9rem;
 }
 
 .navbar.scrolled {
-    background-color: #141414;
+    background-color: #272727;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .nav-left {
     display: flex;
     align-items: center;
+    gap: 30px;
+}
+
+.nav-categories {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-category-link {
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.nav-category-link:hover {
+    color: #b3b3b3;
+}
+
+.nav-category-link.active {
+    color: white;
+    font-weight: 700;
+}
+
+/* Hide categories on mobile */
+@media (max-width: 800px) {
+    .nav-categories {
+        display: none;
+    }
 }
 
 .nav-logo {

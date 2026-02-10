@@ -2302,9 +2302,6 @@ body.legitflix-selection-mode .actionSheetMenuItem:hover .actionSheetItemText {
     text-shadow: none;
     /* No shadow */
     display: -webkit-box;
-    -webkit-line-clamp: 4;
-    /* Limit to 4 lines */
-    line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
     margin: 0;
@@ -5482,12 +5479,6 @@ body.legitflix-selection-mode .actionSheetMenuItem:hover .actionSheetItemText {
     margin-bottom: 0 !important;
     /* Let container handle spacing */
     max-height: 100% !important;
-}
-
-/* Fix lint warning for line-clamp */
-.hero-desc,
-.promo-desc {
-    line-clamp: 3;
 }
 
 /* =========================================

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import './LegitFlixSettingsModal.css';
 
 const PRESET_COLORS = [
@@ -11,21 +12,22 @@ const PRESET_COLORS = [
 ];
 
 const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
-    const [accentColor, setAccentColor] = useState('#ff7e00');
-    const [logoUrl, setLogoUrl] = useState('');
+    const { config, updateConfig } = useTheme();
+    const [accentColor, setAccentColor] = useState(config.accentColor || '#ff7e00');
+    const [logoUrl, setLogoUrl] = useState(config.logoUrl || '');
+    const [showCategories, setShowCategories] = useState(config.showNavbarCategories !== false);
     const [customHex, setCustomHex] = useState('');
 
     useEffect(() => {
         if (isOpen) {
-            const storedColor = localStorage.getItem('LegitFlix_AccentColor') || '#ff7e00';
-            const storedLogo = localStorage.getItem('LegitFlix_LogoUrl') || '';
-            setAccentColor(storedColor);
-            setLogoUrl(storedLogo);
-            if (!PRESET_COLORS.some(c => c.value === storedColor)) {
-                setCustomHex(storedColor);
+            setAccentColor(config.accentColor || '#ff7e00');
+            setLogoUrl(config.logoUrl || '');
+            setShowCategories(config.showNavbarCategories !== false);
+            if (!PRESET_COLORS.some(c => c.value === config.accentColor)) {
+                setCustomHex(config.accentColor);
             }
         }
-    }, [isOpen]);
+    }, [isOpen, config]);
 
     const handleColorChange = (color) => {
         setAccentColor(color);
@@ -41,21 +43,12 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
     };
 
     const handleSave = () => {
-        localStorage.setItem('LegitFlix_AccentColor', accentColor);
-        localStorage.setItem('LegitFlix_LogoUrl', logoUrl);
-
-        // Apply immediately
-        document.documentElement.style.setProperty('--clr-accent', accentColor);
-        const r = parseInt(accentColor.slice(1, 3), 16);
-        const g = parseInt(accentColor.slice(3, 5), 16);
-        const b = parseInt(accentColor.slice(5, 7), 16);
-        document.documentElement.style.setProperty('--clr-accent-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
-
-        // Trigger event for Navbar logo update if needed, 
-        // or just rely on page reload if simple state update isn't enough.
-        // For logo, we might need a context or window event. Use window event for simplicity.
-        window.dispatchEvent(new Event('legitflix-settings-changed'));
-
+        updateConfig({
+            accentColor,
+            logoUrl,
+            logoType: logoUrl ? 'image' : 'text',
+            showNavbarCategories: showCategories
+        });
         onClose();
     };
 
@@ -63,6 +56,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
         setAccentColor('#ff7e00');
         setLogoUrl('');
         setCustomHex('');
+        setShowCategories(true);
     };
 
     if (!isOpen) return null;
@@ -114,6 +108,23 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
                             value={logoUrl}
                             onChange={(e) => setLogoUrl(e.target.value)}
                         />
+                    </div>
+
+                    <div className="setting-section">
+                        <div className="setting-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1rem' }}>Show Categories in Navbar</h3>
+                                <p className="setting-desc" style={{ marginBottom: 0 }}>Display library links in the top navigation bar</p>
+                            </div>
+                            <label className="toggle-switch">
+                                <input
+                                    type="checkbox"
+                                    checked={showCategories}
+                                    onChange={(e) => setShowCategories(e.target.checked)}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 

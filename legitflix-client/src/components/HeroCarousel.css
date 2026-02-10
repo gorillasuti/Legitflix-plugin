@@ -134,6 +134,7 @@
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    line-clamp: 3;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
@@ -175,6 +176,7 @@
     font-size: 1.4rem;
 }
 
+/* Unified Button Styles for Bookmark & Info */
 .btn-hero-bookmark,
 .hero-button-info {
     background: rgba(30, 30, 30, 0.6);
@@ -191,11 +193,17 @@
     padding: 0;
     backdrop-filter: blur(4px);
     outline: none;
+    box-sizing: border-box;
+    /* Ensure border doesn't affect dimensions differently */
 }
 
+/* Ensure icons are identical size/alignment */
 .btn-hero-bookmark .material-icons,
 .hero-button-info .material-icons-outlined {
     font-size: 24px;
+    line-height: 1;
+    display: block;
+    /* Removes inline spacing issues */
 }
 
 .btn-hero-bookmark:hover,
@@ -248,29 +256,33 @@
     height: 100%;
     width: 0%;
     background: var(--clr-accent, #ff7e00);
-    transition: width 0s;
 }
 
+/* Completed: Always full */
 .hero-indicator.completed .fill {
     width: 100%;
     background: rgba(255, 255, 255, 0.6);
-    transition: width 0.3s ease !important;
+    transition: width 0.3s ease;
 }
 
+/* Active: Animate from 0 to 100% over 8s */
 .hero-indicator.active .fill {
-    width: 100%;
-    transition: width 8s linear;
+    animation: fillProgress 8s linear forwards;
+}
+
+@keyframes fillProgress {
+    from {
+        width: 0%;
+    }
+
+    to {
+        width: 100%;
+    }
 }
 
 /* --- PAUSED STATE --- */
 .carousel-paused .hero-indicator.active .fill {
-    width: 100% !important;
-    background: var(--clr-accent, #ff7e00);
-    transition: none !important;
-}
-
-.carousel-paused .hero-indicator.active {
-    width: 56px;
+    animation-play-state: paused;
 }
 
 /* --- RESPONSIVE --- */
@@ -287,9 +299,5 @@
     .hero-logo {
         max-width: 250px;
         height: 120px;
-    }
-
-    .hero-desc {
-        -webkit-line-clamp: 2;
     }
 }

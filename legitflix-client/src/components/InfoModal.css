@@ -137,12 +137,32 @@
     left: 5%;
     width: 45%;
     z-index: 5;
-    transition: opacity 0.5s;
+    transition: all 0.5s ease;
 }
 
-.info-hero-content.idle {
+/* Idle State: Hide actions/title, keep Logo small */
+.info-hero-content.idle .info-actions,
+.info-hero-content.idle .info-title-text,
+.info-hero-content.idle .info-desc,
+.info-hero-content.idle .info-meta-row {
     opacity: 0;
-    /* Hide on idle */
+    pointer-events: none;
+    transform: translateY(20px);
+}
+
+.info-hero-content.idle .info-logo {
+    transform: scale(0.6) translateY(40px);
+    transform-origin: bottom left;
+    margin-bottom: 0;
+}
+
+/* Ensure smooth transitions for children */
+.info-actions,
+.info-title-text,
+.info-desc,
+.info-meta-row,
+.info-logo {
+    transition: all 0.5s ease;
 }
 
 .info-logo {
@@ -176,6 +196,7 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
 .btn-play-hero:hover {
@@ -193,6 +214,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+    transition: all 0.2s;
 }
 
 .btn-my-list:hover {
@@ -205,7 +227,12 @@
     padding: 20px 40px;
     display: flex;
     gap: 40px;
+    transition: opacity 0.5s;
 }
+
+/* Hide details when idle? user didn't specify, but usually "hide animation" means clear the view */
+/* Let's keep detail text visible since it's below the fold usually, or maybe user means just the overlay on video */
+/* User said "Trailer section where it plays... hide animation". This refers to the video hero area logic */
 
 .info-meta-row {
     display: flex;
@@ -261,6 +288,7 @@
 .trailer-card {
     cursor: pointer;
     transition: transform 0.2s;
+    position: relative;
 }
 
 .trailer-card:hover {
@@ -279,13 +307,18 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: filter 0.2s;
+}
+
+.trailer-card:hover .trailer-thumb img {
+    filter: brightness(0.6);
 }
 
 .play-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(0.8);
     background: rgba(0, 0, 0, 0.6);
     border-radius: 50%;
     width: 40px;
@@ -294,12 +327,23 @@
     justify-content: center;
     align-items: center;
     border: 2px solid white;
-    opacity: 0.8;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.trailer-card:hover .play-overlay {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .trailer-title {
     font-size: 1rem;
     color: #ccc;
+    transition: color 0.2s;
+}
+
+.trailer-card:hover .trailer-title {
+    color: white;
 }
 
 /* About Section */

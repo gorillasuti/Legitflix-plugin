@@ -9,26 +9,38 @@ import './Navbar.css';
 
 const Navbar = () => {
     const { config } = useTheme();
-    const [isScrolled, setIsScrolled] = useState(false);
     const [user, setUser] = useState(null);
+    const [libraries, setLibraries] = useState([]);
+    const [isScrolled, setIsScrolled] = useState(false);
     const [showSearch, setShowSearch] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [showLegitSettings, setShowLegitSettings] = useState(false);
     const navigate = useNavigate();
 
+    // Fetch User and Libraries
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const u = await jellyfinService.getCurrentUser();
+                setUser(u);
+                if (u && config.showNavbarCategories) {
+                    const libs = await jellyfinService.getUserViews(u.Id);
+                    if (libs && libs.Items) {
+                        setLibraries(libs.Items);
+                    }
+                }
+            } catch (err) {
+                console.error("Navbar fetch error", err);
+            }
+        };
+        fetchUserData();
+    }, [config.showNavbarCategories]); // Re-fetch if toggle changes
+
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 50);
         };
-
-        const fetchUser = async () => {
-            const u = await jellyfinService.getCurrentUser();
-            setUser(u);
-        };
-
         window.addEventListener('scroll', handleScroll);
-        fetchUser();
-
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -55,6 +67,21 @@ const Navbar = () => {
                             <span className="logo-text">{config.appName}</span>
                         )}
                     </div>
+
+                    {config.showNavbarCategories && libraries.length > 0 && (
+                        <div className="nav-categories">
+                            <span className="nav-category-link" onClick={() => navigate('/')}>Home</span>
+                            {libraries.map(lib => (
+                                <span
+                                    key={lib.Id}
+                                    className="nav-category-link"
+                                    onClick={() => navigate(`/library/${lib.Id}`)} // Assuming library route exists or needs to be handled
+                                >
+                                    {lib.Name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="nav-right">

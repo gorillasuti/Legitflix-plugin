@@ -144,15 +144,37 @@ const HeroCarousel = ({ onInfoClick }) => {
 
     if (loading) {
         return (
-            <div className="hero-carousel-container" style={{ height: '80vh', background: '#111' }}>
+            <div className="hero-carousel-container" style={{ height: '90vh', background: '#111', position: 'relative' }}>
                 <SkeletonLoader width="100%" height="100%" />
-                <div style={{ position: 'absolute', bottom: '10%', left: '4%', width: '40%' }}>
-                    <SkeletonLoader width="60%" height="40px" style={{ marginBottom: '20px' }} />
-                    <SkeletonLoader width="100%" height="20px" style={{ marginBottom: '10px' }} />
-                    <SkeletonLoader width="90%" height="20px" style={{ marginBottom: '20px' }} />
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                        <SkeletonLoader width="150px" height="50px" style={{ borderRadius: '4px' }} />
-                        <SkeletonLoader width="50px" height="50px" style={{ borderRadius: '4px' }} />
+                <div style={{
+                    position: 'absolute',
+                    top: '42.5%',
+                    left: '4%',
+                    transform: 'translateY(-50%)',
+                    width: '40%',
+                    maxWidth: '600px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1.25rem'
+                }}>
+                    {/* Title or Logo */}
+                    <SkeletonLoader width="70%" height="60px" style={{ marginBottom: '0' }} />
+
+                    {/* Meta Line */}
+                    <SkeletonLoader width="40%" height="24px" />
+
+                    {/* Description */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                        <SkeletonLoader width="100%" height="18px" />
+                        <SkeletonLoader width="95%" height="18px" />
+                        <SkeletonLoader width="60%" height="18px" />
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '0.5rem' }}>
+                        <SkeletonLoader width="160px" height="46px" style={{ borderRadius: '50px' }} />
+                        <SkeletonLoader width="42px" height="42px" style={{ borderRadius: '50%' }} />
+                        <SkeletonLoader width="42px" height="42px" style={{ borderRadius: '50%' }} />
                     </div>
                 </div>
             </div>

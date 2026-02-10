@@ -9,12 +9,12 @@
         "imageUrl": "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png",
         "versions": [
             {
-                "version": "1.0.0.22",
-                "changelog": "Added LegitFlix Settings Modal, Skeleton Loaders, and updated dependencies.",
+                "version": "1.0.0.23",
+                "changelog": "Navbar categories & scroll fix, Info Modal polished, Skeleton Loaders refined.",
                 "targetAbi": "10.11.5.0",
-                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.22/LegitFlix.Plugin_1.0.0.22.zip",
-                "checksum": "5a3f7e8b8a3836add31e033f2965c56c",
-                "timestamp": "2026-02-10T22:30:00Z"
+                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.23/LegitFlix.Plugin_1.0.0.23.zip",
+                "checksum": "b8c87b62b1bef35c0c64eaabbe6952e8",
+                "timestamp": "2026-02-10T23:55:00Z"
             }
         ]
     }
