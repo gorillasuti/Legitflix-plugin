@@ -60,6 +60,22 @@
                 var txtPrimaryColor = view.querySelector('#txtPrimaryColor');
                 var txtAccentColor = view.querySelector('#txtAccentColor');
 
+                // --- UI BLOCKER FIX ---
+                // Detect and hide elements with insane z-index (likely from JS Injector or extensions)
+                setTimeout(function () {
+                    var allDivs = document.body.querySelectorAll('div');
+                    allDivs.forEach(function (el) {
+                        var z = window.getComputedStyle(el).zIndex;
+                        if (z && parseInt(z) > 2000000000) {
+                            console.warn('LegitFlix: Hiding blocking element with z-index ' + z, el);
+                            el.style.display = 'none';
+                            el.style.pointerEvents = 'none';
+                            el.style.zIndex = '1';
+                        }
+                    });
+                }, 500); // Delay to ensure injector runs first
+                // -----------------------
+
                 getPluginConfiguration().then(function (config) {
                     chkEnableCustomUI.checked = config.EnableCustomUI;
                     txtPrimaryColor.value = config.PrimaryColor || '#00a4dc';
