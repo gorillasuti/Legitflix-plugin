@@ -12,12 +12,19 @@ dotnet build -c Release
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
 
+# Verify build output first
+if (-not (Test-Path "$buildDir\$dllName")) {
+    Write-Error "Build failed: DLL not found at $buildDir\$dllName"
+    exit 1
+}
+
 Copy-Item "$buildDir\$dllName" -Destination $publishDir
-# meta.json is embedded now or sidecar? The user manual install used it. 
-# For repo, the manifest handles metadata. But sidecar meta.json is good for local.
-# Let's include meta.json if it exists in output
+Write-Host "Copied $dllName to $publishDir"
+
+# Include meta.json if it exists
 if (Test-Path "$buildDir\meta.json") {
     Copy-Item "$buildDir\meta.json" -Destination $publishDir
+    Write-Host "Copied meta.json to $publishDir"
 }
 
 # 3. Zip
@@ -32,20 +39,20 @@ $checksum = $hash.Hash.ToLower()
 
 # 5. Generate Manifest Snippet
 $manifest = @{
-    guid = "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-    name = "LegitFlix UI"
+    guid        = "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+    name        = "LegitFlix UI"
     description = "Total UI replacement for Jellyfin."
-    overview = "A complete overhaul of the Jellyfin web interface."
-    owner = "LegitFlix"
-    category = "User Interface"
-    imageUrl = "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png"
-    versions = @(
+    overview    = "A complete overhaul of the Jellyfin web interface."
+    owner       = "LegitFlix"
+    category    = "User Interface"
+    imageUrl    = "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png"
+    versions    = @(
         @{
-            version = $version
+            version   = $version
             changelog = "Initial Release"
             targetAbi = "10.8.13.0"
             sourceUrl = "https://github.com/YOUR_USER/YOUR_REPO/releases/download/v$version/$zipName"
-            checksum = $checksum
+            checksum  = $checksum
             timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
         }
     )

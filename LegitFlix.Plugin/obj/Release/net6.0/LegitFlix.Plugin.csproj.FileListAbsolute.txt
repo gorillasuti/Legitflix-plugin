@@ -11,3 +11,4 @@ C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\
 C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net6.0\LegitFlix.Plugin.pdb
 C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net6.0\ref\LegitFlix.Plugin.dll
 C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\bin\Release\net6.0\meta.json
+C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net6.0\LegitFlix.Plugin.sourcelink.json
