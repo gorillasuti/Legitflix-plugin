@@ -1,4 +1,4 @@
-$version = "1.0.0.5"
+$version = "1.0.0.6"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 $buildDir = "bin\Release\net9.0"

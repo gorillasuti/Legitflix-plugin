@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    <div data-role="page" class="type-interior pluginConfigurationPage"
+    <div data-role="page" class="type-interior pluginConfigurationPage" id="legitFlixConfigPage"
         data-require="emby-button,emby-checkbox,emby-input">
         <div data-role="content">
             <div class="content-primary">
@@ -53,7 +53,7 @@
         }
 
         (function () {
-            var view = document.querySelector('.pluginConfigurationPage');
+            var view = document.getElementById('legitFlixConfigPage');
 
             view.addEventListener('viewshow', function () {
                 var chkEnableCustomUI = view.querySelector('#chkEnableCustomUI');

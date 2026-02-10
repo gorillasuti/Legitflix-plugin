@@ -9,11 +9,11 @@
         "imageUrl": "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png",
         "versions": [
             {
-                "version": "1.0.0.5",
-                "changelog": "Added Theme Color and Series Detail Page",
+                "version": "1.0.0.6",
+                "changelog": "Fixed Config Page interaction",
                 "targetAbi": "10.11.5",
-                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.5/LegitFlix.Plugin_1.0.0.5.zip",
-                "checksum": "675e8e9adc269107ba77cb5585260c07",
+                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.6/LegitFlix.Plugin_1.0.0.6.zip",
+                "checksum": "4813c7a16a24dbe5d16bef4aa5bc9c0e",
                 "timestamp": "2026-02-10T12:07:53Z"
             }
         ]
