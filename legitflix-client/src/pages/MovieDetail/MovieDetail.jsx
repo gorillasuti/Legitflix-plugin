@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import './MovieDetail.css';
 import jellyfinService from '../../services/jellyfin';
 
@@ -35,7 +36,36 @@ const MovieDetail = () => {
         loadData();
     }, [id]);
 
-    if (loading) return <div className="lf-movie-container" style={{ color: 'white', padding: '100px', textAlign: 'center' }}>Loading...</div>;
+    if (loading) {
+        return (
+            <div className="lf-movie-container">
+                <Navbar />
+                <div style={{ position: 'relative', height: '80vh', backgroundColor: '#141414', overflow: 'hidden' }}>
+                    <SkeletonLoader width="100%" height="100%" />
+                    <div className="lf-movie-hero__content">
+                        <div style={{ width: '300px', height: '450px', flexShrink: 0 }}>
+                            <SkeletonLoader width="100%" height="100%" style={{ borderRadius: '12px' }} />
+                        </div>
+                        <div className="lf-movie-hero__info" style={{ marginLeft: '40px', flex: 1 }}>
+                            <SkeletonLoader width="60%" height="60px" style={{ marginBottom: '20px' }} />
+                            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
+                                <SkeletonLoader width="60px" height="24px" />
+                                <SkeletonLoader width="40px" height="24px" />
+                                <SkeletonLoader width="80px" height="24px" />
+                            </div>
+                            <SkeletonLoader width="100%" height="20px" style={{ marginBottom: '10px' }} />
+                            <SkeletonLoader width="90%" height="20px" style={{ marginBottom: '10px' }} />
+                            <SkeletonLoader width="95%" height="20px" style={{ marginBottom: '30px' }} />
+                            <div style={{ display: 'flex', gap: '20px' }}>
+                                <SkeletonLoader width="150px" height="50px" style={{ borderRadius: '30px' }} />
+                                <SkeletonLoader width="150px" height="50px" style={{ borderRadius: '30px' }} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     if (!movie) return <div className="lf-movie-container" style={{ color: 'white', padding: '100px', textAlign: 'center' }}>Movie not found</div>;
 
     const backdropUrl = jellyfinService.getImageUrl(movie, 'Backdrop');

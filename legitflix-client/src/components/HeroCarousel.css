@@ -131,14 +131,15 @@
     font-size: 0.95rem;
     line-height: 1.5;
     color: #d2d2d2;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 3 !important;
-    line-clamp: 3 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
     margin: 0;
+    max-height: 4.5em;
+    /* Fallback for 3 lines * 1.5 line-height */
 }
 
 /* --- ACTIONS (BUTTONS) --- */
@@ -189,6 +190,12 @@
     transition: all 0.2s;
     padding: 0;
     backdrop-filter: blur(4px);
+    outline: none;
+}
+
+.btn-hero-bookmark .material-icons,
+.hero-button-info .material-icons-outlined {
+    font-size: 24px;
 }
 
 .btn-hero-bookmark:hover,
@@ -201,6 +208,7 @@
 .btn-hero-bookmark.active {
     color: var(--clr-accent, #ff7e00);
     border-color: var(--clr-accent, #ff7e00);
+    background: rgba(255, 126, 0, 0.15);
 }
 
 /* --- INDICATORS --- */

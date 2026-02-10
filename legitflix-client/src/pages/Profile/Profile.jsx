@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import Navbar from '../../components/Navbar';
 import BannerPickerModal from '../../components/BannerPickerModal';
+import LegitFlixSettingsModal from '../../components/LegitFlixSettingsModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import './Profile.css';
 
 const TABS = [
@@ -22,6 +24,7 @@ const Profile = () => {
     const [activeTab, setActiveTab] = useState('details');
     const [bannerUrl, setBannerUrl] = useState('');
     const [showBannerPicker, setShowBannerPicker] = useState(false);
+    const [showLegitSettings, setShowLegitSettings] = useState(false);
 
     // Password state
     const [currentPw, setCurrentPw] = useState('');
@@ -141,7 +144,25 @@ const Profile = () => {
         window.location.reload();
     };
 
-    if (!user) return <div className="profile-loading">Loading Profile...</div>;
+    if (!user) {
+        return (
+            <div className="profile-page">
+                <Navbar />
+                <div className="settings-container">
+                    <SkeletonLoader type="text" width="200px" height="32px" style={{ marginBottom: '20px' }} />
+                    <div className="settings-tabs">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <SkeletonLoader key={i} width="100px" height="40px" style={{ display: 'inline-block', marginRight: '8px', borderRadius: '20px' }} />
+                        ))}
+                    </div>
+                    <SkeletonLoader width="100%" height="250px" style={{ margin: '20px 0', borderRadius: '12px' }} />
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '-60px', paddingLeft: '40px', position: 'relative' }}>
+                        <SkeletonLoader type="circle" width="120px" height="120px" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const avatarUrl = user.PrimaryImageTag
         ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&quality=90`
@@ -464,6 +485,42 @@ const Profile = () => {
                 </div>
                 <span className="material-icons link-arrow">chevron_right</span>
             </button>
+            <button
+                className="btn-link-row"
+                onClick={() => window.location.href = '/web/index.html#!/mypreferencesmenu'}
+            >
+                <span className="material-icons">settings_applications</span>
+                <div>
+                    <span>Classic User Settings</span>
+                    <span className="setting-hint">Open the default Jellyfin user preferences</span>
+                </div>
+                <span className="material-icons link-arrow">chevron_right</span>
+            </button>
+            {user.Policy?.IsAdministrator && (
+                <button
+                    className="btn-link-row"
+                    onClick={() => window.location.href = '/web/index.html#!/plugins'}
+                >
+                    <span className="material-icons">extension</span>
+                    <div>
+                        <span>Plugins</span>
+                        <span className="setting-hint">Manage installed plugins</span>
+                    </div>
+                    <span className="material-icons link-arrow">chevron_right</span>
+                </button>
+            )}
+            <div className="dropdown-divider" style={{ margin: '16px 0', borderColor: 'rgba(255,255,255,0.05)' }}></div>
+            <button
+                className="btn-link-row"
+                onClick={() => setShowLegitSettings(true)}
+            >
+                <span className="material-icons">palette</span>
+                <div>
+                    <span>LegitFlix Settings</span>
+                    <span className="setting-hint">Customize theme colors and logo</span>
+                </div>
+                <span className="material-icons link-arrow">chevron_right</span>
+            </button>
         </div>
     );
 
@@ -498,24 +555,6 @@ const Profile = () => {
                             {tab.label}
                         </button>
                     ))}
-
-                    {/* Icon buttons */}
-                    {user.Policy?.IsAdministrator && (
-                        <button
-                            className="settings-tab settings-tab-icon"
-                            onClick={() => window.location.href = '/web/index.html#!/dashboard'}
-                            title="Dashboard"
-                        >
-                            <span className="material-icons">grid_view</span>
-                        </button>
-                    )}
-                    <button
-                        className="settings-tab settings-tab-icon"
-                        onClick={() => window.location.href = '/web/index.html#!/mypreferencesmenu'}
-                        title="Classic Settings"
-                    >
-                        <span className="material-icons">article</span>
-                    </button>
 
                     {/* Logout */}
                     <button className="settings-tab settings-tab-logout" onClick={handleLogout} title="Sign Out">
@@ -561,6 +600,11 @@ const Profile = () => {
                 onClose={() => setShowBannerPicker(false)}
                 onSave={handleBannerSave}
                 userId={user?.Id}
+            />
+
+            <LegitFlixSettingsModal
+                isOpen={showLegitSettings}
+                onClose={() => setShowLegitSettings(false)}
             />
         </div>
     );

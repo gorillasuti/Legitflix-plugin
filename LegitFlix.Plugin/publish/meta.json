@@ -6,6 +6,6 @@
     "owner": "LegitFlix",
     "overview": "A complete overhaul of the Jellyfin web interface.",
     "supportUrl": "https://legitflix.eu",
-    "version": "1.0.0.20",
+    "version": "1.0.0.22",
     "imageUrl": "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png"
 }

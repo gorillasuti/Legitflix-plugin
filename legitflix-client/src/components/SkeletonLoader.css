@@ -1,60 +1,35 @@
-.lf-loader-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #141414;
-    z-index: 999999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.5s ease;
-    pointer-events: all;
+.skeleton {
+    background: #2a2a2a;
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.05) 25%,
+            rgba(255, 255, 255, 0.1) 37%,
+            rgba(255, 255, 255, 0.05) 63%);
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.4s ease infinite;
+    border-radius: 4px;
 }
 
-.lf-loader-logo {
-    width: 120px;
-    height: auto;
-    animation: lf-pulse 2s infinite ease-in-out;
-    margin-bottom: 20px;
+.skeleton-text {
+    height: 1em;
+    margin-bottom: 0.5em;
+    border-radius: 4px;
 }
 
-.lf-spinner {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto;
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: #E50914;
-    /* Accent Color */
+.skeleton-rect {
+    /* height/width controlled by props */
+    display: block;
+}
+
+.skeleton-circle {
     border-radius: 50%;
-    animation: lf-spin 1s linear infinite;
 }
 
-@keyframes lf-pulse {
+@keyframes skeleton-loading {
     0% {
-        transform: scale(1);
-        opacity: 0.8;
-    }
-
-    50% {
-        transform: scale(1.05);
-        opacity: 1;
+        background-position: 100% 50%;
     }
 
     100% {
-        transform: scale(1);
-        opacity: 0.8;
-    }
-}
-
-@keyframes lf-spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
+        background-position: 0 50%;
     }
 }

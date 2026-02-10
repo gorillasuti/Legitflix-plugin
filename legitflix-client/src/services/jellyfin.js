@@ -292,6 +292,29 @@ class JellyfinService {
         return response.data?.Items || [];
     }
 
+    async getUserViews(userId) {
+        if (!this.api) this.initialize();
+        const response = await this.api.userViews.getUserViews({ userId });
+        return response.data;
+    }
+
+    async searchItems(userId, searchTerm, includeItemTypes = [], parentId = null) {
+        if (!this.api) this.initialize();
+        const query = {
+            searchTerm: searchTerm,
+            recursive: true,
+            fields: ['PrimaryImageAspectRatio', 'ProductionYear', 'DateCreated'],
+            includeItemTypes: includeItemTypes,
+            limit: 20
+        };
+
+        if (parentId && parentId !== 'All') {
+            query.parentId = parentId;
+        }
+
+        return await this.getItems(userId, query);
+    }
+
     async quickConnect(code) {
         if (!this.api) this.initialize();
         const response = await fetch(`${this.api.basePath}/QuickConnect/Authorize?Code=${code}`, {

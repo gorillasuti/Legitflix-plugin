@@ -96,6 +96,13 @@
     padding: 2px 6px;
     font-family: inherit;
     line-height: normal;
+    text-transform: uppercase;
+}
+
+.legit-search-close {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 8px;
 }
 
 /* Categories Bar (Chips) */

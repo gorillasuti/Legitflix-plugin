@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { jellyfinService } from '../services/jellyfin';
 import SearchModal from './SearchModal/SearchModal';
+import LegitFlixSettingsModal from './LegitFlixSettingsModal';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -12,6 +13,7 @@ const Navbar = () => {
     const [user, setUser] = useState(null);
     const [showSearch, setShowSearch] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [showLegitSettings, setShowLegitSettings] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -72,14 +74,12 @@ const Navbar = () => {
                         {showMenu && (
                             <div className="nav-dropdown-menu">
                                 {/* Search row */}
-                                <div className="dropdown-search-row">
-                                    <span className="material-icons">search</span>
-                                    <span>Search</span>
-                                </div>
+                                <button onClick={() => { setShowMenu(false); setShowSearch(true); }}>
+                                    <span className="material-icons">search</span> Search
+                                </button>
 
                                 <button onClick={() => { setShowMenu(false); }}>
                                     <span className="material-icons">cast</span> Cast to Device
-                                    <span className="dropdown-badge">Search</span>
                                 </button>
                                 <button onClick={() => { setShowMenu(false); }}>
                                     <span className="material-icons">sync</span> SyncPlay
@@ -89,6 +89,20 @@ const Navbar = () => {
                                 </button>
                                 <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/dashboard'; }}>
                                     <span className="material-icons">dashboard</span> Dashboard
+                                </button>
+                                <div className="dropdown-divider"></div>
+                                <button onClick={() => { setShowMenu(false); navigate('/profile'); }}>
+                                    <span className="material-icons">settings</span> Settings
+                                </button>
+                                <button onClick={() => { setShowMenu(false); setShowLegitSettings(true); }}>
+                                    <span className="material-icons">palette</span> LegitFlix Settings
+                                </button>
+                                <button onClick={() => {
+                                    setShowMenu(false);
+                                    localStorage.removeItem('jellyfin_credentials');
+                                    window.location.reload();
+                                }}>
+                                    <span className="material-icons">logout</span> Logout
                                 </button>
                             </div>
                         )}
@@ -107,6 +121,7 @@ const Navbar = () => {
             </nav>
 
             <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
+            <LegitFlixSettingsModal isOpen={showLegitSettings} onClose={() => setShowLegitSettings(false)} />
         </>
     );
 };

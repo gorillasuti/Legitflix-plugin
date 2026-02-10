@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../services/jellyfin';
 import { useTheme } from '../context/ThemeContext';
+import SkeletonLoader from './SkeletonLoader';
 import './HeroCarousel.css';
 
 const HeroCarousel = ({ onInfoClick }) => {
@@ -141,7 +142,22 @@ const HeroCarousel = ({ onInfoClick }) => {
     };
 
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <div className="hero-carousel-container" style={{ height: '80vh', background: '#111' }}>
+                <SkeletonLoader width="100%" height="100%" />
+                <div style={{ position: 'absolute', bottom: '10%', left: '4%', width: '40%' }}>
+                    <SkeletonLoader width="60%" height="40px" style={{ marginBottom: '20px' }} />
+                    <SkeletonLoader width="100%" height="20px" style={{ marginBottom: '10px' }} />
+                    <SkeletonLoader width="90%" height="20px" style={{ marginBottom: '20px' }} />
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                        <SkeletonLoader width="150px" height="50px" style={{ borderRadius: '4px' }} />
+                        <SkeletonLoader width="50px" height="50px" style={{ borderRadius: '4px' }} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
     if (items.length === 0) return null;
 
     // Helper functions
@@ -283,7 +299,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                             className={`hero-indicator ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
                             onClick={() => goToSlide(index)}
                         >
-                            <div className="fill" key={`fill-${index}-${fillKey}`}></div>
+                            <div className="fill" key={`fill-${index}-${isActive ? fillKey : 'inactive'}`}></div>
                         </div>
                     );
                 })}

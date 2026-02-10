@@ -6,9 +6,28 @@ import './SearchModal.css';
 const SearchModal = ({ isOpen, onClose }) => {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
-    const [category, setCategory] = useState('All');
+    const [category, setCategory] = useState({ Name: 'All', Id: 'All' });
+    const [views, setViews] = useState([{ Name: 'All', Id: 'All' }]);
     const inputRef = useRef(null);
     const navigate = useNavigate();
+
+    // Fetch Views for Categories
+    useEffect(() => {
+        const fetchViews = async () => {
+            try {
+                const user = await jellyfinService.getCurrentUser();
+                if (user) {
+                    const res = await jellyfinService.getUserViews(user.Id);
+                    if (res && res.Items) {
+                        setViews([{ Name: 'All', Id: 'All' }, ...res.Items]);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch views", e);
+            }
+        };
+        fetchViews();
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -23,25 +42,18 @@ const SearchModal = ({ isOpen, onClose }) => {
                 return;
             }
 
-            // Debounce logic could be here, but for simplicity relying on user typing speed or basic delay if needed
-            // jellyfinService doesn't have a generic search method exposed yet in my service wrapper?
-            // Let's check or assume I can call api directly or add it.
-            // Using jellyfinService.api.getSearchHints for quick results
-
             try {
                 const user = await jellyfinService.getCurrentUser();
                 if (!user) return;
 
-                const includeItemTypes = category === 'Movies' ? 'Movie' :
-                    category === 'Series' ? 'Series' :
-                        category === 'People' ? 'Person' :
-                            'Movie,Series,Person,Episode'; // Default
+                // Search logic: If 'All', search globally. If specific view, restrict by ParentId.
+                const res = await jellyfinService.searchItems(
+                    user.Id,
+                    query,
+                    ['Movie', 'Series', 'Person', 'BoxSet'],
+                    category.Id
+                );
 
-                const url = `/Users/${user.Id}/Items?searchTerm=${encodeURIComponent(query)}&headers=X-Emby-Token&IncludeItemTypes=${includeItemTypes}&Limit=20&Recursive=true&Fields=PrimaryImageAspectRatio`;
-                // Better to use SearchHints endpoint if available, but Items search is standard.
-                // jellyfinService.api is accessible.
-
-                const res = await jellyfinService.api.fetch(url);
                 setResults(res.Items || []);
 
             } catch (e) {
@@ -59,8 +71,9 @@ const SearchModal = ({ isOpen, onClose }) => {
         onClose();
         if (item.Type === 'Movie') navigate(`/movie/${item.Id}`);
         else if (item.Type === 'Series') navigate(`/series/${item.Id}`);
-        else if (item.Type === 'Episode') navigate(`/series/${item.SeriesId}/episodes/${item.Id}`); // Assuming route logic
-        else navigate(`/details/${item.Id}`); // Fallback
+        else if (item.Type === 'Person') navigate(`/person/${item.Id}`); // Assuming person route
+        else if (item.Type === 'BoxSet') navigate(`/collections/${item.Id}`);
+        else navigate(`/details/${item.Id}`);
     };
 
     return (
@@ -71,24 +84,25 @@ const SearchModal = ({ isOpen, onClose }) => {
                     <input
                         ref={inputRef}
                         className="legit-search-input"
-                        placeholder="Search for movies, shows, people..."
+                        placeholder="Search..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
                     />
                     <div className="legit-search-actions" onClick={onClose}>
-                        <span className="legit-search-esc">ESC</span>
+                        <span className="legit-search-esc">esc</span>
+                        <span className="legit-search-close">Close</span>
                     </div>
                 </div>
 
                 <div className="legit-search-categories">
-                    {['All', 'Movies', 'Series', 'People'].map(cat => (
+                    {views.map(view => (
                         <div
-                            key={cat}
-                            className={`legit-search-category-pill ${category === cat ? 'active' : ''}`}
-                            onClick={() => setCategory(cat)}
+                            key={view.Id}
+                            className={`legit-search-category-pill ${category.Id === view.Id ? 'active' : ''}`}
+                            onClick={() => setCategory(view)}
                         >
-                            {cat}
+                            {view.Name}
                         </div>
                     ))}
                 </div>
@@ -102,12 +116,17 @@ const SearchModal = ({ isOpen, onClose }) => {
                         <div key={item.Id} className="legit-search-result-item" onClick={() => handleItemClick(item)}>
                             <div
                                 className="legit-result-thumb"
-                                style={{ backgroundImage: `url(${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=60&fillWidth=40&quality=90)` }}
-                            ></div>
+                                style={{
+                                    backgroundImage: `url(${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=60&fillWidth=40&quality=90)`,
+                                    backgroundColor: '#222'
+                                }}
+                            >
+                                {!item.ImageTags?.Primary && <span className="material-icons legit-result-icon-fallback">movie</span>}
+                            </div>
                             <div className="legit-result-info">
                                 <div className="legit-result-title">{item.Name}</div>
                                 <div className="legit-result-meta">
-                                    <span className="legit-result-tag">{item.Type}</span>
+                                    <span className="legit-result-tag">{item.Type?.toUpperCase()}</span>
                                     {item.ProductionYear && <span>{item.ProductionYear}</span>}
                                 </div>
                             </div>
