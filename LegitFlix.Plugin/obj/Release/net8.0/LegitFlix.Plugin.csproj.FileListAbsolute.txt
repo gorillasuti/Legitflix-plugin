@@ -1,6 +1,0 @@
-C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net8.0\LegitFlix.Plugin.csproj.AssemblyReference.cache
-C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net8.0\LegitFlix.Plugin.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net8.0\LegitFlix.Plugin.AssemblyInfoInputs.cache
-C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net8.0\LegitFlix.Plugin.AssemblyInfo.cs
-C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net8.0\LegitFlix.Plugin.csproj.CoreCompileInputs.cache
-C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\LegitFlix.Plugin\obj\Release\net8.0\LegitFlix.Plugin.sourcelink.json
