@@ -9,7 +9,7 @@ import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
 class JellyfinService {
     constructor() {
         this.jellyfin = new Jellyfin({
-            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.12' },
+            clientInfo: { name: 'LegitFlix Client', version: '1.0.0.13' },
             deviceInfo: { name: 'LegitFlix Web', id: 'legitflix-web' }
         });
         this.api = null;
@@ -160,6 +160,18 @@ class JellyfinService {
             includeItemTypes: ['Movie', 'Episode']
         });
         return response; // getItems already unwraps .data
+    }
+    async markFavorite(userId, itemId, isFavorite) {
+        if (!this.api) this.initialize();
+        // Uses updateUserItemRating for favorites (likes) check SDK or network tab
+        // Actually SDK has markFavoriteItem / unmarkFavoriteItem usually, or updateUserItemRating
+        // definition shows: updateUserItemRating(itemId, userId, likes)
+        // Also markFavoriteItem(itemId, userId)
+        if (isFavorite) {
+            return await this.api.userLibrary.markFavoriteItem({ userId, itemId });
+        } else {
+            return await this.api.userLibrary.unmarkFavoriteItem({ userId, itemId });
+        }
     }
 }
 

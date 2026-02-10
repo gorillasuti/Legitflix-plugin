@@ -182,6 +182,12 @@
     animation: fillProgress 8s linear;
 }
 
+.hero-indicator.completed .fill {
+    width: 100%;
+    height: 100%;
+    background: white;
+}
+
 @keyframes fillProgress {
     from {
         width: 0;
