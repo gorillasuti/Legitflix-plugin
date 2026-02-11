@@ -10,6 +10,7 @@ import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import './Home.css';
 import { Button } from '../../components/ui/button';
+import Footer from '../../components/Footer';
 
 const Home = () => {
     const [libraries, setLibraries] = useState([]);
@@ -401,6 +402,8 @@ const Home = () => {
                                 onCardClick={(item) => openModal(item.Id)}
                             />
                         ))}
+
+                        <Footer />
                     </>
                 )}
             </div>

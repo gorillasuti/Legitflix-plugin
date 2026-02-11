@@ -69,14 +69,10 @@
 
 .row-arrow.left {
     left: -4%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0) 100%);
-    border-radius: 0 6px 6px 0;
 }
 
 .row-arrow.right {
     right: -4%;
-    background: linear-gradient(to left, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0) 100%);
-    border-radius: 6px 0 0 6px;
 }
 
 .row-arrow:hover {
