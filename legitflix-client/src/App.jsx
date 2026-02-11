@@ -5,6 +5,8 @@ import Home from './pages/Home/Home';
 import SeriesDetail from './pages/SeriesDetail/SeriesDetail';
 import MovieDetail from './pages/MovieDetail/MovieDetail';
 import Profile from './pages/Profile/Profile';
+import LegacyRouteHandler from './components/LegacyRouteHandler';
+import ItemRedirect from './pages/ItemRedirect/ItemRedirect';
 import SkeletonLoader from './components/SkeletonLoader'; // Global loader? Or page level?
 // import './App.css'; // Use index.css primarily
 
@@ -31,10 +33,12 @@ function AppContent() {
         />
       )}
       <Router>
+        <LegacyRouteHandler />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/series/:id" element={<SeriesDetail />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
+          <Route path="/item/:id" element={<ItemRedirect />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Home />} />
         </Routes>
