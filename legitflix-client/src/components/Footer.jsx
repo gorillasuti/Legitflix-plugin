@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="legitflix-footer">
             <div className="footer-content">
                 <div className="footer-logo">
-                    <img src={getDefaultLogo(config.accentColor)} alt={config.appName} />
+                    <img className="footer-logo-img" src={getDefaultLogo(config.accentColor)} alt={config.appName} />
                 </div>
                 <div className="footer-divider"></div>
                 <div className="footer-author">

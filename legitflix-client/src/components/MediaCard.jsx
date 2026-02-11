@@ -160,38 +160,40 @@ const MediaCard = ({ item, onClick }) => {
             >
                 <div className="hover-overlay-gradient"></div>
                 <div className="hover-overlay-content">
-                    <h3 className="hover-title">{d.Name}</h3>
+                    <div className="hover-info-group">
+                        <h3 className="hover-title">{d.Name}</h3>
 
-                    <div className="hover-meta-row">
-                        {rating && (
-                            <span className="hover-rating">
-                                {rating} <span className="material-icons star-icon">star</span>
-                                {voteCount && <span className="hover-rating-count">{voteCount}</span>}
-                            </span>
-                        )}
-                        <span className="hover-meta-separator">•</span>
-                        <div className="hover-stats">
-                            {d.Type === 'Series' ? (
-                                <>
-                                    {seasons ? <span>{seasons} Seasons</span> : null}
-                                    {seasons && episodes ? <span> • </span> : null}
-                                    {episodes ? <span>{episodes} Episodes</span> : null}
-                                </>
-                            ) : (
-                                <span>{d.ProductionYear}</span>
+                        <div className="hover-meta-row">
+                            {rating && (
+                                <span className="hover-rating">
+                                    {rating} <span className="material-icons star-icon">star</span>
+                                    {voteCount && <span className="hover-rating-count">{voteCount}</span>}
+                                </span>
                             )}
-                            {subDub && (
-                                <>
-                                    <span> • </span>
-                                    <span style={{ color: '#fff', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.3)', padding: '0 4px', borderRadius: '3px', fontSize: '0.7rem' }}>
-                                        {subDub}
-                                    </span>
-                                </>
-                            )}
+                            <span className="hover-meta-separator">•</span>
+                            <div className="hover-stats">
+                                {d.Type === 'Series' ? (
+                                    <>
+                                        {seasons ? <span>{seasons} Seasons</span> : null}
+                                        {seasons && episodes ? <span> • </span> : null}
+                                        {episodes ? <span>{episodes} Episodes</span> : null}
+                                    </>
+                                ) : (
+                                    <span>{d.ProductionYear}</span>
+                                )}
+                                {subDub && (
+                                    <>
+                                        <span> • </span>
+                                        <span style={{ color: '#fff', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.3)', padding: '0 4px', borderRadius: '3px', fontSize: '0.7rem' }}>
+                                            {subDub}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    {d.Overview && <p className="hover-desc">{d.Overview}</p>}
+                        {d.Overview && <p className="hover-desc">{d.Overview}</p>}
+                    </div>
 
                     <div className="hover-actions">
                         <button className="btn-action-icon play-icon" title="Play" onClick={(e) => { e.stopPropagation(); onClick && onClick(); }}>

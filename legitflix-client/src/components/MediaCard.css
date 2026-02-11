@@ -79,22 +79,20 @@
     background-size: cover;
     background-position: center;
     /* Animation for the "pop" effect */
-    animation: cardPopIn 0.15s ease-out forwards;
+    animation: cardFadeIn 0.15s ease forwards;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     /* Push content to bottom */
 }
 
-@keyframes cardPopIn {
+@keyframes cardFadeIn {
     from {
         opacity: 0;
-        transform: scale(0.95);
     }
 
     to {
         opacity: 1;
-        transform: scale(1);
     }
 }
 
@@ -117,8 +115,16 @@
     padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
     height: 100%;
+    /* No gap here, as we split into top group and bottom actions */
+}
+
+.hover-info-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    /* Ensure left alignment */
 }
 
 .hover-title {
@@ -127,7 +133,7 @@
     font-weight: 700;
     line-height: 1.2;
     color: #fff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    /* Removed text-shadow */
     text-align: left;
 }
 
@@ -180,7 +186,7 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.4;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    /* Removed text-shadow */
     text-align: left;
 }
 
