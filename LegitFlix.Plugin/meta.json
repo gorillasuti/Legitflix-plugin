@@ -5,7 +5,7 @@
     "description": "Total UI replacement for Jellyfin.",
     "owner": "Legitflix",
     "overview": "A complete overhaul of the Jellyfin web interface.",
-    "supportUrl": "https://legitflix.eu",
+    "supportUrl": "https://stream.legitflix.eu",
     "version": "1.0.0.28",
     "imageUrl": "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png"
 }
