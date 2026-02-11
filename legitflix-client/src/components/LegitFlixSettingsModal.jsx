@@ -25,6 +25,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
     const [enableJellyseerr, setEnableJellyseerr] = useState(config.enableJellyseerr !== false);
     const [jellyseerrUrl, setJellyseerrUrl] = useState(config.jellyseerrUrl || 'https://request.legitflix.eu');
     const [showLibraryTitles, setShowLibraryTitles] = useState(config.showLibraryTitles !== false);
+    const [showNavbarRequests, setShowNavbarRequests] = useState(config.showNavbarRequests !== false);
     const [customHex, setCustomHex] = useState('');
 
     useEffect(() => {
@@ -36,6 +37,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
             setEnableJellyseerr(config.enableJellyseerr !== false);
             setJellyseerrUrl(config.jellyseerrUrl || 'https://request.legitflix.eu');
             setShowLibraryTitles(config.showLibraryTitles !== false);
+            setShowNavbarRequests(config.showNavbarRequests !== false);
             setSearchQuery('');
 
             if (!PRESET_COLORS.some(c => c.value === config.accentColor)) {
@@ -65,7 +67,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
             showNavbarCategories: showCategories,
             enableJellyseerr,
             jellyseerrUrl,
-            showLibraryTitles
+            showLibraryTitles,
+            showNavbarRequests
         });
         onClose();
     };
@@ -78,6 +81,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
         setEnableJellyseerr(true);
         setJellyseerrUrl('https://request.legitflix.eu');
         setShowLibraryTitles(true);
+        setShowNavbarRequests(true);
     };
 
     // --- Search Logic ---
@@ -214,6 +218,30 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
                                 type="checkbox"
                                 checked={showCategories}
                                 onChange={(e) => setShowCategories(e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'navbarRequests',
+            tab: 'navigation',
+            label: 'Show Requests in Navbar',
+            keywords: ['navigation', 'navbar', 'requests', 'jellyseerr'],
+            render: () => (
+                <div className="setting-section" key="navbarRequests">
+                    <div className="setting-row">
+                        <div>
+                            <h3 className="setting-title">Show Requests in Navbar</h3>
+                            <p className="setting-desc">Display the "Requests" link next to categories in the navbar</p>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={showNavbarRequests}
+                                onChange={(e) => setShowNavbarRequests(e.target.checked)}
                             />
                             <span className="slider"></span>
                         </label>

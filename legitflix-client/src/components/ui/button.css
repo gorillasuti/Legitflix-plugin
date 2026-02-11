@@ -1,0 +1,119 @@
+/* ================================================
+   LF Button — Global Button Component
+   Uses var(--clr-accent) for theme integration.
+   ================================================ */
+
+.lf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.2;
+    outline: none;
+}
+
+.lf-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.lf-btn .material-icons {
+    font-size: 20px;
+}
+
+/* ---- Variants ---- */
+
+/* Primary: Solid accent color */
+.lf-btn--primary {
+    background: var(--clr-accent, #ff7e00);
+    color: #fff;
+}
+
+.lf-btn--primary:hover {
+    filter: brightness(1.1);
+}
+
+/* Ring Hover: Accent bg + ring outline on hover */
+.lf-btn--ring-hover {
+    background: var(--clr-accent, #ff7e00);
+    color: #fff;
+    box-shadow: 0 0 0 0 transparent;
+}
+
+.lf-btn--ring-hover:hover {
+    box-shadow: 0 0 0 2px #141414, 0 0 0 4px var(--clr-accent, #ff7e00);
+}
+
+/* Glass / Outline */
+.lf-btn--glass {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e5e5e5;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.lf-btn--glass:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+/* Ghost: No bg, subtle hover */
+.lf-btn--ghost {
+    background: transparent;
+    color: #dadada;
+}
+
+.lf-btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+/* Destructive */
+.lf-btn--destructive {
+    background: #e53e3e;
+    color: #fff;
+}
+
+.lf-btn--destructive:hover {
+    filter: brightness(1.1);
+}
+
+/* Outline (border + transparent bg) */
+.lf-btn--outline {
+    background: transparent;
+    color: #e5e5e5;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.lf-btn--outline:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+}
+
+/* ---- Sizes ---- */
+
+.lf-btn--sm {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+}
+
+.lf-btn--lg {
+    padding: 14px 32px;
+    font-size: 1.05rem;
+}
+
+.lf-btn--icon {
+    padding: 8px;
+    width: 40px;
+    height: 40px;
+}

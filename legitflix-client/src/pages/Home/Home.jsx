@@ -89,6 +89,16 @@ const Home = () => {
             <div className="home-content-container" style={{ marginTop: '-150px', position: 'relative', zIndex: 10 }}>
                 {loading ? (
                     <div style={{ padding: '0 4.2%', marginTop: '40px' }}>
+                        {/* Browse Libraries Row */}
+                        <SkeletonLoader width="180px" height="24px" style={{ marginBottom: '20px' }} />
+                        <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '50px' }}>
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <div key={i} style={{ flex: '0 0 160px' }}>
+                                    <SkeletonLoader width="100%" height="240px" style={{ borderRadius: '8px' }} />
+                                </div>
+                            ))}
+                        </div>
+
                         {/* Continue Watching Row */}
                         <SkeletonLoader width="220px" height="24px" style={{ marginBottom: '20px' }} />
                         <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '50px' }}>
@@ -99,6 +109,15 @@ const Home = () => {
                                     <SkeletonLoader width="40%" height="12px" />
                                 </div>
                             ))}
+                        </div>
+
+                        {/* Promo Section */}
+                        <div style={{ marginBottom: '50px' }}>
+                            <SkeletonLoader width="100%" height="300px" style={{ borderRadius: '12px', marginBottom: '15px' }} />
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <SkeletonLoader width="50%" height="180px" style={{ borderRadius: '12px' }} />
+                                <SkeletonLoader width="50%" height="180px" style={{ borderRadius: '12px' }} />
+                            </div>
                         </div>
 
                         {/* Latest Media Row */}

@@ -3,6 +3,20 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
+// Map preset accent colors → matching default logo
+const ACCENT_LOGO_MAP = {
+    '#ff7e00': '/default-logo-orange.png',
+    '#00aaff': '/default-logo-blue.png',
+    '#00ff7e': '/default-logo-green.png',
+    '#ff3333': '/default-logo-red.png',
+    '#aa00ff': '/default-logo-purple.png',
+    '#ff00aa': '/default-logo-purple.png',  // Pink falls back to purple
+};
+
+export const getDefaultLogo = (accentColor) => {
+    return ACCENT_LOGO_MAP[accentColor?.toLowerCase()] || '/default-logo-orange.png';
+};
+
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
@@ -19,6 +33,7 @@ export const ThemeProvider = ({ children }) => {
         enableBackdrops: true,
         accentColor: '#ff7e00',
         showNavbarCategories: true,
+        showNavbarRequests: true,
         showLibraryTitles: true,
     });
 

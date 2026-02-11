@@ -13,7 +13,7 @@
 }
 
 .navbar.scrolled {
-    background-color: #141414;
+    background-color: var(--clr-bg-nav, #141414);
     /* Solid dark when scrolled */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
@@ -25,7 +25,6 @@
     align-items: center;
     height: 100%;
     padding: 0 20px;
-    max-width: 1600px;
     margin: 0 auto;
 }
 
@@ -33,14 +32,14 @@
 .nav-start {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 36px;
 }
 
 .nav-logo {
     cursor: pointer;
     display: flex;
     align-items: center;
-    height: 40px;
+    height: 25px;
     /* Constrain height */
 }
 
@@ -55,8 +54,7 @@
     font-family: 'Outfit', sans-serif;
     font-size: 1.5rem;
     font-weight: 800;
-    color: #f47521;
-    /* Orange accent */
+    color: var(--clr-accent, #f47521);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -64,13 +62,13 @@
 /* Links (Primary & Secondary) */
 .nav-links {
     display: flex;
-    gap: 20px;
+    gap: 24px;
 }
 
 .nav-link {
     color: #dadada;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 400;
     cursor: pointer;
     transition: color 0.2s ease;
     display: flex;
@@ -81,8 +79,23 @@
 }
 
 .nav-link:hover {
-    color: #f47521;
-    /* Orange hover */
+    color: var(--clr-accent, #f47521);
+}
+
+/* When scrolled, hovering a nav-link gets a full-height accent bg */
+.navbar.scrolled .nav-link {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;
+    margin: 0 -12px;
+    border-radius: 0;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.navbar.scrolled .nav-link:hover {
+    background-color: var(--clr-accent, #f47521);
+    color: #fff;
 }
 
 .nav-link.dropdown-trigger {
@@ -167,7 +180,7 @@
 }
 
 .nav-icon-btn:hover {
-    color: #f47521;
+    color: var(--clr-accent, #f47521);
 }
 
 .nav-icon-btn .material-icons {
@@ -267,7 +280,7 @@
 }
 
 .user-status {
-    color: #f47521;
+    color: var(--clr-accent, #f47521);
     font-size: 0.8rem;
     font-weight: 600;
     display: flex;
@@ -275,10 +288,8 @@
     gap: 4px;
 }
 
-.user-status::before {
-    content: '★';
-    /* Simple crown/star placeholder */
-    font-size: 12px;
+.user-status .material-icons {
+    font-size: 14px;
 }
 
 .edit-icon {
@@ -344,6 +355,26 @@
     height: 1px;
     background: #333;
     margin: 8px 0;
+}
+
+/* Divider between categories and Requests in nav-start */
+.nav-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+/* Section labels inside profile dropdown */
+.menu-section-label {
+    padding: 8px 16px 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255, 255, 255, 0.35);
+    pointer-events: none;
 }
 
 /* Responsive adjustments */

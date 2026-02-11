@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
+import { useTheme, getDefaultLogo } from '../context/ThemeContext';
 import { jellyfinService } from '../services/jellyfin';
 import SearchModal from './SearchModal/SearchModal';
 import LegitFlixSettingsModal from './LegitFlixSettingsModal';
+import QuickConnectModal from './QuickConnectModal';
+import ProfileModal from './ProfileModal';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -15,6 +17,9 @@ const Navbar = () => {
     const [showSearch, setShowSearch] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [showLegitSettings, setShowLegitSettings] = useState(false);
+    const [showQuickConnect, setShowQuickConnect] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [hasEnhancedPlugin, setHasEnhancedPlugin] = useState(false);
     const navigate = useNavigate();
 
     // Fetch User and Libraries
@@ -55,62 +60,76 @@ const Navbar = () => {
         return () => document.removeEventListener('click', closeMenu);
     }, []);
 
+    // Detect Jellyfin Enhanced plugin
+    useEffect(() => {
+        const detectEnhanced = async () => {
+            try {
+                const res = await fetch(`${jellyfinService.api.basePath}/Plugins`, {
+                    headers: { 'X-Emby-Authorization': jellyfinService.api.authHeader },
+                });
+                if (res.ok) {
+                    const plugins = await res.json();
+                    const found = plugins.some(p =>
+                        p.Name?.toLowerCase().includes('enhanced') ||
+                        p.Name?.toLowerCase().includes('random button')
+                    );
+                    setHasEnhancedPlugin(found);
+                }
+            } catch (e) {
+                // Plugin detection failed - not critical
+            }
+        };
+        detectEnhanced();
+    }, []);
+
+    const isAdmin = user?.Policy?.IsAdministrator;
 
     return (
         <>
             <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
                 <div className="nav-content">
-                    {/* Left Section: Logo & Primary Links */}
+                    {/* Left Section: Logo & Categories */}
                     <div className="nav-start">
                         <div className="nav-logo" onClick={() => navigate('/')}>
-                            {config.logoType === 'image' && config.logoUrl ? (
+                            {config.logoUrl ? (
                                 <img src={config.logoUrl} alt={config.appName} />
                             ) : (
-                                <span className="logo-text">{config.appName}</span>
+                                <img src={getDefaultLogo(config.accentColor)} alt={config.appName} />
                             )}
                         </div>
+
                         <div className="nav-links primary-links">
                             <span className="nav-link" onClick={() => navigate('/')}>Home</span>
-                            <span className="nav-link">New</span>
-                            <span className="nav-link">Popular</span>
-                            <span className="nav-link">Simulcast</span>
+                            {/* Real Jellyfin library categories */}
+                            {config.showNavbarCategories && libraries.map(lib => (
+                                <span
+                                    key={lib.Id}
+                                    className="nav-link"
+                                    onClick={() => navigate(`/library/${lib.Id}`)}
+                                >
+                                    {lib.Name}
+                                </span>
+                            ))}
+
+                            {/* Divider + Requests — only if setting enabled */}
+                            {config.enableJellyseerr && config.jellyseerrUrl && config.showNavbarRequests !== false && (
+                                <>
+                                    <span className="nav-divider" />
+                                    <a
+                                        href={config.jellyseerrUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="nav-link"
+                                    >
+                                        Requests
+                                    </a>
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right Section: Secondary Links & Actions */}
+                    {/* Right Section: Actions */}
                     <div className="nav-end">
-                        {/* Browse / Categories Dropdown */}
-                        {config.showNavbarCategories && libraries.length > 0 && (
-                            <div className="nav-item-dropdown">
-                                <span className="nav-link dropdown-trigger">
-                                    Browse <span className="material-icons">expand_more</span>
-                                </span>
-                                <div className="dropdown-content">
-                                    {libraries.map(lib => (
-                                        <div
-                                            key={lib.Id}
-                                            className="dropdown-item"
-                                            onClick={() => navigate(`/library/${lib.Id}`)}
-                                        >
-                                            {lib.Name}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Interactive conditional links */}
-                        {config.enableJellyseerr && config.jellyseerrUrl && (
-                            <a
-                                href={config.jellyseerrUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="nav-link secondary-link"
-                            >
-                                Requests
-                            </a>
-                        )}
-
                         <div className="nav-actions">
                             <button className="nav-icon-btn" onClick={() => setShowSearch(true)} title="Search">
                                 <span className="material-icons">search</span>
@@ -119,6 +138,13 @@ const Navbar = () => {
                             <button className="nav-icon-btn" onClick={() => navigate('/favorites')} title="Watchlist">
                                 <span className="material-icons">bookmark_border</span>
                             </button>
+
+                            {/* Random button (Jellyfin Enhanced) */}
+                            {hasEnhancedPlugin && (
+                                <button className="nav-icon-btn" onClick={() => { window.location.href = '/web/index.html#!/randomitems'; }} title="Random">
+                                    <span className="material-icons">shuffle</span>
+                                </button>
+                            )}
 
                             {/* User Profile & Menu */}
                             <div
@@ -145,7 +171,7 @@ const Navbar = () => {
                                     <div className="nav-dropdown-menu usermenu">
                                         {/* User Header */}
                                         {user && (
-                                            <div className="user-menu-header" onClick={() => { setShowMenu(false); navigate('/profile'); }}>
+                                            <div className="user-menu-header" onClick={() => { setShowMenu(false); setShowProfileModal(true); }}>
                                                 <div className="header-avatar-container">
                                                     <img
                                                         src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90`}
@@ -155,34 +181,70 @@ const Navbar = () => {
                                                 </div>
                                                 <div className="user-menu-info">
                                                     <span className="user-name">{user.Name}</span>
-                                                    <span className="user-status">Premium Member</span>
+                                                    <span className="user-status">
+                                                        <span className="material-icons">{isAdmin ? 'shield' : 'person'}</span>
+                                                        {isAdmin ? 'Administrator' : 'User'}
+                                                    </span>
                                                 </div>
                                                 <span className="material-icons edit-icon">edit</span>
                                             </div>
                                         )}
 
-                                        <div className="dropdown-divider"></div>
-
-                                        <button onClick={() => { setShowMenu(false); navigate('/profile'); }}>
-                                            <span className="material-icons">switch_account</span> Switch Profile
+                                        {/* General */}
+                                        <div className="menu-section-label">General</div>
+                                        <button onClick={() => { setShowMenu(false); setShowSearch(true); }}>
+                                            <span className="material-icons">search</span> Search
                                         </button>
-                                        <button onClick={() => { setShowMenu(false); navigate('/profile'); }}>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/remotecontrol'; }}>
+                                            <span className="material-icons">cast</span> Cast to Device
+                                        </button>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/syncplay'; }}>
+                                            <span className="material-icons">sync</span> SyncPlay
+                                        </button>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/playback'; }}>
+                                            <span className="material-icons">play_circle</span> Player
+                                        </button>
+                                        {hasEnhancedPlugin && (
+                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/randomitems'; }}>
+                                                <span className="material-icons">shuffle</span> Random
+                                            </button>
+                                        )}
+
+                                        {/* Administration (admin only) */}
+                                        {isAdmin && (
+                                            <>
+                                                <div className="dropdown-divider"></div>
+                                                <div className="menu-section-label">Administration</div>
+                                                <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/dashboard'; }}>
+                                                    <span className="material-icons">dashboard</span> Dashboard
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {/* Preferences */}
+                                        <div className="dropdown-divider"></div>
+                                        <div className="menu-section-label">Preferences</div>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/mypreferencesmenu'; }}>
                                             <span className="material-icons">settings</span> Settings
                                         </button>
                                         <button onClick={() => { setShowMenu(false); setShowLegitSettings(true); }}>
                                             <span className="material-icons">palette</span> Theme Settings
                                         </button>
-                                        {user && user.Policy && user.Policy.IsAdministrator && (
-                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/dashboard'; }}>
-                                                <span className="material-icons">dashboard</span> Dashboard
+                                        {hasEnhancedPlugin && (
+                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/configurationpage?name=JellyfinEnhanced'; }}>
+                                                <span className="material-icons">auto_awesome</span> Jellyfin Enhanced
                                             </button>
                                         )}
-                                        <button onClick={() => { setShowMenu(false); navigate('/history'); }}>
-                                            <span className="material-icons">history</span> History
-                                        </button>
 
+                                        {/* Account */}
                                         <div className="dropdown-divider"></div>
-
+                                        <div className="menu-section-label">Account</div>
+                                        <button onClick={() => { setShowMenu(false); setShowQuickConnect(true); }}>
+                                            <span className="material-icons">qr_code</span> Quick Connect
+                                        </button>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/selectserver'; }}>
+                                            <span className="material-icons">dns</span> Change Server
+                                        </button>
                                         <button onClick={() => {
                                             setShowMenu(false);
                                             localStorage.removeItem('jellyfin_credentials');
@@ -200,6 +262,8 @@ const Navbar = () => {
 
             <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
             <LegitFlixSettingsModal isOpen={showLegitSettings} onClose={() => setShowLegitSettings(false)} />
+            <QuickConnectModal isOpen={showQuickConnect} onClose={() => setShowQuickConnect(false)} />
+            <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} user={user} />
         </>
     );
 };

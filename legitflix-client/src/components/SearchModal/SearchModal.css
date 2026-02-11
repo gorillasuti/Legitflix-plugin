@@ -114,6 +114,7 @@
     /* Hide scrollbar */
     scrollbar-width: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
 }
 
 .legit-search-categories::-webkit-scrollbar {
