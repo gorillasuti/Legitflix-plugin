@@ -50,7 +50,7 @@ const Home = () => {
                             sortOrder: ['Descending'],
                             imageTypeLimit: 1,
                             enableImageTypes: ['Primary', 'Backdrop', 'Thumb', 'Logo'],
-                            fields: ['Overview', 'ProductionYear', 'ImageTags']
+                            fields: ['Overview', 'ProductionYear', 'ImageTags', 'OfficialRating', 'CommunityRating', 'Genres']
                         });
                     };
 
@@ -268,12 +268,34 @@ const Home = () => {
                                             ) : (
                                                 <h2 className="promo2-hero-title">{promoItems[0].Name}</h2>
                                             )}
+                                            <div className="promo2-meta-line">
+                                                <span className="promo2-badge">{promoItems[0].OfficialRating || '13+'}</span>
+                                                {promoItems[0].ProductionYear && (
+                                                    <>
+                                                        <span className="promo2-meta-dot">•</span>
+                                                        <span className="promo2-meta-text">{promoItems[0].ProductionYear}</span>
+                                                    </>
+                                                )}
+                                                {promoItems[0].Genres && promoItems[0].Genres.length > 0 && (
+                                                    <>
+                                                        <span className="promo2-meta-dot">•</span>
+                                                        <span className="promo2-meta-text">{promoItems[0].Genres.slice(0, 3).join(', ')}</span>
+                                                    </>
+                                                )}
+                                                {promoItems[0].CommunityRating && (
+                                                    <>
+                                                        <span className="promo2-meta-dot">•</span>
+                                                        <span className="promo2-meta-text">⭐ {promoItems[0].CommunityRating.toFixed(1)}</span>
+                                                    </>
+                                                )}
+                                            </div>
                                             {promoItems[0].Overview && (
                                                 <p className="promo2-hero-desc">{promoItems[0].Overview}</p>
                                             )}
                                             <Button
                                                 variant="ringHover"
                                                 size="lg"
+                                                className="promo2-btn"
                                                 onClick={(e) => { e.stopPropagation(); navigate(`/details/${promoItems[0].Id}`); }}
                                             >
                                                 WATCH NOW
@@ -287,12 +309,40 @@ const Home = () => {
                                             {promoItems.slice(1, 3).map(item => (
                                                 <div key={item.Id} className="promo2-card" onClick={() => openModal(item.Id)}>
                                                     <div className="promo2-card-text">
-                                                        <h3 className="promo2-card-title">{item.Name}</h3>
-                                                        <span className="promo2-card-year">{item.ProductionYear}</span>
+                                                        {item.ImageTags?.Logo ? (
+                                                            <img
+                                                                src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Logo/0?maxWidth=220&quality=90`}
+                                                                className="promo2-card-logo"
+                                                                alt={item.Name}
+                                                            />
+                                                        ) : (
+                                                            <h3 className="promo2-card-title">{item.Name}</h3>
+                                                        )}
+                                                        <div className="promo2-meta-line promo2-meta-line--card">
+                                                            <span className="promo2-badge">{item.OfficialRating || '13+'}</span>
+                                                            {item.ProductionYear && (
+                                                                <>
+                                                                    <span className="promo2-meta-dot">•</span>
+                                                                    <span className="promo2-meta-text">{item.ProductionYear}</span>
+                                                                </>
+                                                            )}
+                                                            {item.Genres && item.Genres.length > 0 && (
+                                                                <>
+                                                                    <span className="promo2-meta-dot">•</span>
+                                                                    <span className="promo2-meta-text">{item.Genres.slice(0, 2).join(', ')}</span>
+                                                                </>
+                                                            )}
+                                                            {item.CommunityRating && (
+                                                                <>
+                                                                    <span className="promo2-meta-dot">•</span>
+                                                                    <span className="promo2-meta-text">⭐ {item.CommunityRating.toFixed(1)}</span>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                         <p className="promo2-card-desc">{item.Overview}</p>
                                                         <Button
                                                             variant="ringHover"
-                                                            className="promo2-start-btn"
+                                                            className="promo2-btn"
                                                             onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}
                                                         >
                                                             START WATCHING
