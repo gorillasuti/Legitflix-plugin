@@ -45,7 +45,7 @@ const Home = () => {
                         return jellyfinService.getItems(user.Id, {
                             limit: 20,
                             recursive: true,
-                            includeItemTypes: ['Movie', 'Series'],
+                            includeItemTypes: config.promoMediaTypes || ['Movie', 'Series'],
                             sortBy: ['DateCreated'],
                             sortOrder: ['Descending'],
                             imageTypeLimit: 1,

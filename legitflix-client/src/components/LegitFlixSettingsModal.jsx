@@ -30,6 +30,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [showLibraryTitles, setShowLibraryTitles] = useState(config.showLibraryTitles !== false);
     const [showNavbarRequests, setShowNavbarRequests] = useState(config.showNavbarRequests !== false);
     const [customHex, setCustomHex] = useState('');
+    const [contentTypes, setContentTypes] = useState(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
 
     useEffect(() => {
         if (isOpen) {
@@ -41,6 +42,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setJellyseerrUrl(config.jellyseerrUrl || 'https://request.legitflix.eu');
             setShowLibraryTitles(config.showLibraryTitles !== false);
             setShowNavbarRequests(config.showNavbarRequests !== false);
+            setContentTypes(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
             setSearchQuery('');
 
             if (!PRESET_COLORS.some(c => c.value === config.accentColor)) {
@@ -63,6 +65,11 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     };
 
     const handleSave = () => {
+        // Compute media type arrays from checkboxes
+        const enabledTypes = Object.entries(contentTypes).filter(([, v]) => v).map(([k]) => k);
+        const heroStr = enabledTypes.length > 0 ? enabledTypes.join(',') : 'Movie,Series';
+        const promoArr = enabledTypes.length > 0 ? enabledTypes : ['Movie', 'Series'];
+
         updateConfig({
             accentColor,
             logoUrl,
@@ -71,7 +78,10 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             enableJellyseerr,
             jellyseerrUrl,
             showLibraryTitles,
-            showNavbarRequests
+            showNavbarRequests,
+            contentTypeFilters: contentTypes,
+            heroMediaTypes: heroStr,
+            promoMediaTypes: promoArr,
         });
         onClose();
     };
@@ -85,6 +95,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         setJellyseerrUrl('https://request.legitflix.eu');
         setShowLibraryTitles(true);
         setShowNavbarRequests(true);
+        setContentTypes({ Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
     };
 
     // --- Search Logic ---
@@ -197,38 +208,29 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                             </div>
                         </div>
 
-                        <div className="setting-row">
-                            <div style={{ flex: 1 }}>
-                                <label className="setting-label" style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Card Background</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div className="setting-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+                            <div>
+                                <label className="setting-label" style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Card Background URL</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                     <div style={{
                                         width: '120px',
                                         height: '68px',
                                         borderRadius: '6px',
                                         backgroundColor: '#2a2a2a',
-                                        backgroundImage: config.jellyseerrBackground ? `url('${config.jellyseerrBackground}')` : "url('https://belginux.com/content/images/size/w1200/2024/03/jellyseerr-1.webp')",
+                                        backgroundImage: `url('${config.jellyseerrBackground || 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/jellyseerr.jpg'}')`,
                                         backgroundSize: 'cover',
                                         backgroundPosition: 'center',
                                         border: '1px solid rgba(255,255,255,0.1)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
-                                    </div>
-                                    <div>
-                                        <button className="btn-save" style={{ padding: '6px 16px', fontSize: '0.9rem' }} onClick={() => { setPickerMode('jellyseerr'); setShowBannerPicker(true); }}>
-                                            Choose Image
-                                        </button>
-                                        {config.jellyseerrBackground && (
-                                            <button
-                                                className="btn-reset"
-                                                style={{ marginLeft: '10px', padding: '6px 12px', fontSize: '0.9rem' }}
-                                                onClick={() => updateConfig({ jellyseerrBackground: null })}
-                                            >
-                                                Reset
-                                            </button>
-                                        )}
-                                    </div>
+                                        flexShrink: 0
+                                    }} />
+                                    <input
+                                        type="text"
+                                        className="legit-input"
+                                        style={{ marginTop: 0 }}
+                                        placeholder="https://example.com/background.jpg"
+                                        value={config.jellyseerrBackground || ''}
+                                        onChange={(e) => updateConfig({ jellyseerrBackground: e.target.value || null })}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -260,6 +262,40 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     </div>
                 </div>
             )
+        },
+        {
+            id: 'contentFilters',
+            tab: 'home',
+            label: 'Content Filters',
+            keywords: ['content', 'media', 'type', 'movie', 'series', 'music', 'filter', 'carousel', 'promo', 'hero'],
+            render: () => {
+                const MEDIA_TYPES = [
+                    { key: 'Movie', label: 'Movies', icon: 'movie' },
+                    { key: 'Series', label: 'Series', icon: 'tv' },
+                    { key: 'MusicAlbum', label: 'Music Albums', icon: 'album' },
+                    { key: 'Audio', label: 'Audio', icon: 'audiotrack' },
+                    { key: 'MusicVideo', label: 'Music Videos', icon: 'music_video' },
+                ];
+                return (
+                    <div className="setting-section" key="contentFilters">
+                        <h3>Content Filters</h3>
+                        <p className="setting-desc">Choose which media types appear in the Hero Carousel and Promo Banner.</p>
+                        <div className="content-type-grid">
+                            {MEDIA_TYPES.map(t => (
+                                <label key={t.key} className={`content-type-chip ${contentTypes[t.key] ? 'active' : ''}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={!!contentTypes[t.key]}
+                                        onChange={(e) => setContentTypes(prev => ({ ...prev, [t.key]: e.target.checked }))}
+                                    />
+                                    <span className="material-icons">{t.icon}</span>
+                                    <span>{t.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
         },
         {
             id: 'navbarCategories',

@@ -181,7 +181,7 @@
     padding: 28px 28px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: sapce-between;
     z-index: 1;
     min-width: 0;
 }
@@ -192,7 +192,7 @@
     object-fit: contain;
     object-position: left center;
     margin-bottom: 6px;
-    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.6));
+    height: 100%;
 }
 
 .promo2-card-title {

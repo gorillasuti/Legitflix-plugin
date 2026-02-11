@@ -17,7 +17,7 @@ const JellyseerrCard = () => {
             >
                 <div
                     className="jellyseerr-image"
-                    style={{ backgroundImage: `url('${config.jellyseerrBackground || "https://belginux.com/content/images/size/w1200/2024/03/jellyseerr-1.webp"}')` }}
+                    style={{ backgroundImage: `url('${config.jellyseerrBackground || "https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/jellyseerr.jpg"}')` }}
                 >
                     <div className="jellyseerr-overlay"></div>
                     <div className="jellyseerr-content">

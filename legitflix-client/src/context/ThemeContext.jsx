@@ -23,6 +23,8 @@ export const ThemeProvider = ({ children }) => {
     // Default Configuration
     const [config, setConfig] = useState({
         heroMediaTypes: 'Movie,Series',
+        promoMediaTypes: ['Movie', 'Series'],
+        contentTypeFilters: { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false },
         heroLimit: 20,
         enableJellyseerr: true,
         jellyseerrUrl: 'https://request.legitflix.eu',

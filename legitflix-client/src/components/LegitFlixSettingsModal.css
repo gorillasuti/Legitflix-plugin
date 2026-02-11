@@ -593,3 +593,53 @@ input:checked+.slider:before {
 .btn-save:hover {
     filter: brightness(1.1);
 }
+
+/* ── Content Type Filter Chips ── */
+.content-type-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.content-type-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #252525;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #999;
+    font-size: 0.88rem;
+    user-select: none;
+}
+
+.content-type-chip input[type="checkbox"] {
+    display: none;
+}
+
+.content-type-chip .material-icons {
+    font-size: 18px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.content-type-chip:hover {
+    background: #2a2a2a;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ccc;
+}
+
+.content-type-chip.active {
+    background: rgba(var(--clr-accent-rgb, 255, 126, 0), 0.12);
+    border-color: var(--clr-accent, #ff7e00);
+    color: #fff;
+}
+
+.content-type-chip.active .material-icons {
+    color: var(--clr-accent, #ff7e00);
+    opacity: 1;
+}
