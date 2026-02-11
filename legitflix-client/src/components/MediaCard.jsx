@@ -77,16 +77,17 @@ const MediaCard = ({ item, onClick }) => {
         const d = details || item;
         const rating = d.CommunityRating ? d.CommunityRating.toFixed(1) : '';
         const voteCount = d.VoteCount ? `(${(d.VoteCount / 1000).toFixed(1)}K)` : '';
-        const year = d.ProductionYear || '';
         const seasons = d.ChildCount;
         const episodes = d.RecursiveItemCount || d.ChildCount;
 
-        const overlayWidth = position.width * 3;
-        const overlayHeight = position.height * 0.85;
+        // Poster aspect ratio is 2:3. Hover width is 2x card width, height is proportional to maintain backdrop aspect
+        const overlayWidth = position.width * 2.2;
+        const overlayHeight = overlayWidth / 1.777; // Maintain ~16:9 for backdrop appearance
 
-        // Position: shift left to show detail panel on left + poster on right
-        const leftPos = Math.max(10, position.left - (overlayWidth - position.width) + position.width * 0.1);
-        const topPos = position.top - 20;
+        const leftPos = Math.max(10, position.left - (overlayWidth - position.width) / 2);
+        const topPos = position.top - (overlayHeight - position.height) / 2;
+
+        const backdropUrl = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=90`;
 
         return createPortal(
             <div
@@ -96,63 +97,55 @@ const MediaCard = ({ item, onClick }) => {
                     left: leftPos,
                     width: overlayWidth,
                     height: overlayHeight,
+                    backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.9)), url('${backdropUrl}')`
                 }}
                 onMouseLeave={handleMouseLeave}
                 onClick={onClick}
             >
-                {/* Left: Details Panel */}
-                <div className="hover-panel-left">
+                <div className="hover-overlay-content">
                     <h3 className="hover-title">{d.Name}</h3>
 
                     <div className="hover-meta-row">
                         {rating && (
                             <span className="hover-rating">
                                 {rating} <span className="material-icons star-icon">star</span>
-                                {voteCount && <span className="hover-rating-count">{voteCount}</span>}
+                                {voteCount && <span className="hover-rating-count">({voteCount})</span>}
                             </span>
                         )}
                     </div>
 
-                    {d.Type === 'Series' && (
-                        <div className="hover-stats">
-                            {seasons && <div>{seasons} Season{seasons !== 1 ? 's' : ''}</div>}
-                            {episodes && <div>{episodes} Episode{episodes !== 1 ? 's' : ''}</div>}
-                        </div>
-                    )}
-
-                    {year && d.Type !== 'Series' && (
-                        <div className="hover-stats">{year}</div>
-                    )}
+                    <div className="hover-stats">
+                        {d.Type === 'Series' ? (
+                            <>
+                                {seasons && <span>{seasons} Seasons</span>}
+                                {episodes && <span>{episodes} Episodes</span>}
+                            </>
+                        ) : (
+                            <span>{d.ProductionYear}</span>
+                        )}
+                    </div>
 
                     {d.Overview && <p className="hover-desc">{d.Overview}</p>}
 
                     <div className="hover-actions">
-                        <button className="btn-action-icon" title="Play" onClick={(e) => { e.stopPropagation(); onClick && onClick(); }}>
+                        <button className="btn-action-icon play-icon" title="Play" onClick={(e) => { e.stopPropagation(); onClick && onClick(); }}>
                             <span className="material-icons">play_arrow</span>
                         </button>
                         <button
-                            className={`btn-action-icon ${userData.IsFavorite ? 'active' : ''}`}
+                            className={`btn-action-icon bookmark-icon ${userData.IsFavorite ? 'active' : ''}`}
                             onClick={(e) => handleAction(e, 'favorite')}
                             title={userData.IsFavorite ? "Unfavorite" : "Favorite"}
                         >
                             <span className="material-icons">{userData.IsFavorite ? 'bookmark' : 'bookmark_border'}</span>
                         </button>
                         <button
-                            className={`btn-action-icon ${userData.Played ? 'active' : ''}`}
+                            className={`btn-action-icon plus-icon ${userData.Played ? 'active' : ''}`}
                             onClick={(e) => handleAction(e, 'played')}
                             title={userData.Played ? "Mark Unplayed" : "Mark Played"}
                         >
                             <span className="material-icons">add</span>
                         </button>
                     </div>
-                </div>
-
-                {/* Right: Poster Image */}
-                <div className="hover-panel-right">
-                    <img
-                        src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=500&fillWidth=340&quality=90`}
-                        alt={d.Name}
-                    />
                 </div>
             </div>,
             document.body
@@ -176,7 +169,6 @@ const MediaCard = ({ item, onClick }) => {
                         loading="lazy"
                         onError={(e) => { e.target.style.display = 'none'; }}
                     />
-                    <div className="media-card-fallback-title">{item.Name}</div>
                 </div>
                 <div className="media-card-info">
                     <div className="media-card-title">{item.Name}</div>

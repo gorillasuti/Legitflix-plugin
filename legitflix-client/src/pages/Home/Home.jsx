@@ -44,9 +44,9 @@ const Home = () => {
                     const candidatesFn = async () => {
                         const sortMode = config.contentSortMode || 'latest';
                         const sortMap = {
-                            latest: { sortBy: ['DateCreated'], sortOrder: ['Descending'] },
-                            random: { sortBy: ['Random'], sortOrder: ['Descending'] },
-                            topRated: { sortBy: ['CommunityRating'], sortOrder: ['Descending'] },
+                            latest: { sortBy: 'DateCreated', sortOrder: 'Descending' },
+                            random: { sortBy: 'Random', sortOrder: 'Descending' },
+                            topRated: { sortBy: 'CommunityRating', sortOrder: 'Descending' },
                         };
                         const { sortBy, sortOrder } = sortMap[sortMode] || sortMap.latest;
 
@@ -81,7 +81,7 @@ const Home = () => {
             }
         };
         fetchLibraries();
-    }, []);
+    }, [config]);
 
     const openModal = (id) => {
         setModalItem(id);

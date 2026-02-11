@@ -1,9 +1,0 @@
-﻿[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
-transforming...
-[32mΓ£ô[39m 161 modules transformed.
-rendering chunks...
-computing gzip size...
-[2m../LegitFlix.Plugin/Assets/Client/[22m[32mindex.html  [39m[1m[2m  0.69 kB[22m[1m[22m[2m Γöé gzip:   0.39 kB[22m
-[2m../LegitFlix.Plugin/Assets/Client/[22m[35mstyle.css   [39m[1m[2m158.57 kB[22m[1m[22m[2m Γöé gzip:  26.28 kB[22m
-[2m../LegitFlix.Plugin/Assets/Client/[22m[36mapp.js      [39m[1m[2m411.61 kB[22m[1m[22m[2m Γöé gzip: 114.33 kB[22m
-[32mΓ£ô built in 1.55s[39m

@@ -289,7 +289,9 @@
 }
 
 .library-card {
-    max-width: 200px;
+    flex: 0 0 15vw;
+    min-width: 140px;
+    max-width: 240px;
     height: -webkit-fill-available;
     width: 100%;
     background: #333;
