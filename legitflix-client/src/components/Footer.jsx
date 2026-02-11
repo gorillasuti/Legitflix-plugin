@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTheme, getDefaultLogo } from '../context/ThemeContext';
 import './Footer.css';
 
 const Footer = () => {
+    const { config } = useTheme();
     return (
         <div className="legitflix-footer">
             <div className="footer-content">
