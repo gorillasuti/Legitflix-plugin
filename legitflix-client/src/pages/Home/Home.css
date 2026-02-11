@@ -27,102 +27,202 @@
     border-radius: 4px;
 }
 
-/* Promo Banners (Top/Bottom Layout) */
-.legitflix-promo-container {
+/* ========== Promo Banners (promo2) ========== */
+.promo2-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    margin-bottom: 40px;
+    gap: 16px;
 }
 
-@media (max-width: 1000px) {
-    .legitflix-promo-container {
-        gap: 15px;
-    }
-}
-
-.promo-item {
+/* ── Hero Banner ── */
+.promo2-hero {
     position: relative;
-    border-radius: 8px;
+    width: 100%;
+    height: 420px;
+    border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
-    background: #252525;
 }
 
-.promo-item:hover {
-    transform: scale(1.01);
-}
-
-/* Large Item (Top Hero) */
-.promo-item-large {
-    width: 100%;
-    height: 450px;
-    /* Taller hero */
-}
-
-.promo-bg {
+.promo2-hero-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.6;
-    transition: opacity 0.3s;
+    display: block;
 }
 
-.promo-item-large:hover .promo-bg {
-    opacity: 0.8;
-}
-
-.promo-content {
+.promo2-hero-gradient {
     position: absolute;
-    bottom: 30px;
-    left: 40px;
+    inset: 0;
+    background: linear-gradient(to top,
+            rgba(20, 20, 20, 0.95) 0%,
+            rgba(20, 20, 20, 0.6) 30%,
+            rgba(20, 20, 20, 0.15) 60%,
+            transparent 100%);
+    pointer-events: none;
+}
+
+.promo2-hero-content {
+    position: absolute;
+    bottom: 32px;
+    left: 36px;
     z-index: 2;
-    max-width: 60%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    max-width: 50%;
 }
 
-.promo-logo {
-    max-width: 300px;
-    max-height: 120px;
+.promo2-hero-logo {
+    max-width: 280px;
+    max-height: 100px;
     object-fit: contain;
-    margin-bottom: 20px;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7));
 }
 
-.promo-title {
-    font-size: 3rem;
+.promo2-hero-title {
+    font-size: 2.8rem;
     font-weight: 800;
-    margin-bottom: 15px;
     color: #fff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    line-height: 1.1;
 }
 
+/* ── Small Card Row ── */
+.promo2-row {
+    display: flex;
+    gap: 16px;
+}
 
+.promo2-card {
+    flex: 1;
+    display: flex;
+    height: 200px;
+    background: #1e1e1e;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
 
-.promo-img-container {
-    flex: 0.8;
-    /* Image takes less space */
-    position: relative;
-    height: 100%;
+.promo2-card:hover {
+    transform: scale(1.015);
+}
+
+/* ── Card Text Side ── */
+.promo2-card-text {
+    flex: 1.3;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    min-width: 0;
+}
+
+.promo2-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.promo2-card-year {
+    font-size: 0.82rem;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.promo2-card-desc {
+    font-size: 0.85rem;
+    color: #aaa;
+    line-height: 1.5;
+    margin: 0 0 14px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.promo-poster {
+/* START WATCHING button — accent outline */
+.promo2-start-btn.lf-btn.lf-btn--outline {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    padding: 8px 20px;
+    align-self: flex-start;
+}
+
+.promo2-start-btn.lf-btn.lf-btn--outline:hover {
+    border-color: var(--clr-accent, #ff7e00);
+    color: var(--clr-accent, #ff7e00);
+    background: rgba(255, 126, 0, 0.08);
+}
+
+/* ── Card Image Side ── */
+.promo2-card-img {
+    flex: 0.8;
+    position: relative;
+    overflow: hidden;
+}
+
+.promo2-card-img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Fade from Left (Transparent) to Right (Black/Image) so text blends in */
-    -webkit-mask-image: linear-gradient(to right, transparent, black 20%);
-    mask-image: linear-gradient(to right, transparent, black 20%);
+    display: block;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
+    mask-image: linear-gradient(to right, transparent 0%, black 25%);
 }
 
-@media (max-width: 800px) {
-    .promo-grid-row {
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .promo2-hero {
+        height: 280px;
+    }
+
+    .promo2-hero-content {
+        bottom: 20px;
+        left: 20px;
+        max-width: 70%;
+    }
+
+    .promo2-hero-title {
+        font-size: 1.8rem;
+    }
+
+    .promo2-row {
         flex-direction: column;
     }
 
-    .promo-item-small {
+    .promo2-card {
         height: 180px;
+    }
+}
+
+@media (max-width: 500px) {
+    .promo2-hero {
+        height: 200px;
+    }
+
+    .promo2-hero-logo {
+        max-width: 180px;
+    }
+
+    .promo2-card {
+        height: 160px;
+    }
+
+    .promo2-card-text {
+        padding: 14px 16px;
     }
 }
 

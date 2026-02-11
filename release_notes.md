@@ -11,6 +11,12 @@
 
 # Release Notes
 
+## v1.0.0.32
+- **Promo Banner Rewrite**: Completely rebuilt the Promo Banner section from scratch to match the reference design.
+    - **Hero Banner**: Full-width backdrop with gradient overlay, logo, and "WATCH NOW" button.
+    - **Small Cards**: Two side-by-side cards with text/image split layout and outlined "START WATCHING" buttons.
+    - **Responsive**: Improved mobile layout stacking.
+
 ## v1.0.0.31 (2025-02-11)
 - **Promo Banner Rework**: Implemented strict legacy parity (Latest 3 items, no resume filter) and "1 Big, 2 Small" layout.
 - **Button Component**: Integrated shared `Button` component for Promo section.

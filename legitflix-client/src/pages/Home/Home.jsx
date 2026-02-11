@@ -247,34 +247,31 @@ const Home = () => {
                             </section>
                         )}
 
-                        {/* 2.5 Promo Banners (New) */}
+                        {/* Promo Banners */}
                         {promoItems.length > 0 && (
-                            <section className="home-section promo-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '50px' }}>
-                                <div className="legitflix-promo-container">
-                                    {/* Item 1: Large Hero-style Banner */}
-                                    <div
-                                        className="promo-item promo-item-large"
-                                        onClick={() => openModal(promoItems[0].Id)}
-                                    >
+                            <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '50px' }}>
+                                <div className="promo2-wrapper">
+                                    {/* ── Hero Banner (Item 1) ── */}
+                                    <div className="promo2-hero" onClick={() => openModal(promoItems[0].Id)}>
                                         <img
-                                            src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Backdrop/0?maxWidth=1200&quality=90`}
-                                            className="promo-bg"
+                                            src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Backdrop/0?maxWidth=1400&quality=90`}
+                                            className="promo2-hero-img"
                                             alt={promoItems[0].Name}
                                         />
-                                        <div className="promo-content">
-                                            {promoItems[0].ImageTags && promoItems[0].ImageTags.Logo ? (
+                                        <div className="promo2-hero-gradient" />
+                                        <div className="promo2-hero-content">
+                                            {promoItems[0].ImageTags?.Logo ? (
                                                 <img
-                                                    src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Logo/0?maxWidth=400&quality=90`}
-                                                    className="promo-logo"
+                                                    src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Logo/0?maxWidth=350&quality=90`}
+                                                    className="promo2-hero-logo"
                                                     alt={promoItems[0].Name}
                                                 />
                                             ) : (
-                                                <h2 className="promo-title">{promoItems[0].Name}</h2>
+                                                <h2 className="promo2-hero-title">{promoItems[0].Name}</h2>
                                             )}
                                             <Button
-                                                variant="default"
+                                                variant="primary"
                                                 size="lg"
-                                                className="btn-watch"
                                                 onClick={(e) => { e.stopPropagation(); navigate(`/details/${promoItems[0].Id}`); }}
                                             >
                                                 WATCH NOW
@@ -282,36 +279,29 @@ const Home = () => {
                                         </div>
                                     </div>
 
-                                    {/* Bottom Grid for Items 2 & 3 */}
+                                    {/* ── Two Small Cards (Items 2 & 3) ── */}
                                     {(promoItems[1] || promoItems[2]) && (
-                                        <div className="promo-grid-row">
+                                        <div className="promo2-row">
                                             {promoItems.slice(1, 3).map(item => (
-                                                <div
-                                                    key={item.Id}
-                                                    className="promo-item promo-item-small"
-                                                    onClick={() => openModal(item.Id)}
-                                                >
-                                                    <div className="promo-split">
-                                                        <div className="promo-text">
-                                                            <h3>{item.Name}</h3>
-                                                            <p style={{ marginBottom: '5px', fontSize: '0.85rem', color: '#aaa' }}>{item.ProductionYear}</p>
-                                                            <p className="desc">{item.Overview}</p>
-                                                            <Button
-                                                                variant="ghost"
-                                                                className="btn-orange-text p-0 hover:bg-transparent hover:underline"
-                                                                onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}
-                                                            >
-                                                                START WATCHING
-                                                            </Button>
-                                                        </div>
-                                                        <div className="promo-img-container">
-                                                            <img
-                                                                src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Thumb/0?maxWidth=400&quality=90`}
-                                                                className="promo-poster"
-                                                                onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=400`; }}
-                                                                alt={item.Name}
-                                                            />
-                                                        </div>
+                                                <div key={item.Id} className="promo2-card" onClick={() => openModal(item.Id)}>
+                                                    <div className="promo2-card-text">
+                                                        <h3 className="promo2-card-title">{item.Name}</h3>
+                                                        <span className="promo2-card-year">{item.ProductionYear}</span>
+                                                        <p className="promo2-card-desc">{item.Overview}</p>
+                                                        <Button
+                                                            variant="outline"
+                                                            className="promo2-start-btn"
+                                                            onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}
+                                                        >
+                                                            START WATCHING
+                                                        </Button>
+                                                    </div>
+                                                    <div className="promo2-card-img">
+                                                        <img
+                                                            src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Thumb/0?maxWidth=400&quality=90`}
+                                                            alt={item.Name}
+                                                            onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=400`; }}
+                                                        />
                                                     </div>
                                                 </div>
                                             ))}

@@ -1,4 +1,4 @@
-$version = "1.0.0.31"
+$version = "1.0.0.32"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 # Adjust build dir to be relative to the script location if running from root
@@ -48,7 +48,7 @@ $manifest = @{
     overview    = "A complete overhaul of the Jellyfin web interface."
     owner       = "LegitFlix"
     category    = "User Interface"
-    imageUrl    = "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png"
+    imageUrl    = "https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-blue.png"
     versions    = @(
         @{
             version   = $version
