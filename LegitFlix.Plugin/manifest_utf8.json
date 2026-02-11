@@ -3,11 +3,11 @@
     "versions": [
         {
             "changelog": "Footer added, Media hover card improved",
-            "version": "1.0.0.35",
-            "checksum": "6125c53379c7a68d68d2bf6a2140f189",
-            "timestamp": "2026-02-11T22:17:11Z",
+            "version": "1.0.0.36",
+            "checksum": "3f51de8c47215339a1bbbcfc2d41181c",
+            "timestamp": "2026-02-11T22:31:30Z",
             "targetAbi": "10.11.5.0",
-            "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.35/LegitFlix.Plugin_1.0.0.35.zip"
+            "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.36/LegitFlix.Plugin_1.0.0.36.zip"
         }
     ],
     "overview": "A complete overhaul of the Jellyfin web interface.",

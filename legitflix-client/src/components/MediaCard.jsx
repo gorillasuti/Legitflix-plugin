@@ -12,6 +12,11 @@ const MediaCard = ({ item, onClick }) => {
     const [userData, setUserData] = useState(item.UserData || {});
 
     const handleMouseEnter = async () => {
+        if (hoverTimer.current) {
+            clearTimeout(hoverTimer.current);
+            hoverTimer.current = null;
+        }
+
         if (cardRef.current) {
             const rect = cardRef.current.getBoundingClientRect();
             setPosition({
@@ -39,7 +44,16 @@ const MediaCard = ({ item, onClick }) => {
     };
 
     const handleMouseLeave = () => {
-        setIsHovered(false);
+        hoverTimer.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 100); // 100ms grace period
+    };
+
+    const handleOverlayEnter = () => {
+        if (hoverTimer.current) {
+            clearTimeout(hoverTimer.current);
+            hoverTimer.current = null;
+        }
     };
 
     const handleAction = async (e, type) => {
@@ -118,20 +132,14 @@ const MediaCard = ({ item, onClick }) => {
         const episodes = d.RecursiveItemCount || d.ChildCount;
         const subDub = getSubDubDisplay(d);
 
-        // Overlay dimensions: Slightly wider and taller than the original card to "pop" out
-        // The original card includes the image (2:3) AND the info area below.
-        // We want to cover all of that and expand a bit.
-        const widthScale = 1.15;
-        const overlayWidth = position.width * widthScale;
+        // Overlay dimensions: Fixed pixel increase
+        // Width: +4px (2px each side)
+        // Height: +8px (4px top, 4px bottom)
+        const overlayWidth = position.width + 4;
+        const overlayHeight = position.height + 8;
 
-        // Calculate height to maintain a reasonable aspect ratio or just cover + expand
-        // Let's rely on content or a fixed aspect ratio similar to the card but larger
-        // or just expanded height based on the original rect.
-        // Let's try matching the original rect * scale
-        const overlayHeight = position.height * widthScale; // Keep roughly same proportional expansion
-
-        const leftPos = position.left - (overlayWidth - position.width) / 2;
-        const topPos = position.top - (overlayHeight - position.height) / 2;
+        const leftPos = position.left - 2;
+        const topPos = position.top - 4;
 
         // Use Primary image for portrait background
         const bgUrl = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=600&fillWidth=400&quality=90`;
@@ -143,9 +151,10 @@ const MediaCard = ({ item, onClick }) => {
                     top: topPos,
                     left: leftPos,
                     width: overlayWidth,
-                    minHeight: overlayHeight, // Allow growth if content is long? Reference is fixed size usually
+                    minHeight: overlayHeight,
                     backgroundImage: `url('${bgUrl}')`
                 }}
+                onMouseEnter={handleOverlayEnter}
                 onMouseLeave={handleMouseLeave}
                 onClick={onClick}
             >
