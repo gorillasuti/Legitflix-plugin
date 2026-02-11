@@ -12,14 +12,48 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
     const avatarInputRef = useRef(null);
 
     // Calculate Banner URL for display
-    const currentBannerUrl = user ? (localStorage.getItem(`LegitFlix_Banner_${user.Id}`) ||
-        (user.ImageTags?.Banner ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Banner?tag=${user.ImageTags.Banner}&quality=90`
-            : (user.BackdropImageTags?.[0] ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Backdrop/0?tag=${user.BackdropImageTags[0]}&quality=90` : ''))) : '';
+    // We prioritize the user's actual banner from the API.
+    const currentBannerUrl = user ? (
+        user.ImageTags?.Banner ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Banner?tag=${user.ImageTags.Banner}&quality=90` :
+            (user.BackdropImageTags?.[0] ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Backdrop/0?tag=${user.BackdropImageTags[0]}&quality=90` : '')
+    ) : '';
 
-    const handleBannerSave = (url) => {
-        if (user) {
-            localStorage.setItem(`LegitFlix_Banner_${user.Id}`, url);
-            // Force refresh is handled by the user refreshing manually for now, or we could lift state.
+    const handleBannerSave = async (url) => {
+        if (!user || !url) return;
+
+        // If it's a full URL from our system, we need to fetch it as a blob first
+        // If the user selected a "Backdrop" from the picker, it returns a full URL
+
+        setStatus('Updating banner...');
+        setUploading(true);
+
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+
+            const res = await fetch(
+                `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Banner`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': blob.type,
+                        'X-Emby-Authorization': jellyfinService.api.authHeader,
+                    },
+                    body: blob,
+                }
+            );
+
+            if (res.ok) {
+                setStatus('Banner updated! Refresh to see changes.');
+                // Optimistically update local for now if we wanted, but reload is best
+            } else {
+                setStatus('Failed to upload banner.');
+            }
+        } catch (err) {
+            console.error(err);
+            setStatus('Banner upload failed.');
+        } finally {
+            setUploading(false);
         }
     };
 
