@@ -4,8 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>1.0.0.31</AssemblyVersion>
-    <FileVersion>1.0.0.31</FileVersion>
+    <AssemblyVersion>1.0.0.32</AssemblyVersion>
+    <FileVersion>1.0.0.32</FileVersion>
     <Description>Total UI replacement for Jellyfin.</Description>
   </PropertyGroup>
 
