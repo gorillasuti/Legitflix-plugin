@@ -1,4 +1,4 @@
-$version = "1.0.0.30"
+$version = "1.0.0.31"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 # Adjust build dir to be relative to the script location if running from root
@@ -52,9 +52,9 @@ $manifest = @{
     versions    = @(
         @{
             version   = $version
-            changelog = "Initial Release"
+            changelog = "Promo Banner Rework (Legacy Parity), Button Component Integration, UI Cleanup."
             targetAbi = "10.11.5.0"
-            sourceUrl = "https://github.com/YOUR_USER/YOUR_REPO/releases/download/v$version/$zipName"
+            sourceUrl = "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v$version/$zipName"
             checksum  = $checksum
             timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
         }
