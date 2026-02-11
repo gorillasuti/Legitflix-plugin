@@ -42,17 +42,16 @@ const Home = () => {
                     // --- Promo Logic (Ported from legacy theme) ---
                     // 1. Get Candidates (Latest Movies/Series)
                     const candidatesFn = async () => {
-                        const params = new URLSearchParams({
-                            Limit: 20, // Fetch more to filter
-                            Recursive: true,
-                            IncludeItemTypes: 'Movie,Series',
-                            SortBy: 'DateCreated',
-                            SortOrder: 'Descending',
-                            ImageTypeLimit: 1,
-                            EnableImageTypes: 'Primary,Backdrop,Thumb,Logo',
-                            Fields: 'Overview,ProductionYear,ImageTags'
+                        return jellyfinService.getItems(user.Id, {
+                            limit: 20,
+                            recursive: true,
+                            includeItemTypes: ['Movie', 'Series'],
+                            sortBy: ['DateCreated'],
+                            sortOrder: ['Descending'],
+                            imageTypeLimit: 1,
+                            enableImageTypes: ['Primary', 'Backdrop', 'Thumb', 'Logo'],
+                            fields: ['Overview', 'ProductionYear', 'ImageTags']
                         });
-                        return jellyfinService.getItems(user.Id, params);
                     };
 
                     const candidatesRes = await candidatesFn();
