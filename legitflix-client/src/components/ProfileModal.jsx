@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { jellyfinService } from '../services/jellyfin';
 import BannerPickerModal from './BannerPickerModal';
+import AvatarPickerModal from './AvatarPickerModal';
 import './ProfileModal.css';
 
 const ProfileModal = ({ isOpen, onClose, user }) => {
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState('');
     const [showBannerPicker, setShowBannerPicker] = useState(false);
+    const [showAvatarPicker, setShowAvatarPicker] = useState(false);
     const avatarInputRef = useRef(null);
 
     // Calculate Banner URL for display
@@ -24,8 +26,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
 
     if (!isOpen || !user) return null;
 
-    const handleAvatarUpload = async (e) => {
-        const file = e.target.files?.[0];
+    const handleAvatarFile = async (file) => {
         if (!file) return;
 
         setUploading(true);
@@ -46,6 +47,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
 
             if (res.ok) {
                 setStatus('Profile image updated! Refresh to see changes.');
+                setShowAvatarPicker(false);
             } else {
                 setStatus('Failed to upload image. Please try again.');
             }
@@ -54,6 +56,11 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         } finally {
             setUploading(false);
         }
+    };
+
+    const handleAvatarUpload = (e) => {
+        const file = e.target.files?.[0];
+        handleAvatarFile(file);
     };
 
     const handleDeleteAvatar = async () => {
@@ -140,11 +147,19 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
                             <div className="pm-avatar-actions">
                                 <button
                                     className="pm-btn pm-btn-accent"
+                                    onClick={() => setShowAvatarPicker(true)}
+                                    disabled={uploading}
+                                >
+                                    <span className="material-icons">face</span>
+                                    Choose Avatar
+                                </button>
+                                <button
+                                    className="pm-btn pm-btn-outline"
                                     onClick={() => avatarInputRef.current?.click()}
                                     disabled={uploading}
                                 >
                                     <span className="material-icons">upload</span>
-                                    Upload Photo
+                                    Upload Custom
                                 </button>
                                 <button
                                     className="pm-btn pm-btn-outline"
@@ -152,7 +167,6 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
                                     disabled={uploading}
                                 >
                                     <span className="material-icons">delete</span>
-                                    Remove
                                 </button>
                             </div>
                         </div>
@@ -175,6 +189,12 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
                     handleBannerSave(url);
                     setShowBannerPicker(false);
                 }}
+                userId={user?.Id}
+            />
+            <AvatarPickerModal
+                isOpen={showAvatarPicker}
+                onClose={() => setShowAvatarPicker(false)}
+                onSave={handleAvatarFile}
                 userId={user?.Id}
             />
         </div>

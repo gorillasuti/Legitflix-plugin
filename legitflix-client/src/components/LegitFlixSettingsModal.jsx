@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { jellyfinService } from '../services/jellyfin';
 import BannerPickerModal from './BannerPickerModal';
+import AvatarPickerModal from './AvatarPickerModal';
 import './LegitFlixSettingsModal.css';
 
 const PRESET_COLORS = [
@@ -19,7 +21,9 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [activeTab, setActiveTab] = useState('appearance');
     const [searchQuery, setSearchQuery] = useState('');
     const [showBannerPicker, setShowBannerPicker] = useState(false);
+    const [showAvatarPicker, setShowAvatarPicker] = useState(false);
     const [pickerMode, setPickerMode] = useState('app'); // 'app' | 'jellyseerr'
+    const [uploading, setUploading] = useState(false);
 
     // Form State
     const [accentColor, setAccentColor] = useState(config.accentColor || '#ff7e00');
@@ -102,6 +106,33 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         setSortMode('latest');
     };
 
+    const handleAvatarFile = async (file) => {
+        if (!file || !userId) return;
+        setUploading(true);
+        try {
+            const res = await fetch(
+                `${jellyfinService.api.basePath}/Users/${userId}/Images/Primary`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': file.type,
+                        'X-Emby-Authorization': jellyfinService.api.authHeader,
+                    },
+                    body: file,
+                }
+            );
+            if (res.ok) {
+                setShowAvatarPicker(false);
+                // Ideally trigger a refresh or notify user, but for now just close
+            }
+        } catch (err) {
+            console.error("Avatar upload failed", err);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+
     // --- Search Logic ---
     // If search is active, we ignore tabs and show all matching settings
     const settingsList = [
@@ -157,6 +188,32 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                         value={logoUrl}
                         onChange={(e) => setLogoUrl(e.target.value)}
                     />
+                </div>
+            )
+        },
+        {
+            id: 'avatar',
+            tab: 'appearance',
+            label: 'Profile Avatar',
+            keywords: ['avatar', 'profile', 'image', 'picture', 'user'],
+            render: () => (
+                <div className="setting-section" key="avatar">
+                    <h3>Profile Avatar</h3>
+                    <p className="setting-desc">Change your user profile picture.</p>
+                    <div className="setting-row">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <img
+                                src={`${jellyfinService.api.basePath}/Users/${userId}/Images/Primary?quality=90&t=${Date.now()}`}
+                                alt="Current Avatar"
+                                style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }}
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                            <button className="lf-btn lf-btn--secondary" onClick={() => setShowAvatarPicker(true)}>
+                                <span className="material-icons" style={{ fontSize: '18px', marginRight: '8px' }}>face</span>
+                                Change Avatar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )
         },
@@ -474,6 +531,12 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     }
                     setShowBannerPicker(false);
                 }}
+                userId={userId}
+            />
+            <AvatarPickerModal
+                isOpen={showAvatarPicker}
+                onClose={() => setShowAvatarPicker(false)}
+                onSave={handleAvatarFile}
                 userId={userId}
             />
         </>

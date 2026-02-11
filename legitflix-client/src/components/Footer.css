@@ -29,7 +29,7 @@
 }
 
 .footer-logo-img {
-    height: 16px;
+    height: 25px;
     width: auto;
     vertical-align: middle;
     filter: grayscale(100%) brightness(0.7);
@@ -61,4 +61,16 @@
 
 .footer-content:hover .footer-author strong {
     color: #ccc;
+}
+
+.footer-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.footer-link:hover {
+    color: #fff;
 }

@@ -1,12 +1,32 @@
-$version = "1.0.0.37"
+$version = "1.0.0.38"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 # Adjust build dir to be relative to the script location if running from root
 $projectDir = $PSScriptRoot
+$itemDir = "$projectDir\.."
+$clientDir = Join-Path $itemDir "legitflix-client"
+$assetsDir = Join-Path $projectDir "Assets\Client"
 $buildDir = Join-Path $projectDir "bin\Release\net9.0"
 $publishDir = Join-Path $projectDir "publish"
 
-# 1. Build
+# 0. Build React App
+Write-Host "Building React Client..."
+Set-Location $clientDir
+npm install
+npm run build
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "React build failed!"
+    exit 1
+}
+
+# Copy Build Artifacts to Plugin Assets
+# Vite handles output to Assets/Client directly via vite.config.js
+# No manual copy needed here
+
+# Return to project dir
+Set-Location $projectDir
+
+# 1. Build Plugin
 Write-Host "Building Plugin..."
 # Ensure we build the specific project
 dotnet build "$projectDir\LegitFlix.Plugin.csproj" -c Release
@@ -31,6 +51,7 @@ if (Test-Path "$buildDir\meta.json") {
 }
 
 # 3. Zip
+Start-Sleep -Seconds 2 # Wait for file handles to close
 Write-Host "Zipping artifacts..."
 $zipPath = "$PWD\$zipName"
 if (Test-Path $zipPath) { Remove-Item $zipPath }

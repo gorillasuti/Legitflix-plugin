@@ -7,6 +7,7 @@ import SearchModal from './SearchModal/SearchModal';
 import LegitFlixSettingsModal from './LegitFlixSettingsModal';
 import QuickConnectModal from './QuickConnectModal';
 import ProfileModal from './ProfileModal';
+import AvatarPickerModal from './AvatarPickerModal';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -19,8 +20,11 @@ const Navbar = () => {
     const [showLegitSettings, setShowLegitSettings] = useState(false);
     const [showQuickConnect, setShowQuickConnect] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
+    const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [hasEnhancedPlugin, setHasEnhancedPlugin] = useState(false);
     const navigate = useNavigate();
+    const dropdownRef = React.useRef(null);
 
     // Fetch User and Libraries
     useEffect(() => {
@@ -83,6 +87,35 @@ const Navbar = () => {
     }, []);
 
     const isAdmin = user?.Policy?.IsAdministrator;
+
+    const handleAvatarFile = async (file) => {
+        if (!file || !user?.Id) return;
+        setUploading(true);
+        try {
+            const res = await fetch(
+                `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': file.type,
+                        'X-Emby-Authorization': jellyfinService.api.authHeader,
+                    },
+                    body: file,
+                }
+            );
+            if (res.ok) {
+                setShowAvatarPicker(false);
+                // Dispatch event to update avatar everywhere
+                window.dispatchEvent(new CustomEvent('userUpdated', { detail: user }));
+                // Force reload image logic might be needed but browser cache handles it usually with query param
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error("Avatar upload failed", err);
+        } finally {
+            setUploading(false);
+        }
+    };
 
     return (
         <>
@@ -150,13 +183,15 @@ const Navbar = () => {
                             <div
                                 className={`nav-avatar-container ${showMenu ? 'active' : ''}`}
                                 onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                                ref={dropdownRef}
                             >
                                 {user ? (
                                     <div className="nav-avatar-wrapper">
                                         <img
-                                            src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90`}
+                                            src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90&${new Date().getTime()}`}
                                             alt={user.Name}
                                             className="nav-avatar"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
                                         />
                                         <span className="material-icons avatar-arrow">expand_more</span>
                                     </div>
@@ -174,9 +209,10 @@ const Navbar = () => {
                                             <div className="user-menu-header" onClick={() => { setShowMenu(false); setShowProfileModal(true); }}>
                                                 <div className="header-avatar-container">
                                                     <img
-                                                        src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90`}
+                                                        src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90&${new Date().getTime()}`}
                                                         alt={user.Name}
                                                         className="menu-avatar"
+                                                        onError={(e) => { e.target.style.display = 'none'; }}
                                                     />
                                                 </div>
                                                 <div className="user-menu-info">
@@ -239,6 +275,9 @@ const Navbar = () => {
                                         {/* Account */}
                                         <div className="dropdown-divider"></div>
                                         <div className="menu-section-label">Account</div>
+                                        <button onClick={() => { setShowMenu(false); setShowAvatarPicker(true); }}>
+                                            <span className="material-icons">face</span> Change Avatar
+                                        </button>
                                         <button onClick={() => { setShowMenu(false); setShowQuickConnect(true); }}>
                                             <span className="material-icons">qr_code</span> Quick Connect
                                         </button>
@@ -264,6 +303,13 @@ const Navbar = () => {
             <LegitFlixSettingsModal isOpen={showLegitSettings} onClose={() => setShowLegitSettings(false)} userId={user?.Id} />
             <QuickConnectModal isOpen={showQuickConnect} onClose={() => setShowQuickConnect(false)} />
             <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} user={user} />
+            <AvatarPickerModal
+                isOpen={showAvatarPicker}
+                onClose={() => setShowAvatarPicker(false)}
+                onSave={handleAvatarFile}
+                userId={user?.Id}
+                uploading={uploading}
+            />
         </>
     );
 };

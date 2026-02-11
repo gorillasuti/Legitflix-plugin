@@ -19,9 +19,9 @@
     color: white;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 0;
-    transform: scale(0.96) translateY(10px);
+    transform: scale(0.96) translateY(4px);
     /* Start slightly smaller */
 
     /* Rounding from card - Enforce overflow to clip content */

@@ -10,7 +10,7 @@ const MediaCard = ({ item, onClick }) => {
     const handleMouseEnter = () => {
         hoverTimeoutRef.current = setTimeout(() => {
             setShowHover(true);
-        }, 600); // 600ms delay before showing hover card
+        }, 300); // 300ms delay before showing hover card
     };
 
     const handleMouseLeave = () => {

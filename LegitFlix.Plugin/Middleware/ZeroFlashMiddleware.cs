@@ -49,19 +49,35 @@ namespace LegitFlix.Plugin.Middleware
             // if we set base href in Vite.
             if (path.StartsWith("/legitflix/client/"))
             {
-                var fileName = Path.GetFileName(path);
-                // Try to find in assets
-                // Recursively search or map known files?
-                // Manifest based?
-                // For now, simple mapping for app.js and style.css
-                var resourceName = $"LegitFlix.Plugin.Assets.Client.{fileName}";
-                 var content = GetEmbeddedFile(resourceName); // This reads as string, but binaries (images) need stream.
-                 // For JS/CSS string is fine usually.
+                var relativePath = path.Substring("/legitflix/client/".Length).TrimStart('/');
+                // Normalize path to dot notation for resource matching attempt, though we will search properly
+                // Embedded resources: Folder/File -> Folder.File
+                // Spaces often become underscores or stay as is depending on compiler, 
+                // but usually the best way is to match by suffix or fuzzy match.
+
+                // However, doing a full scan on every request is slow. 
+                // Better approach: Try to construct the name, fallback to scan?
+                // Or just scan. For a few avatars it's fine. 
+                // But wait, there are 2700 assets. Scanning 2700 strings on every image load might be okay but not ideal.
+                
+                // Let's try to construct the expected resource name first.
+                // Standard mapping: / -> .
+                var resourcePath = System.Net.WebUtility.UrlDecode(relativePath).Replace('/', '.');
+                var expectedName = $"LegitFlix.Plugin.Assets.Client.{resourcePath}";
+
+                // We also need to get the file extension to set content type
+                var extension = Path.GetExtension(relativePath).ToLower();
+                
+                var content = GetEmbeddedFile(expectedName, extension);
                  if (content != null)
                  {
-                     if (fileName.EndsWith(".js")) context.Response.ContentType = "application/javascript";
-                     if (fileName.EndsWith(".css")) context.Response.ContentType = "text/css";
-                     await context.Response.WriteAsync(content);
+                     if (extension == ".js") context.Response.ContentType = "application/javascript";
+                     else if (extension == ".css") context.Response.ContentType = "text/css";
+                     else if (extension == ".png") context.Response.ContentType = "image/png";
+                     else if (extension == ".jpg" || extension == ".jpeg") context.Response.ContentType = "image/jpeg";
+                     else if (extension == ".svg") context.Response.ContentType = "image/svg+xml";
+
+                     await context.Response.Body.WriteAsync(content, 0, content.Length);
                      return;
                  }
             }
@@ -69,16 +85,54 @@ namespace LegitFlix.Plugin.Middleware
             await _next(context);
         }
 
-        private string GetEmbeddedFile(string resourceName)
+        private byte[] GetEmbeddedFile(string resourceName, string extension)
         {
             var assembly = Assembly.GetExecutingAssembly();
+            
+            // Try direct get
             using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
-                if (stream == null) return null;
-                using (var reader = new StreamReader(stream))
+                if (stream != null)
                 {
-                    return reader.ReadToEnd();
+                    return ReadStream(stream);
                 }
+            }
+
+            // Fallback: The resource name might have different encoding for spaces or special chars.
+            // For example "Disney +" might be "Disney__" or "Disney_".
+            // We search for a resource that EndsWith the path we asked for.
+            // We strip the prefix "LegitFlix.Plugin.Assets.Client." to match against the suffix.
+            var suffix = resourceName.Replace("LegitFlix.Plugin.Assets.Client.", "");
+            
+            // Allow for some fuzziness in standard replace
+            // e.g. "avatars.Disney +.img.png" might be "avatars.Disney__.img.png"
+            // Let's iterate all resources and match loosely.
+            var allResources = assembly.GetManifestResourceNames();
+            foreach (var res in allResources)
+            {
+                if (res.Contains("Assets.Client") && res.Equals(resourceName, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    using (var stream = assembly.GetManifestResourceStream(res))
+                        return ReadStream(stream);
+                }
+            }
+
+            // Try replacing spaces with underscores (common MSBuild behavior)
+            var underscoreName = resourceName.Replace(" ", "_");
+            using (var stream = assembly.GetManifestResourceStream(underscoreName))
+            {
+                if (stream != null) return ReadStream(stream);
+            }
+
+            return null;
+        }
+
+        private byte[] ReadStream(Stream stream)
+        {
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                return ms.ToArray();
             }
         }
     }

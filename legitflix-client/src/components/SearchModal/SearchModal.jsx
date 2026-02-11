@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
+import SkeletonLoader from '../SkeletonLoader';
 import './SearchModal.css';
 
 const SearchModal = ({ isOpen, onClose }) => {
@@ -8,6 +9,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     const [results, setResults] = useState([]);
     const [category, setCategory] = useState({ Name: 'All', Id: 'All' });
     const [views, setViews] = useState([{ Name: 'All', Id: 'All' }]);
+    const [isLoading, setIsLoading] = useState(false);
     const inputRef = useRef(null);
     const navigate = useNavigate();
 
@@ -37,6 +39,9 @@ const SearchModal = ({ isOpen, onClose }) => {
 
     useEffect(() => {
         const fetchResults = async () => {
+            setIsLoading(true);
+            setResults([]); // Clear previous results immediately
+
             // Case 1: Empty Query
             if (query.trim().length === 0) {
                 // If a specific category is selected, show suggested items from it
@@ -61,16 +66,20 @@ const SearchModal = ({ isOpen, onClose }) => {
                         setResults([]);
                     }
                 } else {
-                    // All + Empty Query = Clear
+                    // All + Empty Query = Clear (No loading needed really, but fast enough)
                     setResults([]);
                 }
+                setIsLoading(false);
                 return;
             }
 
             // Case 2: Active Query
             try {
                 const user = await jellyfinService.getCurrentUser();
-                if (!user) return;
+                if (!user) {
+                    setIsLoading(false);
+                    return;
+                }
 
                 // Search logic: If 'All', search globally. If specific view, restrict by ParentId.
                 const res = await jellyfinService.searchItems(
@@ -84,6 +93,8 @@ const SearchModal = ({ isOpen, onClose }) => {
 
             } catch (e) {
                 console.error("Search failed", e);
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -134,41 +145,55 @@ const SearchModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="legit-search-results">
-                    {results.length === 0 && query.length > 0 && (
-                        <div className="legit-no-results">No results found for "{query}"</div>
-                    )}
-
-                    {results.length === 0 && query.length === 0 && category.Id !== 'All' && (
-                        <div className="legit-no-results">No items found in {category.Name}</div>
-                    )}
-
-                    {query.length === 0 && category.Id === 'All' && (
-                        <div className="legit-search-helper">
-                            <span className="material-icons">keyboard</span>
-                            <p>Start typing to search...</p>
-                        </div>
-                    )}
-
-                    {results.map(item => (
-                        <div key={item.Id} className="legit-search-result-item" onClick={() => handleItemClick(item)}>
-                            <div
-                                className="legit-result-thumb"
-                                style={{
-                                    backgroundImage: `url(${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=60&fillWidth=40&quality=90)`,
-                                    backgroundColor: '#222'
-                                }}
-                            >
-                                {!item.ImageTags?.Primary && <span className="material-icons legit-result-icon-fallback">movie</span>}
-                            </div>
-                            <div className="legit-result-info">
-                                <div className="legit-result-title">{item.Name}</div>
-                                <div className="legit-result-meta">
-                                    <span className="legit-result-tag">{item.Type?.toUpperCase()}</span>
-                                    {item.ProductionYear && <span>{item.ProductionYear}</span>}
+                    {isLoading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <div key={`skeleton-${i}`} className="legit-search-result-item skeleton-item" style={{ pointerEvents: 'none' }}>
+                                <SkeletonLoader width="40px" height="60px" style={{ borderRadius: '4px', marginRight: '15px' }} />
+                                <div className="legit-result-info" style={{ width: '100%' }}>
+                                    <SkeletonLoader width="60%" height="20px" style={{ marginBottom: '8px' }} />
+                                    <SkeletonLoader width="30%" height="14px" />
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <>
+                            {results.length === 0 && query.length > 0 && (
+                                <div className="legit-no-results">No results found for "{query}"</div>
+                            )}
+
+                            {results.length === 0 && query.length === 0 && category.Id !== 'All' && (
+                                <div className="legit-no-results">No items found in {category.Name}</div>
+                            )}
+
+                            {query.length === 0 && category.Id === 'All' && (
+                                <div className="legit-search-helper">
+                                    <span className="material-icons">keyboard</span>
+                                    <p>Start typing to search...</p>
+                                </div>
+                            )}
+
+                            {results.map(item => (
+                                <div key={item.Id} className="legit-search-result-item" onClick={() => handleItemClick(item)}>
+                                    <div
+                                        className="legit-result-thumb"
+                                        style={{
+                                            backgroundImage: `url(${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=60&fillWidth=40&quality=90)`,
+                                            backgroundColor: '#222'
+                                        }}
+                                    >
+                                        {!item.ImageTags?.Primary && <span className="material-icons legit-result-icon-fallback">movie</span>}
+                                    </div>
+                                    <div className="legit-result-info">
+                                        <div className="legit-result-title">{item.Name}</div>
+                                        <div className="legit-result-meta">
+                                            <span className="legit-result-tag">{item.Type?.toUpperCase()}</span>
+                                            {item.ProductionYear && <span>{item.ProductionYear}</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
                 </div>
             </div>
         </div>
