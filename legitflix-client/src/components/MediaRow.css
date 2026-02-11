@@ -25,14 +25,11 @@
 /* Scroll Container */
 .media-row-scroll {
     display: flex;
-    gap: 0;
-    /* Gap handled by wrapper padding */
+    gap: 12px;
     overflow-x: scroll;
-    /* Using native scroll for touch support */
-    overflow-y: hidden;
+    overflow-y: visible;
     scroll-behavior: smooth;
-    padding: 2px;
-    /* Prevent cutoff shadows */
+    padding: 4px 2px 20px;
     margin: 0;
 
     /* Hide scrollbar */
@@ -44,14 +41,11 @@
     display: none;
 }
 
-/* Cards Wrapper - Layout controlled by Row */
-.media-card-wrapper {
-    flex: 0 0 14%;
-    /* ~7 items per row */
-    position: relative;
-    padding: 0 0.4vw;
-    /* Gap handling via padding instead of margin for precise flex calc */
-    box-sizing: border-box;
+/* Cards size inside rows */
+.media-row-scroll>.media-card {
+    flex: 0 0 12.35vw;
+    min-width: 140px;
+    max-width: 240px;
 }
 
 /* Arrows */
@@ -95,8 +89,8 @@
 
 /* Responsive */
 @media (max-width: 1400px) {
-    .media-card-wrapper {
-        flex: 0 0 16%;
+    .media-row-scroll>.media-card {
+        flex: 0 0 15vw;
     }
 
     .media-row-title {
@@ -105,14 +99,14 @@
 }
 
 @media (max-width: 1000px) {
-    .media-card-wrapper {
-        flex: 0 0 20%;
+    .media-row-scroll>.media-card {
+        flex: 0 0 22vw;
     }
 }
 
 @media (max-width: 600px) {
-    .media-card-wrapper {
-        flex: 0 0 33%;
+    .media-row-scroll>.media-card {
+        flex: 0 0 35vw;
     }
 
     .row-arrow {

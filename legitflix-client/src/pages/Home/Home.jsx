@@ -183,38 +183,56 @@ const Home = () => {
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
                                 <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>Continue Watching</h2>
                                 <div className="backdrop-scroll-container">
-                                    {resumeItems.map(item => (
-                                        <div
-                                            key={item.Id}
-                                            className="backdrop-card"
-                                            onClick={() => navigate(`/details/${item.Id}`)}
-                                            title={item.Name}
-                                        >
-                                            <div className="backdrop-card-image">
-                                                <img
-                                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
-                                                    alt={item.Name}
-                                                    onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
-                                                />
-                                            </div>
-                                            {/* Progress Bar */}
-                                            {item.UserData && item.RunTimeTicks > 0 && (
-                                                <div className="backdrop-progress-track">
-                                                    <div className="backdrop-progress-fill" style={{ width: `${Math.min(100, (item.UserData.PlaybackPositionTicks / item.RunTimeTicks) * 100)}%` }}></div>
+                                    {resumeItems.map(item => {
+                                        const played = item.UserData?.PlayedPercentage >= 100 || item.UserData?.Played;
+                                        const ticksLeft = item.RunTimeTicks && item.UserData?.PlaybackPositionTicks
+                                            ? item.RunTimeTicks - item.UserData.PlaybackPositionTicks
+                                            : 0;
+                                        const minsLeft = ticksLeft > 0 ? Math.round(ticksLeft / 600000000) : 0;
+
+                                        return (
+                                            <div
+                                                key={item.Id}
+                                                className="backdrop-card"
+                                                onClick={() => navigate(`/details/${item.Id}`)}
+                                                title={item.Name}
+                                            >
+                                                <div className="backdrop-card-image">
+                                                    <img
+                                                        src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
+                                                        alt={item.Name}
+                                                        onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
+                                                    />
+                                                    {/* Play Overlay */}
+                                                    <div className="backdrop-play-overlay">
+                                                        <span className="material-icons">play_arrow</span>
+                                                    </div>
+                                                    {/* Time-Left or Watched Badge */}
+                                                    {played ? (
+                                                        <div className="backdrop-badge watched">Watched</div>
+                                                    ) : minsLeft > 0 ? (
+                                                        <div className="backdrop-badge time-left">{minsLeft}m left</div>
+                                                    ) : null}
                                                 </div>
-                                            )}
-                                            <div className="backdrop-card-info">
-                                                <span className="backdrop-card-title">{item.SeriesName || item.Name}</span>
-                                                {item.SeriesName && (
-                                                    <span className="backdrop-card-subtitle">
-                                                        {item.ParentIndexNumber != null && item.IndexNumber != null
-                                                            ? `S${item.ParentIndexNumber}:E${item.IndexNumber} - ${item.Name}`
+                                                {/* Progress Bar */}
+                                                {item.UserData && item.RunTimeTicks > 0 && !played && (
+                                                    <div className="backdrop-progress-track">
+                                                        <div className="backdrop-progress-fill" style={{ width: `${Math.min(100, (item.UserData.PlaybackPositionTicks / item.RunTimeTicks) * 100)}%` }}></div>
+                                                    </div>
+                                                )}
+                                                <div className="backdrop-card-info">
+                                                    <span className="backdrop-card-series">{item.SeriesName || ''}</span>
+                                                    <span className="backdrop-card-title">
+                                                        {item.SeriesName
+                                                            ? (item.ParentIndexNumber != null && item.IndexNumber != null
+                                                                ? `S${item.ParentIndexNumber} E${item.IndexNumber} – ${item.Name}`
+                                                                : item.Name)
                                                             : item.Name}
                                                     </span>
-                                                )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </section>
                         )}
@@ -222,7 +240,7 @@ const Home = () => {
                         {/* 2.5. History */}
                         {historyItems.length > 0 && (
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
-                                <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>History ›</h2>
+                                <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>History</h2>
                                 <div className="backdrop-scroll-container">
                                     {historyItems.map(item => (
                                         <div
@@ -237,16 +255,19 @@ const Home = () => {
                                                     alt={item.Name}
                                                     onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
                                                 />
+                                                <div className="backdrop-play-overlay">
+                                                    <span className="material-icons">play_arrow</span>
+                                                </div>
                                             </div>
                                             <div className="backdrop-card-info">
-                                                <span className="backdrop-card-title">{item.SeriesName || item.Name}</span>
-                                                {item.SeriesName && (
-                                                    <span className="backdrop-card-subtitle">
-                                                        {item.ParentIndexNumber != null && item.IndexNumber != null
-                                                            ? `S${item.ParentIndexNumber}:E${item.IndexNumber} - ${item.Name}`
-                                                            : item.Name}
-                                                    </span>
-                                                )}
+                                                <span className="backdrop-card-series">{item.SeriesName || ''}</span>
+                                                <span className="backdrop-card-title">
+                                                    {item.SeriesName
+                                                        ? (item.ParentIndexNumber != null && item.IndexNumber != null
+                                                            ? `S${item.ParentIndexNumber} E${item.IndexNumber} – ${item.Name}`
+                                                            : item.Name)
+                                                        : item.Name}
+                                                </span>
                                             </div>
                                         </div>
                                     ))}
