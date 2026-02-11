@@ -211,8 +211,16 @@
 }
 
 .setting-section {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     animation: fadeIn 0.3s ease-out;
+}
+
+.setting-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .setting-row {
@@ -617,7 +625,8 @@ input:checked+.slider:before {
     user-select: none;
 }
 
-.content-type-chip input[type="checkbox"] {
+.content-type-chip input[type="checkbox"],
+.content-type-chip input[type="radio"] {
     display: none;
 }
 

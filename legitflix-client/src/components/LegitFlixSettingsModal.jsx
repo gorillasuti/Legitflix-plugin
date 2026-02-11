@@ -31,6 +31,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [showNavbarRequests, setShowNavbarRequests] = useState(config.showNavbarRequests !== false);
     const [customHex, setCustomHex] = useState('');
     const [contentTypes, setContentTypes] = useState(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
+    const [sortMode, setSortMode] = useState(config.contentSortMode || 'latest');
 
     useEffect(() => {
         if (isOpen) {
@@ -43,6 +44,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setShowLibraryTitles(config.showLibraryTitles !== false);
             setShowNavbarRequests(config.showNavbarRequests !== false);
             setContentTypes(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
+            setSortMode(config.contentSortMode || 'latest');
             setSearchQuery('');
 
             if (!PRESET_COLORS.some(c => c.value === config.accentColor)) {
@@ -82,6 +84,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             contentTypeFilters: contentTypes,
             heroMediaTypes: heroStr,
             promoMediaTypes: promoArr,
+            contentSortMode: sortMode,
         });
         onClose();
     };
@@ -96,6 +99,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         setShowLibraryTitles(true);
         setShowNavbarRequests(true);
         setContentTypes({ Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
+        setSortMode('latest');
     };
 
     // --- Search Logic ---
@@ -290,6 +294,43 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                                     />
                                     <span className="material-icons">{t.icon}</span>
                                     <span>{t.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+        },
+        {
+            id: 'displayOrder',
+            tab: 'home',
+            label: 'Display Order',
+            keywords: ['sort', 'order', 'random', 'latest', 'rated', 'carousel', 'promo', 'display'],
+            render: () => {
+                const SORT_MODES = [
+                    { key: 'latest', label: 'Latest', icon: 'schedule', desc: 'Newest additions first' },
+                    { key: 'random', label: 'Random', icon: 'shuffle', desc: 'Shuffled each visit' },
+                    { key: 'topRated', label: 'Top Rated', icon: 'star', desc: 'Highest community rating' },
+                ];
+                return (
+                    <div className="setting-section" key="displayOrder">
+                        <h3>Display Order</h3>
+                        <p className="setting-desc">How content is sorted in the Hero Carousel and Promo Banner.</p>
+                        <div className="content-type-grid">
+                            {SORT_MODES.map(m => (
+                                <label
+                                    key={m.key}
+                                    className={`content-type-chip ${sortMode === m.key ? 'active' : ''}`}
+                                    title={m.desc}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="sortMode"
+                                        checked={sortMode === m.key}
+                                        onChange={() => setSortMode(m.key)}
+                                    />
+                                    <span className="material-icons">{m.icon}</span>
+                                    <span>{m.label}</span>
                                 </label>
                             ))}
                         </div>

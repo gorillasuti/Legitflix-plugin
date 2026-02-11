@@ -31,12 +31,20 @@ const HeroCarousel = ({ onInfoClick }) => {
                 }
                 console.log("[HeroCarousel] User found:", user.Name, user.Id);
 
+                const sortMode = config.contentSortMode || 'latest';
+                const sortMap = {
+                    latest: { sortBy: 'DateCreated', sortOrder: 'Descending' },
+                    random: { sortBy: 'Random', sortOrder: 'Descending' },
+                    topRated: { sortBy: 'CommunityRating', sortOrder: 'Descending' },
+                };
+                const { sortBy, sortOrder } = sortMap[sortMode] || sortMap.latest;
+
                 const query = {
                     includeItemTypes: config.heroMediaTypes,
                     recursive: true,
-                    sortBy: 'DateCreated',
-                    sortOrder: 'Descending',
-                    limit: 20, // Fetch more to slice later
+                    sortBy,
+                    sortOrder,
+                    limit: 20,
                     fields: ['PrimaryImageAspectRatio', 'Overview', 'ProductionYear', 'OfficialRating', 'CommunityRating', 'RunTimeTicks', 'Genres', 'MediaStreams', 'UserData', 'ImageTags', 'BackdropImageTags'],
                     imageTypeLimit: 1,
                     enableImageTypes: ['Backdrop', 'Primary', 'Logo']

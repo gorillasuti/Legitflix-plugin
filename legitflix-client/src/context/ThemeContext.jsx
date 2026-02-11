@@ -25,6 +25,7 @@ export const ThemeProvider = ({ children }) => {
         heroMediaTypes: 'Movie,Series',
         promoMediaTypes: ['Movie', 'Series'],
         contentTypeFilters: { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false },
+        contentSortMode: 'latest', // 'latest' | 'random' | 'topRated'
         heroLimit: 20,
         enableJellyseerr: true,
         jellyseerrUrl: 'https://request.legitflix.eu',

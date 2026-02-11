@@ -42,12 +42,20 @@ const Home = () => {
                     // --- Promo Logic (Ported from legacy theme) ---
                     // 1. Get Candidates (Latest Movies/Series)
                     const candidatesFn = async () => {
+                        const sortMode = config.contentSortMode || 'latest';
+                        const sortMap = {
+                            latest: { sortBy: ['DateCreated'], sortOrder: ['Descending'] },
+                            random: { sortBy: ['Random'], sortOrder: ['Descending'] },
+                            topRated: { sortBy: ['CommunityRating'], sortOrder: ['Descending'] },
+                        };
+                        const { sortBy, sortOrder } = sortMap[sortMode] || sortMap.latest;
+
                         return jellyfinService.getItems(user.Id, {
                             limit: 20,
                             recursive: true,
                             includeItemTypes: config.promoMediaTypes || ['Movie', 'Series'],
-                            sortBy: ['DateCreated'],
-                            sortOrder: ['Descending'],
+                            sortBy,
+                            sortOrder,
                             imageTypeLimit: 1,
                             enableImageTypes: ['Primary', 'Backdrop', 'Thumb', 'Logo'],
                             fields: ['Overview', 'ProductionYear', 'ImageTags', 'OfficialRating', 'CommunityRating', 'Genres']
