@@ -7,18 +7,10 @@
 .home-content-container {
     position: relative;
     z-index: 2;
-    padding: 20px 4% 0;
+    padding: 20px 0 20px 0;
     margin-top: -100px;
     /* Overlap Hero */
     background: linear-gradient(to bottom, transparent, #141414 100px);
-}
-
-.section-title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: #e5e5e5;
-    text-align: left;
 }
 
 .libraries-grid {
@@ -43,19 +35,17 @@
     border-radius: 4px;
 }
 
-/* Promo Banners */
+/* Promo Banners (Top/Bottom Layout) */
 .legitflix-promo-container {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    height: 350px;
-    /* Fixed height for consistency */
+    margin-bottom: 40px;
 }
 
 @media (max-width: 1000px) {
     .legitflix-promo-container {
-        grid-template-columns: 1fr;
-        height: auto;
+        gap: 15px;
     }
 }
 
@@ -73,9 +63,11 @@
     transform: scale(1.01);
 }
 
-/* Large Item (Left) */
+/* Large Item (Top Hero) */
 .promo-item-large {
-    height: 100%;
+    width: 100%;
+    height: 450px;
+    /* Taller hero */
 }
 
 .promo-bg {
@@ -83,7 +75,6 @@
     height: 100%;
     object-fit: cover;
     opacity: 0.6;
-    /* Dim for text popup */
     transition: opacity 0.3s;
 }
 
@@ -93,21 +84,21 @@
 
 .promo-content {
     position: absolute;
-    bottom: 20px;
-    left: 30px;
+    bottom: 30px;
+    left: 40px;
     z-index: 2;
-    max-width: 50%;
+    max-width: 60%;
 }
 
 .promo-logo {
-    max-width: 200px;
-    max-height: 80px;
+    max-width: 300px;
+    max-height: 120px;
     object-fit: contain;
     margin-bottom: 20px;
 }
 
 .promo-title {
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 800;
     margin-bottom: 15px;
     color: #fff;
@@ -118,49 +109,59 @@
     background-color: var(--clr-accent, #ff7e00);
     color: white;
     border: none;
-    padding: 10px 25px;
-    font-size: 0.9rem;
+    padding: 12px 30px;
+    font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
     border-radius: 4px;
     letter-spacing: 1px;
     text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s;
 }
 
-/* Side Grid (Right) */
-.promo-grid-column {
+.btn-watch:hover {
+    background-color: #ff9933;
+}
+
+/* Bottom Grid (Small Items) */
+.promo-grid-row {
     display: flex;
-    flex-direction: column;
     gap: 20px;
-    height: 100%;
+    width: 100%;
 }
 
 .promo-item-small {
     flex: 1;
-    /* Split height equally */
+    height: 220px;
     background: #1a1a1a;
     display: flex;
-    /* Ensure inner content stretches */
 }
 
 .promo-split {
     display: flex;
     width: 100%;
+    height: 100%;
 }
 
 .promo-text {
-    flex: 1;
-    padding: 20px;
+    flex: 1.2;
+    /* Text takes slightly more space */
+    padding: 20px 25px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    background: linear-gradient(to right, #1a1a1a 90%, transparent);
+    /* Fade text bg into image */
+    z-index: 2;
+    /* Text above image edge */
 }
 
 .promo-text h3 {
     margin: 0 0 5px 0;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     color: #fff;
-    font-weight: 600;
+    font-weight: 700;
     display: -webkit-box;
     -webkit-line-clamp: 1;
     line-clamp: 1;
@@ -169,15 +170,15 @@
 }
 
 .promo-text .desc {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #aaa;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
 .btn-orange-text {
@@ -185,45 +186,68 @@
     border: none;
     color: var(--clr-accent, #ff7e00);
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
     padding: 0;
     cursor: pointer;
     align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-orange-text:hover {
+    text-decoration: underline;
 }
 
 .promo-img-container {
-    width: 40%;
+    flex: 0.8;
+    /* Image takes less space */
     position: relative;
+    height: 100%;
+    overflow: hidden;
 }
 
 .promo-poster {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    mask-image: linear-gradient(to right, transparent, black 10%);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%);
+    /* Fade from Left (Transparent) to Right (Black/Image) so text blends in */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 20%);
+    mask-image: linear-gradient(to right, transparent, black 20%);
+}
+
+@media (max-width: 800px) {
+    .promo-grid-row {
+        flex-direction: column;
+    }
+
+    .promo-item-small {
+        height: 180px;
+    }
 }
 
 .library-card {
     width: 160px;
     height: 240px;
     min-width: 160px;
-    /* Required for flex scroll */
     background: #333;
     border-radius: 8px;
     display: block;
-    /* Changed from flex for image */
     position: relative;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     overflow: hidden;
 }
 
 .library-card:hover {
     transform: scale(1.05);
     z-index: 2;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+.library-card:hover .library-card-image {
+    filter: brightness(1.15);
 }
 
 .library-card-image {
@@ -262,4 +286,109 @@
     justify-content: center;
     align-items: center;
     color: #777;
+}
+
+/* ========== Backdrop Cards (Continue Watching / History) ========== */
+.backdrop-scroll-container {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.backdrop-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.backdrop-card {
+    flex: 0 0 320px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.backdrop-card:hover {
+    transform: scale(1.05);
+    z-index: 5;
+}
+
+.backdrop-card:hover .backdrop-card-image {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+.backdrop-card:hover .backdrop-card-image img {
+    filter: brightness(1.15);
+}
+
+.backdrop-card-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #222;
+}
+
+.backdrop-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Orange Progress Bar */
+.backdrop-progress-track {
+    width: 100%;
+    height: 3px;
+    background: #333;
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+    margin-top: -3px;
+    /* Overlap bottom of image */
+    position: relative;
+    z-index: 2;
+}
+
+.backdrop-progress-fill {
+    height: 100%;
+    background: var(--clr-accent, #ff7e00);
+    border-radius: 0 2px 2px 0;
+}
+
+/* Card Text Info */
+.backdrop-card-info {
+    padding: 8px 2px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.backdrop-card-title {
+    font-size: 0.95rem;
+    color: #e0e0e0;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.backdrop-card-subtitle {
+    font-size: 0.82rem;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 800px) {
+    .backdrop-card {
+        flex: 0 0 260px;
+    }
+}
+
+@media (max-width: 500px) {
+    .backdrop-card {
+        flex: 0 0 220px;
+    }
 }

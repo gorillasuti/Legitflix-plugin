@@ -17,7 +17,7 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
             try {
                 const user = await jellyfinService.getCurrentUser();
                 if (user && libraryId) {
-                    const res = await jellyfinService.getLatestItems(user.Id, libraryId, 20);
+                    const res = await jellyfinService.getLatestItems(user.Id, libraryId);
                     if (res && res.Items) {
                         setItems(res.Items);
                     }

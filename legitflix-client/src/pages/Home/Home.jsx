@@ -13,6 +13,7 @@ import './Home.css';
 const Home = () => {
     const [libraries, setLibraries] = useState([]);
     const [resumeItems, setResumeItems] = useState([]);
+    const [historyItems, setHistoryItems] = useState([]);
     const [promoItems, setPromoItems] = useState([]); // New state for promos
     const [loading, setLoading] = useState(true);
     const [modalItem, setModalItem] = useState(null); // ID of item to show in modal
@@ -31,6 +32,11 @@ const Home = () => {
                     const resume = await jellyfinService.getResumeItems(user.Id);
                     const resumeList = resume.Items || [];
                     setResumeItems(resumeList);
+
+                    // History (recently played, completed items)
+                    const history = await jellyfinService.getHistoryItems(user.Id, 12);
+                    const historyList = (history.Items || []).filter(i => !resumeList.some(r => r.Id === i.Id));
+                    setHistoryItems(historyList);
 
                     // --- Promo Logic (Ported from legacy theme) ---
                     // 1. Get Candidates (Latest Movies/Series)
@@ -147,42 +153,71 @@ const Home = () => {
                         {resumeItems.length > 0 && (
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
                                 <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>Continue Watching</h2>
-                                <div className="resume-scroll-container" style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px' }}>
+                                <div className="backdrop-scroll-container">
                                     {resumeItems.map(item => (
                                         <div
                                             key={item.Id}
-                                            className="library-card"
+                                            className="backdrop-card"
                                             onClick={() => navigate(`/details/${item.Id}`)}
                                             title={item.Name}
-                                            style={{ flex: '0 0 280px', cursor: 'pointer', transition: 'transform 0.2s', position: 'relative' }}
                                         >
-                                            <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+                                            <div className="backdrop-card-image">
                                                 <img
-                                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?fillHeight=157&fillWidth=280&quality=90`}
+                                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
                                                     alt={item.Name}
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
                                                 />
-                                                <div className="play-overlay-center" style={{
-                                                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                                    width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(0,0,0,0.6)',
-                                                    border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.8
-                                                }}>
-                                                    <span className="material-icons" style={{ fontSize: '24px' }}>play_arrow</span>
-                                                </div>
                                             </div>
-
-                                            <div style={{ marginTop: '8px' }}>
-                                                <div style={{ width: '100%', background: '#333', height: '3px', borderRadius: '2px', marginBottom: '5px' }}>
-                                                    <div style={{
-                                                        width: `${Math.min(100, (item.UserData.PlaybackPositionTicks / item.RunTimeTicks) * 100)}%`,
-                                                        background: '#ff7e00', // Orange progress
-                                                        height: '100%'
-                                                    }}></div>
+                                            {/* Progress Bar */}
+                                            {item.UserData && item.RunTimeTicks > 0 && (
+                                                <div className="backdrop-progress-track">
+                                                    <div className="backdrop-progress-fill" style={{ width: `${Math.min(100, (item.UserData.PlaybackPositionTicks / item.RunTimeTicks) * 100)}%` }}></div>
                                                 </div>
-                                                <span style={{ fontSize: '0.9rem', color: '#ddd', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                    {item.SeriesName || item.Name}
-                                                </span>
-                                                {item.SeriesName && <span style={{ fontSize: '0.8rem', color: '#888' }}>{item.Name}</span>}
+                                            )}
+                                            <div className="backdrop-card-info">
+                                                <span className="backdrop-card-title">{item.SeriesName || item.Name}</span>
+                                                {item.SeriesName && (
+                                                    <span className="backdrop-card-subtitle">
+                                                        {item.ParentIndexNumber != null && item.IndexNumber != null
+                                                            ? `S${item.ParentIndexNumber}:E${item.IndexNumber} - ${item.Name}`
+                                                            : item.Name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* 2.5. History */}
+                        {historyItems.length > 0 && (
+                            <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
+                                <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>History ›</h2>
+                                <div className="backdrop-scroll-container">
+                                    {historyItems.map(item => (
+                                        <div
+                                            key={item.Id}
+                                            className="backdrop-card"
+                                            onClick={() => navigate(`/details/${item.Id}`)}
+                                            title={item.Name}
+                                        >
+                                            <div className="backdrop-card-image">
+                                                <img
+                                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
+                                                    alt={item.Name}
+                                                    onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
+                                                />
+                                            </div>
+                                            <div className="backdrop-card-info">
+                                                <span className="backdrop-card-title">{item.SeriesName || item.Name}</span>
+                                                {item.SeriesName && (
+                                                    <span className="backdrop-card-subtitle">
+                                                        {item.ParentIndexNumber != null && item.IndexNumber != null
+                                                            ? `S${item.ParentIndexNumber}:E${item.IndexNumber} - ${item.Name}`
+                                                            : item.Name}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -220,9 +255,9 @@ const Home = () => {
                                         </div>
                                     </div>
 
-                                    {/* Side Grid for Items 2 & 3 */}
+                                    {/* Bottom Grid for Items 2 & 3 */}
                                     {(promoItems[1] || promoItems[2]) && (
-                                        <div className="promo-grid-column">
+                                        <div className="promo-grid-row">
                                             {promoItems.slice(1, 3).map(item => (
                                                 <div
                                                     key={item.Id}

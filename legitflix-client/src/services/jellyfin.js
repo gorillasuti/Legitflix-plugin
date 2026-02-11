@@ -169,6 +169,20 @@ class JellyfinService {
         return response;
     }
 
+    async getHistoryItems(userId, limit = 12) {
+        if (!this.api) this.initialize();
+        const response = await this.getItems(userId, {
+            sortBy: ['DatePlayed'],
+            sortOrder: ['Descending'],
+            limit: limit,
+            recursive: true,
+            filters: ['IsPlayed'],
+            includeItemTypes: ['Movie', 'Episode'],
+            fields: ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks']
+        });
+        return response;
+    }
+
     async markFavorite(userId, itemId, isFavorite) {
         if (!this.api) this.initialize();
         if (isFavorite) {
@@ -203,16 +217,15 @@ class JellyfinService {
         }
     }
 
-    async getLatestItems(userId, parentId, limit = 12) {
+    async getLatestItems(userId, parentId) {
         if (!this.api) this.initialize();
         try {
             const response = await this.api.items.getItems({
                 userId,
                 parentId,
-                limit,
                 sortBy: ['DateCreated'],
                 sortOrder: ['Descending'],
-                includeItemTypes: ['Movie', 'Episode', 'Series'],
+                includeItemTypes: ['Movie', 'Series'],
                 recursive: true,
                 fields: ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks']
             });

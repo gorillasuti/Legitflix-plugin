@@ -1,18 +1,13 @@
 .jellyseerr-card {
     display: block;
-    width: 160px;
-    height: 240px;
-    /* Portrait */
-    min-width: 160px;
-    /* Required for flex scroll */
+    width: 100%;
+    height: 100%;
     position: relative;
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
-    margin: 10px;
     background: #202020;
-    /* Fallback bg */
 }
 
 .jellyseerr-card:hover {
