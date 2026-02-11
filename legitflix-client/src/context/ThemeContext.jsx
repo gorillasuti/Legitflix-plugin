@@ -5,12 +5,12 @@ const ThemeContext = createContext();
 
 // Map preset accent colors → matching default logo
 const ACCENT_LOGO_MAP = {
-    '#ff7e00': '/default-logo-orange.png',
-    '#00aaff': '/default-logo-blue.png',
-    '#00ff7e': '/default-logo-green.png',
-    '#ff3333': '/default-logo-red.png',
-    '#aa00ff': '/default-logo-purple.png',
-    '#ff00aa': '/default-logo-purple.png',  // Pink falls back to purple
+    '#ff7e00': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-orange.png',
+    '#00aaff': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-blue.png',
+    '#00ff7e': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-green.png',
+    '#ff3333': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-red.png',
+    '#aa00ff': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-purple.png',
+    '#ff00aa': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-purple.png',  // Pink falls back to purple
 };
 
 export const getDefaultLogo = (accentColor) => {
