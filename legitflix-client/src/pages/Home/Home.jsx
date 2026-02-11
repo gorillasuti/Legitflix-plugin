@@ -269,8 +269,11 @@ const Home = () => {
                                             ) : (
                                                 <h2 className="promo2-hero-title">{promoItems[0].Name}</h2>
                                             )}
+                                            {promoItems[0].Overview && (
+                                                <p className="promo2-hero-desc">{promoItems[0].Overview}</p>
+                                            )}
                                             <Button
-                                                variant="primary"
+                                                variant="ringHover"
                                                 size="lg"
                                                 onClick={(e) => { e.stopPropagation(); navigate(`/details/${promoItems[0].Id}`); }}
                                             >
@@ -289,7 +292,7 @@ const Home = () => {
                                                         <span className="promo2-card-year">{item.ProductionYear}</span>
                                                         <p className="promo2-card-desc">{item.Overview}</p>
                                                         <Button
-                                                            variant="outline"
+                                                            variant="ringHover"
                                                             className="promo2-start-btn"
                                                             onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}
                                                         >
@@ -298,9 +301,9 @@ const Home = () => {
                                                     </div>
                                                     <div className="promo2-card-img">
                                                         <img
-                                                            src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Thumb/0?maxWidth=400&quality=90`}
+                                                            src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
                                                             alt={item.Name}
-                                                            onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=400`; }}
+                                                            onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`; }}
                                                         />
                                                     </div>
                                                 </div>
