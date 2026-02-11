@@ -390,7 +390,6 @@ input:checked+.slider:before {
 
 .btn-save:hover {
     filter: brightness(1.1);
-    box-shadow: 0 4px 15px rgba(255, 126, 0, 0.3);
 }
 
 .no-results {

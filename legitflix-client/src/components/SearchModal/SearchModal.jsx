@@ -37,11 +37,37 @@ const SearchModal = ({ isOpen, onClose }) => {
 
     useEffect(() => {
         const fetchResults = async () => {
+            // Case 1: Empty Query
             if (query.trim().length === 0) {
-                setResults([]);
+                // If a specific category is selected, show suggested items from it
+                if (category.Id !== 'All') {
+                    try {
+                        const user = await jellyfinService.getCurrentUser();
+                        if (user) {
+                            // fetch latest or random items from this category logic
+                            const res = await jellyfinService.getItems(user.Id, {
+                                parentId: category.Id,
+                                limit: 20,
+                                sortBy: ['DateCreated'],
+                                sortOrder: ['Descending'],
+                                includeItemTypes: ['Movie', 'Series', 'BoxSet'],
+                                recursive: true,
+                                fields: ['PrimaryImageAspectRatio', 'ProductionYear']
+                            });
+                            setResults(res.Items || []);
+                        }
+                    } catch (e) {
+                        console.error("Category fetch failed", e);
+                        setResults([]);
+                    }
+                } else {
+                    // All + Empty Query = Clear
+                    setResults([]);
+                }
                 return;
             }
 
+            // Case 2: Active Query
             try {
                 const user = await jellyfinService.getCurrentUser();
                 if (!user) return;
@@ -112,7 +138,11 @@ const SearchModal = ({ isOpen, onClose }) => {
                         <div className="legit-no-results">No results found for "{query}"</div>
                     )}
 
-                    {query.length === 0 && (
+                    {results.length === 0 && query.length === 0 && category.Id !== 'All' && (
+                        <div className="legit-no-results">No items found in {category.Name}</div>
+                    )}
+
+                    {query.length === 0 && category.Id === 'All' && (
                         <div className="legit-search-helper">
                             <span className="material-icons">keyboard</span>
                             <p>Start typing to search...</p>

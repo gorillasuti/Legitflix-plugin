@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { jellyfinService } from '../services/jellyfin';
+import { Button } from '@/components/ui/button';
 import './InfoModal.css';
 
 const InfoModal = ({ itemId, onClose, isOpen }) => {
@@ -69,6 +70,16 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                 if (foundTrailers.length > 0) {
                     // Default to first trailer
                     setActiveTrailerId(foundTrailers[0].id);
+                } else if (data.Type === 'Series' || data.Type === 'Movie') {
+                    // FALLBACK: If no trailers found, add a Search Trailer
+                    const fallbackId = `${data.Name} ${data.ProductionYear || ''} Trailer`;
+                    const fallbackTrailer = {
+                        title: 'Search YouTube',
+                        id: fallbackId,
+                        type: 'Search'
+                    };
+                    setTrailers([fallbackTrailer]);
+                    setActiveTrailerId(fallbackId);
                 }
             }
         };
@@ -159,8 +170,12 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
             isLocalTrailer = true;
             // Native Stream
             trailerUrl = `${jellyfinService.api.basePath}/Videos/${activeTrailer.id}/stream?Container=mp4&Static=true&api_key=${jellyfinService.api.accessToken}`;
+        } else if (activeTrailer.type === 'Search') {
+            // YouTube Search List
+            // listType=search&list=QUERY
+            trailerUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(activeTrailer.id)}&autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1`;
         } else {
-            // YouTube
+            // YouTube ID
             trailerUrl = `https://www.youtube.com/embed/${activeTrailer.id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1&playlist=${activeTrailer.id}&enablejsapi=1`;
         }
     }
@@ -170,9 +185,14 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
             <div className="info-modal-backdrop" onClick={onClose}></div>
 
             <div className="info-modal-content">
-                <button className="btn-close-modal" onClick={onClose}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="btn-close-modal absolute top-5 right-5 z-50 rounded-full bg-black/50 text-white hover:bg-white/20"
+                    onClick={onClose}
+                >
                     <span className="material-icons">close</span>
-                </button>
+                </Button>
 
                 {/* VIDEO HERO */}
                 <div className="info-video-container">
@@ -206,9 +226,14 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                     {/* Mute Button */}
                     {trailerUrl && (
                         <div className="video-mute-overlay">
-                            <button className="btn-mute-toggle" onClick={toggleMute}>
-                                <span className="material-icons">{isMuted ? 'volume_off' : 'volume_up'}</span>
-                            </button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="rounded-full w-10 h-10 border border-white/30 bg-black/30 hover:bg-white/10 text-white"
+                                onClick={toggleMute}
+                            >
+                                <span className="material-icons text-lg">{isMuted ? 'volume_off' : 'volume_up'}</span>
+                            </Button>
                         </div>
                     )}
 
@@ -216,13 +241,24 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                     <div className={`info-hero-content ${isIdle ? 'idle' : ''}`}>
                         {logoUrl ? <img src={logoUrl} className="info-logo" alt={details.Name} /> : <h1 className="info-title-text">{details.Name}</h1>}
 
-                        <div className="info-actions">
-                            <button className="btn-play-hero" onClick={handlePlay}>
+                        <div className="info-actions flex gap-4 mt-6">
+                            <Button
+                                variant="ringHover"
+                                size="lg"
+                                className="h-12 px-8 text-lg font-bold rounded-md gap-2"
+                                onClick={handlePlay}
+                            >
                                 <span className="material-icons">play_arrow</span> Play
-                            </button>
-                            <button className="btn-my-list" onClick={toggleFavorite}>
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className={`h-12 px-6 text-lg rounded-md gap-2 border-2 bg-transparent hover:bg-white/10 ${details.UserData?.IsFavorite ? 'border-primary text-primary' : 'border-white/40 text-white'}`}
+                                onClick={toggleFavorite}
+                            >
                                 <span className="material-icons">{details.UserData?.IsFavorite ? 'check' : 'add'}</span> My List
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

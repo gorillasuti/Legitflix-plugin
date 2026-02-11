@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import { Button } from '@/components/ui/button';
 import './MovieDetail.css';
 import jellyfinService from '../../services/jellyfin';
 
@@ -161,23 +162,31 @@ const MovieDetail = () => {
                             </div>
                         </div>
 
-                        <div className="lf-movie-hero__actions" style={{ marginTop: 20 }}>
-                            <button className="lf-btn lf-btn--primary">
+                        <div className="lf-movie-hero__actions" style={{ marginTop: 20, display: 'flex', gap: '10px' }}>
+                            <Button
+                                variant="ringHover"
+                                size="lg"
+                                className="h-12 px-8 text-lg font-bold rounded-md gap-2"
+                            >
                                 <span className="material-icons">play_arrow</span>
                                 Watch Now
-                            </button>
-                            <button className="lf-btn lf-btn--glass">
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className="h-12 px-6 text-lg rounded-md gap-2 border-2 bg-white/5 border-white/20 hover:bg-white/10 hover:border-white text-white"
+                            >
                                 <span className="material-icons">theaters</span>
                                 Trailer
-                            </button>
-                            <div className="lf-btn-group">
-                                <button
-                                    className={`lf-btn lf-btn--glass lf-btn--icon-only lf-btn--heart ${movie.UserData?.IsFavorite ? 'is-liked' : ''}`}
-                                    onClick={handleToggleFavorite}
-                                >
-                                    <span className="material-icons">{movie.UserData?.IsFavorite ? 'favorite' : 'favorite_border'}</span>
-                                </button>
-                            </div>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className={`h-12 w-12 rounded-md border-2 bg-white/5 border-white/20 hover:bg-white/10 hover:border-white ${movie.UserData?.IsFavorite ? 'text-primary border-primary' : 'text-white'}`}
+                                onClick={handleToggleFavorite}
+                            >
+                                <span className="material-icons">{movie.UserData?.IsFavorite ? 'favorite' : 'favorite_border'}</span>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -187,16 +196,24 @@ const MovieDetail = () => {
             <div className="lf-content-section" id="lfDirectPlayer">
                 <div className="lf-section-header">
                     <h2 className="lf-section-title">{movie.Name}</h2>
-                    <div className="lf-filter-controls">
-                        <button className="lf-filter-btn" title="Audio & Subtitles" onClick={() => setIsSubtitleModalOpen(true)}>
+                    <div className="lf-filter-controls flex gap-3">
+                        <Button
+                            variant="outline"
+                            className="gap-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                            onClick={() => setIsSubtitleModalOpen(true)}
+                        >
                             <span className="material-icons">subtitles</span>
                             <span>Audio & Subs</span>
                             <span className="material-icons">expand_more</span>
-                        </button>
-                        <button className="lf-filter-btn" title="Mark Played" onClick={handleTogglePlayed}>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className={`gap-2 border-white/20 bg-transparent hover:bg-white/10 ${movie.UserData?.Played ? 'text-primary border-primary/50' : 'text-white'}`}
+                            onClick={handleTogglePlayed}
+                        >
                             <span className="material-icons">{movie.UserData?.Played ? 'check_circle' : 'check_circle_outline'}</span>
                             <span>{movie.UserData?.Played ? 'Played' : 'Mark Played'}</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
 

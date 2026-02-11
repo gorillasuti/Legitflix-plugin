@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../services/jellyfin';
 import { useTheme } from '../context/ThemeContext';
 import SkeletonLoader from './SkeletonLoader';
+import { Button } from '@/components/ui/button';
 import './HeroCarousel.css';
 
 const HeroCarousel = ({ onInfoClick }) => {
@@ -289,22 +290,37 @@ const HeroCarousel = ({ onInfoClick }) => {
 
                             <p className="hero-desc">{item.Overview}</p>
 
-                            <div className="hero-actions">
-                                <button className="btn-hero-primary" onClick={() => navigate(`/details/${item.Id}`)}>
+                            <div className="hero-actions flex gap-3 items-center">
+                                <Button
+                                    variant="ringHover"
+                                    size="lg"
+                                    className="rounded-full px-8 h-12 text-lg font-bold gap-2"
+                                    onClick={() => navigate(`/details/${item.Id}`)}
+                                >
                                     <i className="material-icons">play_arrow</i>
-                                    <span>{btnText} <small>{btnSubText}</small></span>
-                                </button>
-                                <button
-                                    className={`btn-hero-bookmark ${isFav ? 'active' : ''}`}
+                                    <span>{btnText} <small className="opacity-80 font-normal text-sm ml-1">{btnSubText}</small></span>
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className={`rounded-full w-12 h-12 border-2 border-white/20 bg-black/40 hover:bg-white/10 hover:border-white ${isFav ? 'text-primary' : 'text-white'}`}
                                     onClick={(e) => toggleFav(e, item)}
                                 >
                                     <span className={isFav ? "material-icons" : "material-icons-outlined"}>
                                         {isFav ? 'bookmark' : 'bookmark_border'}
                                     </span>
-                                </button>
-                                <button className="btn-hero-bookmark" onClick={() => onInfoClick(item.Id)} title="More Info">
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="rounded-full w-12 h-12 border-2 border-white/20 bg-black/40 hover:bg-white/10 hover:border-white text-white"
+                                    onClick={() => onInfoClick(item.Id)}
+                                    title="More Info"
+                                >
                                     <span className="material-icons-outlined">info</span>
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
+import { Button } from '@/components/ui/button';
 import './SeriesDetail.css';
 import jellyfinService from '../../services/jellyfin';
 
@@ -119,15 +120,24 @@ const SeriesDetail = () => {
                         </div>
 
                         {/* Play Buttons Placeholder */}
-                        <div className="lf-series-hero__actions" style={{ marginTop: 20 }}>
-                            <button className="lf-btn lf-btn--primary">
+                        <div className="lf-series-hero__actions" style={{ marginTop: 20, display: 'flex', gap: '10px' }}>
+                            <Button
+                                variant="ringHover"
+                                size="lg"
+                                className="h-12 px-8 text-lg font-bold rounded-md gap-2"
+                            >
                                 <span className="material-icons">play_arrow</span>
                                 Watch Now
-                            </button>
-                            <button className="lf-btn lf-btn--glass" onClick={() => setIsSubtitleModalOpen(true)}>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className="h-12 px-6 text-lg rounded-md gap-2 border-2 bg-white/5 border-white/20 hover:bg-white/10 hover:border-white text-white"
+                                onClick={() => setIsSubtitleModalOpen(true)}
+                            >
                                 <span className="material-icons">subtitles</span>
                                 Subtitles
-                            </button>
+                            </Button>
                         </div>
 
                     </div>
@@ -139,14 +149,14 @@ const SeriesDetail = () => {
                 <h2 className="lf-section-title">Episodes</h2>
                 <div style={{ display: 'flex', gap: 10, margin: '20px 0', overflowX: 'auto', paddingBottom: 10 }}>
                     {seasons.map(s => (
-                        <button
+                        <Button
                             key={s.Id}
                             onClick={() => setSelectedSeasonId(s.Id)}
-                            className={`lf-btn ${selectedSeasonId === s.Id ? 'lf-btn--primary' : 'lf-btn--glass'}`}
-                            style={{ whiteSpace: 'nowrap' }}
+                            variant={selectedSeasonId === s.Id ? "default" : "ghost"}
+                            className={`whitespace-nowrap ${selectedSeasonId === s.Id ? "bg-primary text-primary-foreground" : "text-gray-300 hover:text-white hover:bg-white/10"}`}
                         >
                             {s.Name}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 

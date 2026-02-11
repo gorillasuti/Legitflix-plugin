@@ -1,195 +1,375 @@
+/* Navbar Container */
 .navbar {
     position: fixed;
     top: 0;
     width: 100%;
-    height: 68px;
+    height: 60px;
+    /* Crunchroll style height */
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 4%;
     background: transparent;
-    transition: background-color 0.4s;
-    font-size: 0.9rem;
+    /* Transparent by default */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: 'Outfit', 'Inter', sans-serif;
 }
 
 .navbar.scrolled {
-    background-color: #272727;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background-color: #141414;
+    /* Solid dark when scrolled */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-.nav-left {
+/* Inner Content Container */
+.nav-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    padding: 0 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Left Section: Logo & Primary Links */
+.nav-start {
     display: flex;
     align-items: center;
-    gap: 30px;
-}
-
-.nav-categories {
-    display: flex;
-    gap: 20px;
-}
-
-.nav-category-link {
-    color: #e5e5e5;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.2s;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.nav-category-link:hover {
-    color: #b3b3b3;
-}
-
-.nav-category-link.active {
-    color: white;
-    font-weight: 700;
-}
-
-/* Hide categories on mobile */
-@media (max-width: 800px) {
-    .nav-categories {
-        display: none;
-    }
+    gap: 24px;
 }
 
 .nav-logo {
     cursor: pointer;
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #E50914;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    height: 35px;
     display: flex;
     align-items: center;
+    height: 40px;
+    /* Constrain height */
 }
 
 .nav-logo img {
     height: 100%;
+    width: auto;
+    /* Auto width for custom logos */
     object-fit: contain;
 }
 
 .logo-text {
-    font-family: 'Inter', sans-serif;
-    letter-spacing: 2px;
-    font-size: 1.4rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
     font-weight: 800;
+    color: #f47521;
+    /* Orange accent */
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.nav-right {
+/* Links (Primary & Secondary) */
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-link {
+    color: #dadada;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    /* For icons inside links */
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    color: #f47521;
+    /* Orange hover */
+}
+
+.nav-link.dropdown-trigger {
+    padding-right: 4px;
+}
+
+.nav-link .material-icons {
+    font-size: 18px;
+    margin-top: 1px;
+}
+
+/* Right Section */
+.nav-end {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.secondary-link {
+    display: block;
+    /* Show on desktop */
+}
+
+/* Dropdown Menu (Browse) */
+.nav-item-dropdown {
+    position: relative;
+    padding: 10px 0;
+    /* buffer for hover */
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #191919;
+    min-width: 200px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    padding: 8px 0;
+    z-index: 1001;
+    border: 1px solid #333;
+}
+
+.nav-item-dropdown:hover .dropdown-content {
+    display: block;
+    animation: fadeIn 0.2s ease forwards;
+}
+
+.dropdown-item {
+    padding: 10px 20px;
+    color: #e5e5e5;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background: #2a2a2a;
+    color: white;
+}
+
+/* Icons / Actions */
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .nav-icon-btn {
     background: transparent;
     border: none;
-    color: white;
+    color: #dadada;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px;
-    border-radius: 50%;
-    transition: background 0.2s;
+    padding: 8px;
+    transition: color 0.2s;
 }
 
 .nav-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    color: #f47521;
 }
 
 .nav-icon-btn .material-icons {
-    font-size: 22px;
+    font-size: 24px;
 }
 
-/* Avatar */
+/* Avatar & User Dropdown */
 .nav-avatar-container {
+    position: relative;
+    margin-left: 8px;
     cursor: pointer;
-    margin-left: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-avatar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.2s;
+}
+
+.nav-avatar-wrapper:hover {
+    opacity: 0.8;
 }
 
 .nav-avatar {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    transition: border-color 0.2s;
+    border: 2px solid transparent;
 }
 
-.nav-avatar:hover {
-    border-color: rgba(255, 255, 255, 0.5);
+.nav-avatar-placeholder {
+    font-size: 48px;
+    color: #dadada;
 }
 
-/* Dropdown Menu */
-.nav-menu-container {
+.avatar-arrow {
+    color: #dadada;
+    font-size: 24px;
+    transition: transform 0.2s ease;
+}
+
+.nav-avatar-container.active .avatar-arrow {
+    transform: rotate(180deg);
+}
+
+/* User Menu Dropdown */
+.nav-dropdown-menu.usermenu {
+    width: 320px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.user-menu-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #232323;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.user-menu-header:hover {
+    background: #2a2a2a;
+}
+
+.header-avatar-container {
     position: relative;
+    width: 56px;
+    height: 56px;
 }
 
+.menu-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-menu-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.user-name {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.user-status {
+    color: #f47521;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.user-status::before {
+    content: '★';
+    /* Simple crown/star placeholder */
+    font-size: 12px;
+}
+
+.edit-icon {
+    color: #dadada;
+    font-size: 20px;
+    opacity: 0.8;
+    transition: color 0.2s;
+}
+
+.user-menu-header:hover .edit-icon {
+    color: #fff;
+}
+
+/* Dropdown Content Override */
 .nav-dropdown-menu {
     position: absolute;
-    top: 40px;
+    top: 60px;
     right: 0;
-    background: rgba(20, 20, 20, 0.95);
+    background: #191919;
     border: 1px solid #333;
     border-radius: 6px;
     padding: 8px 0;
     min-width: 200px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(10px);
-}
-
-/* Search row at top of dropdown */
-.dropdown-search-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
-    color: #fff;
-    font-size: 0.9rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 4px;
-}
-
-.dropdown-search-row .material-icons {
-    font-size: 20px;
-    opacity: 0.7;
+    z-index: 1002;
+    animation: fadeIn 0.15s ease-out;
 }
 
 .nav-dropdown-menu button {
     background: transparent;
     border: none;
-    color: #fff;
-    padding: 10px 15px;
+    color: #e5e5e5;
+    padding: 12px 16px;
     text-align: left;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    transition: background 0.15s;
+    gap: 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    width: 100%;
+    transition: background 0.2s;
 }
 
 .nav-dropdown-menu button:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: #2a2a2a;
+    color: white;
 }
 
 .nav-dropdown-menu button .material-icons {
-    font-size: 20px;
-    opacity: 0.7;
+    font-size: 24px;
+    opacity: 0.8;
+    color: #dadada;
 }
 
-/* Small badge (e.g. "Search" next to Cast) */
-.dropdown-badge {
-    margin-left: auto;
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 3px;
-    color: #aaa;
+.nav-dropdown-menu button:hover .material-icons {
+    color: white;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #333;
+    margin: 8px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+
+    .primary-links,
+    .secondary-link {
+        display: none;
+    }
+
+    .nav-item-dropdown {
+        display: none;
+    }
+
+    /* We might want a hamburger menu button here if logic existed, 
+       but for now we rely on the user avatar or a simplified view */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
