@@ -54,6 +54,17 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                     });
                 }
 
+                // 3. Local Trailers
+                if (data.LocalTrailers) {
+                    data.LocalTrailers.forEach(t => {
+                        foundTrailers.push({
+                            title: t.Name || 'Local Trailer',
+                            id: t.Id,
+                            type: 'Local'
+                        });
+                    });
+                }
+
                 setTrailers(foundTrailers);
                 if (foundTrailers.length > 0) {
                     // Default to first trailer
@@ -139,9 +150,20 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
         : null;
 
     // Trailer URL construction
-    const trailerUrl = activeTrailerId
-        ? `https://www.youtube.com/embed/${activeTrailerId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1&playlist=${activeTrailerId}&enablejsapi=1`
-        : null;
+    const activeTrailer = trailers.find(t => t.id === activeTrailerId);
+    let trailerUrl = null;
+    let isLocalTrailer = false;
+
+    if (activeTrailer) {
+        if (activeTrailer.type === 'Local') {
+            isLocalTrailer = true;
+            // Native Stream
+            trailerUrl = `${jellyfinService.api.basePath}/Videos/${activeTrailer.id}/stream?Container=mp4&Static=true&api_key=${jellyfinService.api.accessToken}`;
+        } else {
+            // YouTube
+            trailerUrl = `https://www.youtube.com/embed/${activeTrailer.id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1&playlist=${activeTrailer.id}&enablejsapi=1`;
+        }
+    }
 
     return (
         <div className={`legitflix-info-modal ${isVisible ? 'visible' : ''}`}>
@@ -156,12 +178,24 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                 <div className="info-video-container">
                     <div className="iframe-wrapper">
                         {trailerUrl ? (
-                            <iframe
-                                className="info-video-iframe"
-                                src={trailerUrl}
-                                title="Trailer"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            />
+                            isLocalTrailer ? (
+                                <video
+                                    className="info-video-iframe"
+                                    src={trailerUrl}
+                                    autoPlay
+                                    muted={isMuted}
+                                    loop
+                                    playsInline
+                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                />
+                            ) : (
+                                <iframe
+                                    className="info-video-iframe"
+                                    src={trailerUrl}
+                                    title="Trailer"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                />
+                            )
                         ) : (
                             <div className="info-backdrop-fallback" style={{ backgroundImage: `url('${backdropUrl}')` }}></div>
                         )}
@@ -207,22 +241,39 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                 </div>
 
                 {/* TRAILERS GRID */}
-                {trailers.length > 0 && (
-                    <div className="info-trailers-section">
-                        <h3>Trailers & More</h3>
-                        <div className="trailers-grid">
-                            {trailers.map(t => (
-                                <div key={t.id} className="trailer-card" onClick={() => setActiveTrailerId(t.id)}>
-                                    <div className="trailer-thumb">
+                <div className="info-trailers-section">
+                    <h3>Trailers & More</h3>
+                    <div className="trailers-grid">
+                        {trailers.map(t => (
+                            <div key={t.id} className="trailer-card" onClick={() => setActiveTrailerId(t.id)}>
+                                <div className="trailer-thumb">
+                                    {t.type === 'Local' ? (
+                                        <div className="local-trailer-placeholder">
+                                            <span className="material-icons">movie</span>
+                                        </div>
+                                    ) : (
                                         <img src={`https://img.youtube.com/vi/${t.id}/mqdefault.jpg`} alt={t.title} loading="lazy" />
-                                        <div className="play-overlay"><span className="material-icons">play_circle_outline</span></div>
-                                    </div>
-                                    <div className="trailer-title">{t.title}</div>
+                                    )}
+                                    <div className="play-overlay"><span className="material-icons">play_circle_outline</span></div>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="trailer-title">{t.title}</div>
+                            </div>
+                        ))}
+
+                        {/* Search on YouTube Fallback */}
+                        <a
+                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(details.Name + ' ' + (details.ProductionYear || '') + ' trailer')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="trailer-card search-card"
+                        >
+                            <div className="trailer-thumb search-thumb">
+                                <span className="material-icons">search</span>
+                            </div>
+                            <div className="trailer-title">Search YouTube</div>
+                        </a>
                     </div>
-                )}
+                </div>
 
                 {/* ABOUT SECTION */}
                 <div className="info-about-section">

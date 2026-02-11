@@ -112,6 +112,13 @@ const SearchModal = ({ isOpen, onClose }) => {
                         <div className="legit-no-results">No results found for "{query}"</div>
                     )}
 
+                    {query.length === 0 && (
+                        <div className="legit-search-helper">
+                            <span className="material-icons">keyboard</span>
+                            <p>Start typing to search...</p>
+                        </div>
+                    )}
+
                     {results.map(item => (
                         <div key={item.Id} className="legit-search-result-item" onClick={() => handleItemClick(item)}>
                             <div

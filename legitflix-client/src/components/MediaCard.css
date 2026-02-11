@@ -1,0 +1,176 @@
+/* MediaCard.css */
+.media-card {
+    flex: 0 0 160px;
+    /* Standard width */
+    height: 240px;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    /* Clips default image */
+    transition: transform 0.2s;
+    background-color: #333;
+}
+
+.media-card-image-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.media-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.media-card-fallback-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 0.85rem;
+    text-align: center;
+    display: none;
+    /* Only show if image fails (handled by JS toggling display, or simpler: CSS adjacent sibling if we had clean DOM structure for it. Here strictly JS onError handles image hiding, so this div sits behind it or is shown when img is hidden) */
+    /* Actually simpler: Text is always there, Image z-index higher. If image hidden, text shows. */
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* Hover Overlay (Portal) */
+.media-card-hover-overlay {
+    position: absolute;
+    /* Relative to Body */
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid #333;
+    cursor: pointer;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.media-card-hover-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #e5e5e5;
+}
+
+.hover-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hover-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: #aeaeae;
+}
+
+.hover-rating {
+    color: #fff;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.star-icon {
+    font-size: 14px;
+    color: var(--clr-accent, #ff7e00);
+}
+
+.hover-desc {
+    font-size: 0.8rem;
+    color: #ccc;
+    margin: 5px 0 10px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.hover-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.btn-action-play {
+    flex: 1;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-action-play:hover {
+    background-color: #ddd;
+}
+
+.btn-action-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #555;
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action-icon:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-action-icon.active {
+    border-color: var(--clr-accent, #ff7e00);
+    color: var(--clr-accent, #ff7e00);
+}
+
+.btn-action-icon .material-icons {
+    font-size: 18px;
+}

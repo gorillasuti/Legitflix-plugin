@@ -302,7 +302,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                                         {isFav ? 'bookmark' : 'bookmark_border'}
                                     </span>
                                 </button>
-                                <button className="hero-button-info" onClick={() => onInfoClick(item.Id)} title="More Info">
+                                <button className="btn-hero-bookmark" onClick={() => onInfoClick(item.Id)} title="More Info">
                                     <span className="material-icons-outlined">info</span>
                                 </button>
                             </div>

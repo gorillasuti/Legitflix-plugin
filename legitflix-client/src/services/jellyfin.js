@@ -92,6 +92,30 @@ class JellyfinService {
         return response.data;
     }
 
+    async getItem(userId, itemId) {
+        if (!this.api) this.initialize();
+        const response = await this.api.userLibrary.getItem({ userId, itemId });
+        return response.data;
+    }
+
+    async markPlayed(userId, itemId, isPlayed) {
+        if (!this.api) this.initialize();
+        if (isPlayed) {
+            return await this.api.userLibrary.markPlayedItem({ userId, itemId });
+        } else {
+            return await this.api.userLibrary.markUnplayedItem({ userId, itemId });
+        }
+    }
+
+    async markFavorite(userId, itemId, isFavorite) {
+        if (!this.api) this.initialize();
+        if (isFavorite) {
+            return await this.api.userLibrary.markFavoriteItem({ userId, itemId });
+        } else {
+            return await this.api.userLibrary.unmarkFavoriteItem({ userId, itemId });
+        }
+    }
+
     async getSeasons(userId, seriesId) {
         if (!this.api) this.initialize();
         const response = await this.api.tvShows.getSeasons({ userId, seriesId });
@@ -123,7 +147,7 @@ class JellyfinService {
 
     async getSeries(userId, seriesId) {
         if (!this.api) this.initialize();
-        const fields = ['Overview', 'Genres', 'Studios', 'OfficialRating', 'CommunityRating', 'ImageTags', 'BackdropImageTags', 'People', 'RemoteTrailers', 'ChildCount', 'MediaSources'];
+        const fields = ['Overview', 'Genres', 'Studios', 'OfficialRating', 'CommunityRating', 'ImageTags', 'BackdropImageTags', 'People', 'RemoteTrailers', 'LocalTrailers', 'ChildCount', 'MediaSources'];
         const response = await this.api.userLibrary.getItem({
             userId,
             itemId: seriesId,
@@ -166,7 +190,7 @@ class JellyfinService {
     async getItemDetails(userId, itemId) {
         if (!this.api) this.initialize();
         try {
-            const fields = ['RemoteTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData', 'MediaSources'];
+            const fields = ['RemoteTrailers', 'LocalTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData', 'MediaSources'];
             const response = await this.api.userLibrary.getItem({
                 userId,
                 itemId,

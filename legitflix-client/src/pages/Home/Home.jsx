@@ -7,13 +7,16 @@ import JellyseerrCard from '../../components/JellyseerrCard';
 import Navbar from '../../components/Navbar';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import { jellyfinService } from '../../services/jellyfin';
+import { useTheme } from '../../context/ThemeContext';
 import './Home.css';
 
 const Home = () => {
     const [libraries, setLibraries] = useState([]);
     const [resumeItems, setResumeItems] = useState([]);
+    const [promoItems, setPromoItems] = useState([]); // New state for promos
     const [loading, setLoading] = useState(true);
     const [modalItem, setModalItem] = useState(null); // ID of item to show in modal
+    const { config } = useTheme(); // Consuming ThemeContext
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -26,7 +29,34 @@ const Home = () => {
                     setLibraries(res.Items || []);
 
                     const resume = await jellyfinService.getResumeItems(user.Id);
-                    setResumeItems(resume.Items || []);
+                    const resumeList = resume.Items || [];
+                    setResumeItems(resumeList);
+
+                    // --- Promo Logic (Ported from legacy theme) ---
+                    // 1. Get Candidates (Latest Movies/Series)
+                    const candidatesFn = async () => {
+                        const params = new URLSearchParams({
+                            Limit: 20, // Fetch more to filter
+                            Recursive: true,
+                            IncludeItemTypes: 'Movie,Series',
+                            SortBy: 'DateCreated',
+                            SortOrder: 'Descending',
+                            ImageTypeLimit: 1,
+                            EnableImageTypes: 'Primary,Backdrop,Thumb,Logo',
+                            Fields: 'Overview,ProductionYear,ImageTags'
+                        });
+                        return jellyfinService.getItems(user.Id, params);
+                    };
+
+                    const candidatesRes = await candidatesFn();
+                    const candidates = candidatesRes.Items || [];
+
+                    // 2. Filter out Resume items (and maybe Next Up if we had it, but Resume is main one)
+                    const resumeIds = new Set(resumeList.map(i => i.Id));
+                    const filtered = candidates.filter(i => !resumeIds.has(i.Id));
+
+                    // 3. Take Top 3
+                    setPromoItems(filtered.slice(0, 3));
                 }
             } catch (e) {
                 console.error("Failed to fetch data", e);
@@ -77,7 +107,43 @@ const Home = () => {
                     </div>
                 ) : (
                     <>
-                        {/* 1. Continue Watching */}
+                        {/* 1. Jellyseerr & Library Navigation */}
+                        <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
+                            <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>Browse Libraries</h2>
+                            <div className="libraries-grid">
+                                {libraries.map(lib => (
+                                    <div
+                                        key={lib.Id}
+                                        className="library-card"
+                                        onClick={() => navigate(`/library/${lib.Id}`)} // Assuming consistent with Navbar
+                                    >
+                                        <img
+                                            src={`${jellyfinService.api.basePath}/Items/${lib.Id}/Images/Primary?fillHeight=480&fillWidth=320&quality=90`}
+                                            alt={lib.Name}
+                                            className="library-card-image"
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling.style.display = 'flex'; // Show fallback if image fails
+                                            }}
+                                        />
+                                        <div className="library-card-content fallback" style={{ display: 'none' }}>
+                                            <span className="material-icons library-icon">
+                                                {lib.CollectionType === 'movies' ? 'movie' :
+                                                    lib.CollectionType === 'tvshows' ? 'tv' : 'folder'}
+                                            </span>
+                                        </div>
+                                        {config.showLibraryTitles && (
+                                            <div className="library-card-overlay">
+                                                <span className="library-name">{lib.Name}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                <JellyseerrCard />
+                            </div>
+                        </section>
+
+                        {/* 2. Continue Watching */}
                         {resumeItems.length > 0 && (
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
                                 <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>Continue Watching</h2>
@@ -124,7 +190,72 @@ const Home = () => {
                             </section>
                         )}
 
-                        {/* 2. Media Rows (Latest per Library) */}
+                        {/* 2.5 Promo Banners (New) */}
+                        {promoItems.length > 0 && (
+                            <section className="home-section promo-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '50px' }}>
+                                <div className="legitflix-promo-container">
+                                    {/* Item 1: Large Hero-style Banner */}
+                                    <div
+                                        className="promo-item promo-item-large"
+                                        onClick={() => openModal(promoItems[0].Id)}
+                                    >
+                                        <img
+                                            src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Backdrop/0?maxWidth=1200&quality=90`}
+                                            className="promo-bg"
+                                            alt={promoItems[0].Name}
+                                        />
+                                        <div className="promo-content">
+                                            {promoItems[0].ImageTags && promoItems[0].ImageTags.Logo ? (
+                                                <img
+                                                    src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Logo/0?maxWidth=400&quality=90`}
+                                                    className="promo-logo"
+                                                    alt={promoItems[0].Name}
+                                                />
+                                            ) : (
+                                                <h2 className="promo-title">{promoItems[0].Name}</h2>
+                                            )}
+                                            <button className="btn-watch" onClick={(e) => { e.stopPropagation(); navigate(`/details/${promoItems[0].Id}`); }}>
+                                                WATCH NOW
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Side Grid for Items 2 & 3 */}
+                                    {(promoItems[1] || promoItems[2]) && (
+                                        <div className="promo-grid-column">
+                                            {promoItems.slice(1, 3).map(item => (
+                                                <div
+                                                    key={item.Id}
+                                                    className="promo-item promo-item-small"
+                                                    onClick={() => openModal(item.Id)}
+                                                >
+                                                    <div className="promo-split">
+                                                        <div className="promo-text">
+                                                            <h3>{item.Name}</h3>
+                                                            <p style={{ marginBottom: '5px', fontSize: '0.85rem', color: '#aaa' }}>{item.ProductionYear}</p>
+                                                            <p className="desc">{item.Overview}</p>
+                                                            <button className="btn-orange-text" onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}>
+                                                                START WATCHING
+                                                            </button>
+                                                        </div>
+                                                        <div className="promo-img-container">
+                                                            <img
+                                                                src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Thumb/0?maxWidth=400&quality=90`}
+                                                                className="promo-poster"
+                                                                onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=400`; }}
+                                                                alt={item.Name}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* 3. Media Rows (Latest per Library) */}
                         {libraries.map(lib => (
                             <MediaRow
                                 key={lib.Id}
@@ -133,29 +264,6 @@ const Home = () => {
                                 onCardClick={(item) => openModal(item.Id)}
                             />
                         ))}
-
-                        {/* 3. Jellyseerr & Library Navigation */}
-                        <section className="home-section">
-                            <h2 className="section-title">Browse Libraries</h2>
-                            <div className="libraries-grid">
-                                {libraries.map(lib => (
-                                    <div
-                                        key={lib.Id}
-                                        className="library-card"
-                                        onClick={() => {/* Navigate to library */ }}
-                                    >
-                                        <div className="library-card-content">
-                                            <span className="material-icons library-icon">
-                                                {lib.CollectionType === 'movies' ? 'movie' :
-                                                    lib.CollectionType === 'tvshows' ? 'tv' : 'folder'}
-                                            </span>
-                                            <span className="library-name">{lib.Name}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                                <JellyseerrCard />
-                            </div>
-                        </section>
                     </>
                 )}
             </div>

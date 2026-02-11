@@ -122,7 +122,7 @@ const Navbar = () => {
                                     <span className="material-icons">settings</span> Settings
                                 </button>
                                 <button onClick={() => { setShowMenu(false); setShowLegitSettings(true); }}>
-                                    <span className="material-icons">palette</span> LegitFlix Settings
+                                    <span className="material-icons">palette</span> Legitflix Settings
                                 </button>
                                 <button onClick={() => {
                                     setShowMenu(false);

@@ -19,6 +19,7 @@ export const ThemeProvider = ({ children }) => {
         enableBackdrops: true,
         accentColor: '#ff7e00',
         showNavbarCategories: true,
+        showLibraryTitles: true,
     });
 
     useEffect(() => {

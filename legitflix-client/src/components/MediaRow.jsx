@@ -1,14 +1,15 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { jellyfinService } from '../services/jellyfin';
-import MediaCard from './MediaCard/MediaCard';
+import MediaCard from './MediaCard';
 import SkeletonLoader from './SkeletonLoader';
 import './MediaRow.css';
+import { useNavigate } from 'react-router-dom';
 
 const MediaRow = ({ title, libraryId, onCardClick }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const rowRef = useRef(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchItems = async () => {
@@ -46,8 +47,8 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
                 </div>
                 <div className="media-row-wrapper" style={{ paddingLeft: '4%', display: 'flex', gap: '15px', overflow: 'hidden' }}>
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} style={{ flex: '0 0 200px' }}>
-                            <SkeletonLoader width="100%" height="300px" style={{ borderRadius: '8px' }} />
+                        <div key={i} style={{ flex: '0 0 160px' }}>
+                            <SkeletonLoader width="100%" height="240px" style={{ borderRadius: '8px' }} />
                         </div>
                     ))}
                 </div>
@@ -59,7 +60,12 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
 
     return (
         <div className="media-row-container">
-            <h2 className="media-row-title">{title}</h2>
+            <h2 className="media-row-title"
+                onClick={() => navigate(`/library/${libraryId}`)}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+                {title} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>›</span>
+            </h2>
             <div className="media-row-wrapper">
                 <button className="row-arrow left" onClick={() => scroll('left')}>
                     <span className="material-icons">chevron_left</span>
@@ -70,7 +76,7 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
                         <MediaCard
                             key={item.Id}
                             item={item}
-                            onClick={onCardClick}
+                            onClick={() => onCardClick ? onCardClick(item.Id) : navigate(`/details/${item.Id}`)}
                         />
                     ))}
                 </div>
