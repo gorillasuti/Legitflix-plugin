@@ -26,6 +26,8 @@ export const ThemeProvider = ({ children }) => {
         heroLimit: 20,
         enableJellyseerr: true,
         jellyseerrUrl: 'https://request.legitflix.eu',
+        jellyseerrBackground: null,
+        jellyseerrText: 'Request Feature',
         // Visual Customization
         logoType: 'text', // 'text' | 'image'
         logoUrl: '',

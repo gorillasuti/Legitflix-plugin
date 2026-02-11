@@ -19,6 +19,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [activeTab, setActiveTab] = useState('appearance');
     const [searchQuery, setSearchQuery] = useState('');
     const [showBannerPicker, setShowBannerPicker] = useState(false);
+    const [pickerMode, setPickerMode] = useState('app'); // 'app' | 'jellyseerr'
 
     // Form State
     const [accentColor, setAccentColor] = useState(config.accentColor || '#ff7e00');
@@ -126,50 +127,6 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             )
         },
         {
-            id: 'appBackground',
-            tab: 'appearance',
-            label: 'App Background',
-            keywords: ['background', 'wallpaper', 'image', 'custom'],
-            render: () => (
-                <div className="setting-section" key="appBackground">
-                    <h3>App Background</h3>
-                    <p className="setting-desc">Set a global background image for the application.</p>
-
-                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{
-                            width: '120px',
-                            height: '68px',
-                            borderRadius: '6px',
-                            backgroundColor: '#2a2a2a',
-                            backgroundImage: config.appBackground ? `url('${config.appBackground}')` : 'none',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            {!config.appBackground && <span className="material-icons" style={{ opacity: 0.3 }}>image</span>}
-                        </div>
-                        <div>
-                            <button className="btn-save" style={{ padding: '6px 16px', fontSize: '0.9rem' }} onClick={() => setShowBannerPicker(true)}>
-                                Change Background
-                            </button>
-                            {config.appBackground && (
-                                <button
-                                    className="btn-reset"
-                                    style={{ marginLeft: '10px', padding: '6px 12px', fontSize: '0.9rem' }}
-                                    onClick={() => updateConfig({ appBackground: null })}
-                                >
-                                    Reset
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )
-        },
-        {
             id: 'logoUrl',
             tab: 'appearance',
             label: 'Custom Logo URL',
@@ -194,34 +151,90 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             label: 'Request Feature (Jellyseerr)',
             keywords: ['request', 'jellyseerr', 'ombi', 'home', 'card'],
             render: () => (
-                <div className="setting-section" key="requestFeature">
-                    <div className="setting-row">
-                        <div>
-                            <h3 className="setting-title">Request Feature</h3>
-                            <p className="setting-desc">Enable "Request" card on Home screen</p>
+                <>
+                    <div className="setting-section" key="requestFeature">
+                        <div className="setting-row">
+                            <div>
+                                <h3 className="setting-title">Request Feature</h3>
+                                <p className="setting-desc">Enable "Request" card on Home screen</p>
+                            </div>
+                            <label className="toggle-switch">
+                                <input
+                                    type="checkbox"
+                                    checked={enableJellyseerr}
+                                    onChange={(e) => setEnableJellyseerr(e.target.checked)}
+                                />
+                                <span className="slider"></span>
+                            </label>
                         </div>
-                        <label className="toggle-switch">
+
+                        <div className="fade-in" style={{ marginTop: '10px' }}>
+                            <p className="setting-desc">Request URL (Required for both Home Card and Navbar):</p>
                             <input
-                                type="checkbox"
-                                checked={enableJellyseerr}
-                                onChange={(e) => setEnableJellyseerr(e.target.checked)}
+                                type="text"
+                                className="legit-input"
+                                placeholder="https://request.legitflix.eu"
+                                value={jellyseerrUrl}
+                                onChange={(e) => setJellyseerrUrl(e.target.value)}
                             />
-                            <span className="slider"></span>
-                        </label>
+                        </div>
                     </div>
 
-                    <div className="fade-in" style={{ marginTop: '10px' }}>
-                        <p className="setting-desc">Request URL (Required for both Home Card and Navbar):</p>
-                        <input
-                            type="text"
-                            className="legit-input"
-                            placeholder="https://request.legitflix.eu"
-                            value={jellyseerrUrl}
-                            onChange={(e) => setJellyseerrUrl(e.target.value)}
-                        />
-                    </div>
-                </div>
+                    <div className="setting-section" key="requestFeatureCustomization">
+                        <h3>Card Appearance</h3>
+                        <p className="setting-desc">Customize the look of the Request card on the Home screen.</p>
 
+                        <div className="setting-row" style={{ marginBottom: '15px' }}>
+                            <div style={{ flex: 1 }}>
+                                <label className="setting-label" style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Card Title</label>
+                                <input
+                                    type="text"
+                                    className="legit-input"
+                                    placeholder="Request Feature"
+                                    value={config.jellyseerrText || ''}
+                                    onChange={(e) => updateConfig({ jellyseerrText: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="setting-row">
+                            <div style={{ flex: 1 }}>
+                                <label className="setting-label" style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Card Background</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{
+                                        width: '120px',
+                                        height: '68px',
+                                        borderRadius: '6px',
+                                        backgroundColor: '#2a2a2a',
+                                        backgroundImage: config.jellyseerrBackground ? `url('${config.jellyseerrBackground}')` : "url('https://belginux.com/content/images/size/w1200/2024/03/jellyseerr-1.webp')",
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                    </div>
+                                    <div>
+                                        <button className="btn-save" style={{ padding: '6px 16px', fontSize: '0.9rem' }} onClick={() => { setPickerMode('jellyseerr'); setShowBannerPicker(true); }}>
+                                            Choose Image
+                                        </button>
+                                        {config.jellyseerrBackground && (
+                                            <button
+                                                className="btn-reset"
+                                                style={{ marginLeft: '10px', padding: '6px 12px', fontSize: '0.9rem' }}
+                                                onClick={() => updateConfig({ jellyseerrBackground: null })}
+                                            >
+                                                Reset
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </>
             )
         },
         {
@@ -368,7 +381,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
 
                         <div className="content-footer">
                             <button className="btn-reset" onClick={handleReset}>Reset Defaults</button>
-                            <button className="btn-save" onClick={handleSave}>Save Changes</button>
+                            <button className="btn-save lf-btn--ring-hover" onClick={handleSave}>Save Changes</button>
                         </div>
                     </div>
                 </div>
@@ -377,7 +390,11 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                 isOpen={showBannerPicker}
                 onClose={() => setShowBannerPicker(false)}
                 onSave={(url) => {
-                    updateConfig({ appBackground: url });
+                    if (pickerMode === 'app') {
+                        updateConfig({ appBackground: url });
+                    } else if (pickerMode === 'jellyseerr') {
+                        updateConfig({ jellyseerrBackground: url });
+                    }
                     setShowBannerPicker(false);
                 }}
                 userId={userId}

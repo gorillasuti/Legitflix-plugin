@@ -9,12 +9,12 @@
         "imageUrl": "https://raw.githubusercontent.com/jellyfin/jellyfin/master/Jellyfin.Server/Resources/Images/JellyfinLogo.png",
         "versions": [
             {
-                "version": "1.0.0.30",
-                "changelog": "Profile & Theme Enhancements (Banners, Backgrounds, Skeletons).",
+                "version": "1.0.0.31",
+                "changelog": "Promo Banner Rework (Legacy Parity), Button Component Integration, UI Cleanup.",
                 "targetAbi": "10.11.5.0",
-                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v.1.0.0.30/LegitFlix.Plugin_1.0.0.30.zip",
-                "checksum": "d90ca179b6892c08e132829985551356",
-                "timestamp": "2026-02-11T16:03:06Z"
+                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v.1.0.0.31/LegitFlix.Plugin_1.0.0.31.zip",
+                "checksum": "7e48699bc1200c1e507ba816bc3f9ae5",
+                "timestamp": "2026-02-11T17:25:00Z"
             }
         ]
     }

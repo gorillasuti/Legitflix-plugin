@@ -17,12 +17,12 @@ const JellyseerrCard = () => {
             >
                 <div
                     className="jellyseerr-image"
-                    style={{ backgroundImage: `url('https://belginux.com/content/images/size/w1200/2024/03/jellyseerr-1.webp')` }}
+                    style={{ backgroundImage: `url('${config.jellyseerrBackground || "https://belginux.com/content/images/size/w1200/2024/03/jellyseerr-1.webp"}')` }}
                 >
                     <div className="jellyseerr-overlay"></div>
                     <div className="jellyseerr-content">
                         <span className="material-icons card-icon">add_circle_outline</span>
-                        <span className="card-label">Request Music/Movies</span>
+                        <span className="card-label">{config.jellyseerrText || 'Request Feature'}</span>
                     </div>
                 </div>
             </a>

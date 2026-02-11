@@ -293,8 +293,6 @@ const HeroCarousel = ({ onInfoClick }) => {
                             <div className="hero-actions flex gap-3 items-center">
                                 <Button
                                     variant="ringHover"
-                                    size="lg"
-                                    className="rounded-full px-8 h-12 text-lg font-bold gap-2"
                                     onClick={() => navigate(`/details/${item.Id}`)}
                                 >
                                     <i className="material-icons">play_arrow</i>

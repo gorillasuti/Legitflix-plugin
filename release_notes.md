@@ -11,6 +11,11 @@
 
 # Release Notes
 
+## v1.0.0.31 (2025-02-11)
+- **Promo Banner Rework**: Implemented strict legacy parity (Latest 3 items, no resume filter) and "1 Big, 2 Small" layout.
+- **Button Component**: Integrated shared `Button` component for Promo section.
+- **UI Cleanup**: Removed redundant CSS from `Home.css`.
+
 ## v1.0.0.30 (2025-02-11)
 - **Profile Banners**: Added ability to set a custom profile banner via the "Edit Profile" modal.
 - **Global Backgrounds**: Added "App Background" setting to Theme Settings.

@@ -9,6 +9,7 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import './Home.css';
+import { Button } from '../../components/ui/button';
 
 const Home = () => {
     const [libraries, setLibraries] = useState([]);
@@ -58,11 +59,13 @@ const Home = () => {
                     const candidates = candidatesRes.Items || [];
 
                     // 2. Filter out Resume items (and maybe Next Up if we had it, but Resume is main one)
-                    const resumeIds = new Set(resumeList.map(i => i.Id));
-                    const filtered = candidates.filter(i => !resumeIds.has(i.Id));
+                    // LEGACY PARITY: Do NOT filter out Resume items for Promo. 
+                    // Promo should be the absolute latest items added to the server.
+                    // const resumeIds = new Set(resumeList.map(i => i.Id));
+                    // const filtered = candidates.filter(i => !resumeIds.has(i.Id));
 
                     // 3. Take Top 3
-                    setPromoItems(filtered.slice(0, 3));
+                    setPromoItems(candidates.slice(0, 3));
                 }
             } catch (e) {
                 console.error("Failed to fetch data", e);
@@ -268,9 +271,14 @@ const Home = () => {
                                             ) : (
                                                 <h2 className="promo-title">{promoItems[0].Name}</h2>
                                             )}
-                                            <button className="btn-watch" onClick={(e) => { e.stopPropagation(); navigate(`/details/${promoItems[0].Id}`); }}>
+                                            <Button
+                                                variant="default"
+                                                size="lg"
+                                                className="btn-watch"
+                                                onClick={(e) => { e.stopPropagation(); navigate(`/details/${promoItems[0].Id}`); }}
+                                            >
                                                 WATCH NOW
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
 
@@ -288,9 +296,13 @@ const Home = () => {
                                                             <h3>{item.Name}</h3>
                                                             <p style={{ marginBottom: '5px', fontSize: '0.85rem', color: '#aaa' }}>{item.ProductionYear}</p>
                                                             <p className="desc">{item.Overview}</p>
-                                                            <button className="btn-orange-text" onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                className="btn-orange-text p-0 hover:bg-transparent hover:underline"
+                                                                onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}
+                                                            >
                                                                 START WATCHING
-                                                            </button>
+                                                            </Button>
                                                         </div>
                                                         <div className="promo-img-container">
                                                             <img
