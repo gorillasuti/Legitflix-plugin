@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import BannerPickerModal from './BannerPickerModal';
 import './LegitFlixSettingsModal.css';
 
 const PRESET_COLORS = [
@@ -11,12 +12,13 @@ const PRESET_COLORS = [
     { name: 'Purple', value: '#aa00ff' },
 ];
 
-const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
+const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const { config, updateConfig } = useTheme();
 
     // Tab State
     const [activeTab, setActiveTab] = useState('appearance');
     const [searchQuery, setSearchQuery] = useState('');
+    const [showBannerPicker, setShowBannerPicker] = useState(false);
 
     // Form State
     const [accentColor, setAccentColor] = useState(config.accentColor || '#ff7e00');
@@ -120,6 +122,51 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
                         <div className="color-preview" style={{ backgroundColor: accentColor }}></div>
                     </div>
                 </div>
+
+            )
+        },
+        {
+            id: 'appBackground',
+            tab: 'appearance',
+            label: 'App Background',
+            keywords: ['background', 'wallpaper', 'image', 'custom'],
+            render: () => (
+                <div className="setting-section" key="appBackground">
+                    <h3>App Background</h3>
+                    <p className="setting-desc">Set a global background image for the application.</p>
+
+                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            width: '120px',
+                            height: '68px',
+                            borderRadius: '6px',
+                            backgroundColor: '#2a2a2a',
+                            backgroundImage: config.appBackground ? `url('${config.appBackground}')` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            {!config.appBackground && <span className="material-icons" style={{ opacity: 0.3 }}>image</span>}
+                        </div>
+                        <div>
+                            <button className="btn-save" style={{ padding: '6px 16px', fontSize: '0.9rem' }} onClick={() => setShowBannerPicker(true)}>
+                                Change Background
+                            </button>
+                            {config.appBackground && (
+                                <button
+                                    className="btn-reset"
+                                    style={{ marginLeft: '10px', padding: '6px 12px', fontSize: '0.9rem' }}
+                                    onClick={() => updateConfig({ appBackground: null })}
+                                >
+                                    Reset
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )
         },
         {
@@ -162,19 +209,19 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
                             <span className="slider"></span>
                         </label>
                     </div>
-                    {enableJellyseerr && (
-                        <div className="fade-in" style={{ marginTop: '10px' }}>
-                            <p className="setting-desc">Request URL (Jellyseerr/Ombi):</p>
-                            <input
-                                type="text"
-                                className="legit-input"
-                                placeholder="https://request.legitflix.eu"
-                                value={jellyseerrUrl}
-                                onChange={(e) => setJellyseerrUrl(e.target.value)}
-                            />
-                        </div>
-                    )}
+
+                    <div className="fade-in" style={{ marginTop: '10px' }}>
+                        <p className="setting-desc">Request URL (Required for both Home Card and Navbar):</p>
+                        <input
+                            type="text"
+                            className="legit-input"
+                            placeholder="https://request.legitflix.eu"
+                            value={jellyseerrUrl}
+                            onChange={(e) => setJellyseerrUrl(e.target.value)}
+                        />
+                    </div>
                 </div>
+
             )
         },
         {
@@ -260,71 +307,82 @@ const LegitFlixSettingsModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="legit-settings-overlay" onClick={onClose}>
-            <div className="legit-settings-modal expanded" onClick={e => e.stopPropagation()}>
-                <div className="legit-settings-sidebar">
-                    <div className="sidebar-header">
-                        <h2>Settings</h2>
+        <>
+            <div className="legit-settings-overlay" onClick={onClose}>
+                <div className="legit-settings-modal expanded" onClick={e => e.stopPropagation()}>
+                    <div className="legit-settings-sidebar">
+                        <div className="sidebar-header">
+                            <h2>Settings</h2>
+                        </div>
+                        <div className="sidebar-tabs">
+                            <button
+                                className={`sidebar-tab ${activeTab === 'appearance' && !searchQuery ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('appearance'); setSearchQuery(''); }}
+                            >
+                                <span className="material-icons">palette</span> Appearance
+                            </button>
+                            <button
+                                className={`sidebar-tab ${activeTab === 'home' && !searchQuery ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('home'); setSearchQuery(''); }}
+                            >
+                                <span className="material-icons">home</span> Home Screen
+                            </button>
+                            <button
+                                className={`sidebar-tab ${activeTab === 'navigation' && !searchQuery ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('navigation'); setSearchQuery(''); }}
+                            >
+                                <span className="material-icons">menu</span> Navigation
+                            </button>
+                        </div>
                     </div>
-                    <div className="sidebar-tabs">
-                        <button
-                            className={`sidebar-tab ${activeTab === 'appearance' && !searchQuery ? 'active' : ''}`}
-                            onClick={() => { setActiveTab('appearance'); setSearchQuery(''); }}
-                        >
-                            <span className="material-icons">palette</span> Appearance
-                        </button>
-                        <button
-                            className={`sidebar-tab ${activeTab === 'home' && !searchQuery ? 'active' : ''}`}
-                            onClick={() => { setActiveTab('home'); setSearchQuery(''); }}
-                        >
-                            <span className="material-icons">home</span> Home Screen
-                        </button>
-                        <button
-                            className={`sidebar-tab ${activeTab === 'navigation' && !searchQuery ? 'active' : ''}`}
-                            onClick={() => { setActiveTab('navigation'); setSearchQuery(''); }}
-                        >
-                            <span className="material-icons">menu</span> Navigation
-                        </button>
-                    </div>
-                </div>
 
-                <div className="legit-settings-content">
-                    <div className="content-header">
-                        <div className="search-container">
-                            <span className="material-icons search-icon">search</span>
-                            <input
-                                type="text"
-                                placeholder="Search settings..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {searchQuery && (
-                                <button className="clear-search" onClick={() => setSearchQuery('')}>
-                                    <span className="material-icons">close</span>
-                                </button>
+                    <div className="legit-settings-content">
+                        <div className="content-header">
+                            <div className="search-container">
+                                <span className="material-icons search-icon">search</span>
+                                <input
+                                    type="text"
+                                    placeholder="Search settings..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button className="clear-search" onClick={() => setSearchQuery('')}>
+                                        <span className="material-icons">close</span>
+                                    </button>
+                                )}
+                            </div>
+                            <button className="close-btn-icon" onClick={onClose}>&times;</button>
+                        </div>
+
+                        <div className="content-body">
+                            {filteredSettings.length > 0 ? (
+                                filteredSettings.map(s => s.render())
+                            ) : (
+                                <div className="no-results">
+                                    <span className="material-icons">search_off</span>
+                                    <p>No settings found for "{searchQuery}"</p>
+                                </div>
                             )}
                         </div>
-                        <button className="close-btn-icon" onClick={onClose}>&times;</button>
-                    </div>
 
-                    <div className="content-body">
-                        {filteredSettings.length > 0 ? (
-                            filteredSettings.map(s => s.render())
-                        ) : (
-                            <div className="no-results">
-                                <span className="material-icons">search_off</span>
-                                <p>No settings found for "{searchQuery}"</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="content-footer">
-                        <button className="btn-reset" onClick={handleReset}>Reset Defaults</button>
-                        <button className="btn-save" onClick={handleSave}>Save Changes</button>
+                        <div className="content-footer">
+                            <button className="btn-reset" onClick={handleReset}>Reset Defaults</button>
+                            <button className="btn-save" onClick={handleSave}>Save Changes</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <BannerPickerModal
+                isOpen={showBannerPicker}
+                onClose={() => setShowBannerPicker(false)}
+                onSave={(url) => {
+                    updateConfig({ appBackground: url });
+                    setShowBannerPicker(false);
+                }}
+                userId={userId}
+            />
+        </>
     );
 };
 

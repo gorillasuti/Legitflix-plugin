@@ -14,7 +14,7 @@ const ACCENT_LOGO_MAP = {
 };
 
 export const getDefaultLogo = (accentColor) => {
-    return ACCENT_LOGO_MAP[accentColor?.toLowerCase()] || '/default-logo-orange.png';
+    return ACCENT_LOGO_MAP[accentColor?.toLowerCase()] || 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-orange.png';
 };
 
 export const useTheme = () => useContext(ThemeContext);
@@ -35,6 +35,7 @@ export const ThemeProvider = ({ children }) => {
         showNavbarCategories: true,
         showNavbarRequests: true,
         showLibraryTitles: true,
+        appBackground: null,
     });
 
     useEffect(() => {

@@ -5,12 +5,7 @@
 }
 
 .home-content-container {
-    position: relative;
-    z-index: 2;
-    padding: 20px 0 20px 0;
-    margin-top: -100px;
-    /* Overlap Hero */
-    background: linear-gradient(to bottom, transparent, #141414 100px);
+    margin-top: 75px;
 }
 
 .libraries-grid {
@@ -19,10 +14,7 @@
     /* Change to nowrap for horizontal scroll */
     gap: 15px;
     margin-bottom: 40px;
-    overflow-x: auto;
-    /* Horizontal scroll */
     padding-bottom: 15px;
-    /* Space for scrollbar */
 }
 
 /* Hide scrollbar for cleaner look */
@@ -228,15 +220,15 @@
 }
 
 .library-card {
-    width: 160px;
-    height: 240px;
-    min-width: 160px;
+    max-width: 200px;
+    height: -webkit-fill-available;
+    width: 100%;
     background: #333;
-    border-radius: 8px;
+    border-radius: 4px;
     display: block;
     position: relative;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform .3s ease, box-shadow .3s ease;
     overflow: hidden;
 }
 

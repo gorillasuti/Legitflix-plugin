@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { jellyfinService } from '../services/jellyfin';
+import SkeletonLoader from './SkeletonLoader';
 import './BannerPickerModal.css';
 
 const BannerPickerModal = ({ isOpen, onClose, onSave, userId }) => {
@@ -50,9 +51,12 @@ const BannerPickerModal = ({ isOpen, onClose, onSave, userId }) => {
                 <h2 className="banner-picker-title">Select Banner</h2>
 
                 {loading ? (
-                    <div className="banner-picker-loading">
-                        <span className="material-icons spinning">refresh</span>
-                        <span>Loading backdrops...</span>
+                    <div className="banner-picker-grid">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
+                            <div key={i} className="banner-picker-card">
+                                <SkeletonLoader width="100%" height="100%" style={{ borderRadius: '6px' }} />
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="banner-picker-grid">

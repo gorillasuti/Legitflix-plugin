@@ -9,6 +9,13 @@
 *   **Home Page:** Hero Carousel, Continue Watching with progress bars, History section.
 *   **Navbar:** Dynamic transparency, search button, settings menu.
 
+# Release Notes
+
+## v1.0.0.30 (2025-02-11)
+- **Profile Banners**: Added ability to set a custom profile banner via the "Edit Profile" modal.
+- **Global Backgrounds**: Added "App Background" setting to Theme Settings.
+- **UX Improvements**: Replaced loading spinners with Skeleton Loaders in Banner Picker.
+
 ## 📥 Installation
 
 1.  **Download** the latest release zip.

@@ -618,6 +618,7 @@ const Profile = () => {
             <LegitFlixSettingsModal
                 isOpen={showLegitSettings}
                 onClose={() => setShowLegitSettings(false)}
+                userId={user?.Id}
             />
         </div>
     );

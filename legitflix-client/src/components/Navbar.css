@@ -13,9 +13,8 @@
 }
 
 .navbar.scrolled {
-    background-color: var(--clr-bg-nav, #141414);
+    background-color: var(--clr-bg-nav, #272727);
     /* Solid dark when scrolled */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* Inner Content Container */
@@ -33,13 +32,14 @@
     display: flex;
     align-items: center;
     gap: 36px;
+    height: -webkit-fill-available;
 }
 
 .nav-logo {
     cursor: pointer;
     display: flex;
     align-items: center;
-    height: 25px;
+    height: 30px;
     /* Constrain height */
 }
 
@@ -63,6 +63,8 @@
 .nav-links {
     display: flex;
     gap: 24px;
+    height: -webkit-fill-available;
+    align-items: center;
 }
 
 .nav-link {
@@ -90,7 +92,6 @@
     padding: 0 12px;
     margin: 0 -12px;
     border-radius: 0;
-    transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .navbar.scrolled .nav-link:hover {

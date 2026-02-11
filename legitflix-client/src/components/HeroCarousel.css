@@ -48,18 +48,6 @@
     transform: scale(1.05);
 }
 
-/* --- OVERLAY --- */
-.hero-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background:
-        linear-gradient(to top, #141414 15%, rgba(20, 20, 20, 0.8) 35%, rgba(20, 20, 20, 0) 60%),
-        linear-gradient(to right, #141414 0%, rgba(20, 20, 20, 0.5) 40%, transparent 80%);
-}
-
 /* --- CONTENT --- */
 .hero-content {
     position: absolute;
@@ -130,7 +118,7 @@
 .hero-desc {
     font-size: 0.95rem;
     line-height: 1.5;
-    color: #d2d2d2;
+    color: white;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -211,12 +199,6 @@
     background: rgba(255, 255, 255, 0.12);
     border-color: white;
     transform: scale(1.08);
-}
-
-.btn-hero-bookmark.active {
-    color: var(--clr-accent, #ff7e00);
-    border-color: var(--clr-accent, #ff7e00);
-    background: rgba(255, 126, 0, 0.15);
 }
 
 /* --- INDICATORS --- */

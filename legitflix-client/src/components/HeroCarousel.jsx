@@ -298,7 +298,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                                     onClick={() => navigate(`/details/${item.Id}`)}
                                 >
                                     <i className="material-icons">play_arrow</i>
-                                    <span>{btnText} <small className="opacity-80 font-normal text-sm ml-1">{btnSubText}</small></span>
+                                    <span>{btnText} <small className="text-sm ml-1">{btnSubText}</small></span>
                                 </Button>
 
                                 <Button

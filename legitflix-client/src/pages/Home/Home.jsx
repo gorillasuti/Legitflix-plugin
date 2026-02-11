@@ -86,7 +86,7 @@ const Home = () => {
             <Navbar />
             <HeroCarousel onInfoClick={openModal} />
 
-            <div className="home-content-container" style={{ marginTop: '-150px', position: 'relative', zIndex: 10 }}>
+            <div className="home-content-container" style={{ position: 'relative', zIndex: 10 }}>
                 {loading ? (
                     <div style={{ padding: '0 4.2%', marginTop: '40px' }}>
                         {/* Browse Libraries Row */}

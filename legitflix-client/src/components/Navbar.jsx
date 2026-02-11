@@ -112,7 +112,7 @@ const Navbar = () => {
                             ))}
 
                             {/* Divider + Requests — only if setting enabled */}
-                            {config.enableJellyseerr && config.jellyseerrUrl && config.showNavbarRequests !== false && (
+                            {config.jellyseerrUrl && config.showNavbarRequests !== false && (
                                 <>
                                     <span className="nav-divider" />
                                     <a
@@ -261,7 +261,7 @@ const Navbar = () => {
             </nav>
 
             <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
-            <LegitFlixSettingsModal isOpen={showLegitSettings} onClose={() => setShowLegitSettings(false)} />
+            <LegitFlixSettingsModal isOpen={showLegitSettings} onClose={() => setShowLegitSettings(false)} userId={user?.Id} />
             <QuickConnectModal isOpen={showQuickConnect} onClose={() => setShowQuickConnect(false)} />
             <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} user={user} />
         </>
