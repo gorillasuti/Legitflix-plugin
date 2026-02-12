@@ -59,6 +59,7 @@ const Player = () => {
     const [playbackRate, setPlaybackRate] = useState(1);
     const [autoPlay, setAutoPlay] = useState(true);
     const [maxBitrate, setMaxBitrate] = useState(null); // null = Auto
+    const [mediaSourceId, setMediaSourceId] = useState(null);
     const [showSkipIntro, setShowSkipIntro] = useState(false);
     const [introStart, setIntroStart] = useState(null);
     const [introEnd, setIntroEnd] = useState(null);
@@ -84,6 +85,7 @@ const Player = () => {
                 // --- Stream Processing ---
                 if (itemData.MediaSources && itemData.MediaSources.length > 0) {
                     const source = itemData.MediaSources[0];
+                    setMediaSourceId(source.Id);
                     const streams = source.MediaStreams || [];
 
                     const audio = streams.filter(s => s.Type === 'Audio');
@@ -155,7 +157,7 @@ const Player = () => {
             item.Id,
             selectedAudioIndex,
             selectedSubtitleIndex,
-            null, // mediaSourceId
+            mediaSourceId,
             maxBitrate
         );
 

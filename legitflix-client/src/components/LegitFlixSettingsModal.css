@@ -740,3 +740,9 @@ select.legit-input option {
     font-weight: 500;
     text-transform: lowercase;
 }
+
+.setting-label {
+    font-size: .95rem;
+    color: #ccc;
+    font-weight: 500;
+}
