@@ -1,4 +1,4 @@
-$version = "1.0.0.53"
+$version = "1.0.0.54"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 # Adjust build dir to be relative to the script location if running from root

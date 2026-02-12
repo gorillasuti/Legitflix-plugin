@@ -421,20 +421,21 @@ const SeriesDetail = () => {
                             title="Trailer"
                         />
                     )}
-                    {/* Help Button - Always show when playing */}
-                    {isTrailerPlaying && (
-                        <button
-                            className="lf-trailer-help-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowBlockedModal(true);
-                            }}
-                        >
-                            <span className="material-icons">help_outline</span>
-                            <span>Trouble playing?</span>
-                        </button>
-                    )}
                 </div>
+
+                {/* Trouble Playing - shows in clean-view with logo */}
+                {isTrailerPlaying && (
+                    <button
+                        className="lf-trailer-help-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowBlockedModal(true);
+                        }}
+                    >
+                        <span className="material-icons">help_outline</span>
+                        <span>Trouble playing?</span>
+                    </button>
+                )}
 
                 {/* Clean View Logo */}
                 {logoUrl && (
@@ -745,19 +746,25 @@ const SeriesDetail = () => {
 
             {/* Blocked Modal */}
             {showBlockedModal && (
-                <div className="lf-blocked-modal-overlay">
-                    <div className="lf-blocked-modal">
-                        <span className="material-icons lf-blocked-icon">block</span>
-                        <h3>Content blocked by browser</h3>
-                        <p>The trailer cannot be played because your browser blocked it. This usually happens due to tracking protection or ad blockers affecting the YouTube player.</p>
+                <div className="lf-blocked-modal-overlay" onClick={() => { setShowBlockedModal(false); handleStopTrailer(); }}>
+                    <div className="lf-blocked-modal" onClick={(e) => e.stopPropagation()}>
                         <button
-                            className="lf-btn lf-btn--primary"
+                            className="lf-blocked-modal__close"
+                            onClick={() => { setShowBlockedModal(false); handleStopTrailer(); }}
+                        >
+                            <span className="material-icons">close</span>
+                        </button>
+                        <span className="material-icons lf-blocked-icon">error_outline</span>
+                        <h3>Playback issue</h3>
+                        <p>The trailer can't play — your browser's tracking protection or ad blocker is likely blocking the YouTube embed.</p>
+                        <button
+                            className="lf-btn lf-btn--glass"
                             onClick={() => {
                                 setShowBlockedModal(false);
                                 handleStopTrailer();
                             }}
                         >
-                            Close
+                            Got it
                         </button>
                     </div>
                 </div>

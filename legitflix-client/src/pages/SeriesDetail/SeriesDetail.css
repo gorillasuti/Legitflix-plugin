@@ -71,7 +71,7 @@
     border: none;
 }
 
-/* Trailer Help Button */
+/* Trailer Help Button — only visible in clean-view alongside the logo */
 .lf-trailer-help-btn {
     position: absolute;
     bottom: 30px;
@@ -90,6 +90,13 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.lf-series-hero.is-clean-view .lf-trailer-help-btn {
+    opacity: 1;
+    pointer-events: auto;
     animation: fadeIn 0.5s ease;
 }
 
@@ -488,7 +495,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     background: var(--clr-bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
@@ -561,8 +568,8 @@
 }
 
 .lf-season-selector__option.is-selected {
-    color: var(--clr-accent);
-    background: rgba(255, 106, 0, 0.1);
+    color: var(--clr-text-main);
+    background: var(--clr-bg-glass);
 }
 
 .lf-season-selector__option-count {
@@ -655,8 +662,8 @@
 }
 
 .lf-filter-dropdown__option.is-selected {
-    color: var(--clr-accent);
-    background: rgba(255, 106, 0, 0.1);
+    color: var(--clr-text-main);
+    background: var(--clr-bg-glass);
 }
 
 .lf-filter-dropdown__option .material-icons {
@@ -912,49 +919,117 @@
 }
 
 /* ============================================
-   BLOCKED CONTENT MODAL
+   BLOCKED CONTENT MODAL (Modern Glass)
    ============================================ */
 .lf-blocked-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.7);
     z-index: 11000;
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(5px);
-    animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: modalOverlayIn 0.25s ease;
+}
+
+@keyframes modalOverlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .lf-blocked-modal {
-    background: var(--clr-bg-surface);
-    padding: 40px;
-    border-radius: 16px;
-    max-width: 450px;
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
+    max-width: 420px;
+    width: 90%;
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.lf-blocked-modal__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--clr-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.lf-blocked-modal__close:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--clr-text-main);
+}
+
+.lf-blocked-modal__close .material-icons {
+    font-size: 18px;
 }
 
 .lf-blocked-icon {
-    font-size: 64px;
-    color: var(--clr-accent);
-    /* Use accent instead of hardcoded red for branding consistency */
-    margin-bottom: 24px;
+    font-size: 48px;
+    color: var(--clr-text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    margin-left: auto;
+    margin-right: auto;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
 }
 
 .lf-blocked-modal h3 {
-    font-size: 1.5rem;
-    margin-bottom: 12px;
-    color: white;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+    color: var(--clr-text-main);
+    font-weight: 600;
 }
 
 .lf-blocked-modal p {
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 32px;
+    color: var(--clr-text-muted);
+    margin-bottom: 1.5rem;
     line-height: 1.6;
-    font-size: 1rem;
+    font-size: 0.9rem;
+}
+
+.lf-blocked-modal .lf-btn {
+    width: 100%;
+    justify-content: center;
 }
 
 
@@ -1165,9 +1240,9 @@
 }
 
 .lf-filter-btn.is-active {
-    background: rgba(255, 106, 0, 0.15);
-    border-color: var(--clr-accent);
-    color: var(--clr-accent);
+    background: var(--clr-bg-glass);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--clr-text-main);
 }
 
 .lf-filter-dropdown {
@@ -1214,8 +1289,8 @@
 }
 
 .lf-filter-dropdown__option.is-selected {
-    color: var(--clr-accent);
-    background: rgba(255, 106, 0, 0.1);
+    color: var(--clr-text-main);
+    background: var(--clr-bg-glass);
 }
 
 /* Language Selector Specifics */
