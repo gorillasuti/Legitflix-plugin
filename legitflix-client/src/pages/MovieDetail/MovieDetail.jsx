@@ -7,6 +7,8 @@ import './MovieDetail.css';
 import jellyfinService from '../../services/jellyfin';
 // Footer removed as per SeriesDetail changes
 
+import DetailSkeleton from '../../components/DetailSkeleton';
+
 const MovieDetail = () => {
     const { id } = useParams();
     const [movie, setMovie] = useState(null);
@@ -204,7 +206,7 @@ const MovieDetail = () => {
         };
     }, []);
 
-    if (loading) return <div className="lf-movie-container" style={{ color: 'white' }}>Loading...</div>;
+    if (loading) return <DetailSkeleton />;
     if (!movie) return <div className="lf-movie-container" style={{ color: 'white' }}>Movie not found</div>;
 
     const backdropUrl = jellyfinService.getImageUrl(movie, 'Backdrop');

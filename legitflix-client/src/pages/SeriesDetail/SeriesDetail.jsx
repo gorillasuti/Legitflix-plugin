@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import './SeriesDetail.css';
 import jellyfinService from '../../services/jellyfin';
 import Footer from '../../components/Footer';
+import DetailSkeleton from '../../components/DetailSkeleton';
 
 const SeriesDetail = () => {
     const { id } = useParams();
@@ -335,7 +336,7 @@ const SeriesDetail = () => {
         };
     }, []);
 
-    if (loading) return <div className="lf-series-container" style={{ color: 'white' }}>Loading...</div>;
+    if (loading) return <DetailSkeleton />;
     if (!series) return <div className="lf-series-container" style={{ color: 'white' }}>Series not found</div>;
 
     const backdropUrl = jellyfinService.getImageUrl(series, 'Backdrop');
@@ -490,28 +491,19 @@ const SeriesDetail = () => {
             <div className="lf-content-section">
                 <div className="lf-episodes-header">
                     {/* Season Selector */}
-                    <div className={`lf-season-selector ${isSeasonDropdownOpen ? 'is-open' : ''}`} ref={dropdownRef}>
-                        <div
-                            className="lf-season-selector__button"
-                            onClick={() => setIsSeasonDropdownOpen(!isSeasonDropdownOpen)}
+                    {/* Season Selector - Native */}
+                    <div className="lf-season-selector-wrapper">
+                        <select
+                            className="lf-season-select"
+                            value={selectedSeasonId || ''}
+                            onChange={(e) => setSelectedSeasonId(e.target.value)}
                         >
-                            <span>{selectedSeason ? selectedSeason.Name : 'Select Season'}</span>
-                            <span className="material-icons">expand_more</span>
-                        </div>
-                        <div className="lf-season-selector__dropdown">
                             {seasons.map(season => (
-                                <div
-                                    key={season.Id}
-                                    className={`lf-season-selector__option ${selectedSeasonId === season.Id ? 'is-selected' : ''}`}
-                                    onClick={() => {
-                                        setSelectedSeasonId(season.Id);
-                                        setIsSeasonDropdownOpen(false);
-                                    }}
-                                >
-                                    <span>{season.Name}</span>
-                                </div>
+                                <option key={season.Id} value={season.Id}>
+                                    {season.Name}
+                                </option>
                             ))}
-                        </div>
+                        </select>
                     </div>
 
                     {/* Filter / Bulk Controls */}
