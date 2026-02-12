@@ -4,9 +4,9 @@ import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
 import { Button } from '@/components/ui/button';
 import './SeriesDetail.css';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import jellyfinService from '../../services/jellyfin';
 import Footer from '../../components/Footer';
-import DetailSkeleton from '../../components/DetailSkeleton';
 
 const SeriesDetail = () => {
     const { id } = useParams();
@@ -336,7 +336,52 @@ const SeriesDetail = () => {
         };
     }, []);
 
-    if (loading) return <DetailSkeleton />;
+    // Skeleton Loader
+    if (loading) {
+        return (
+            <div className="lf-series-container">
+                <Navbar alwaysFilled={true} />
+                <section className="lf-series-hero">
+                    <div className="lf-series-hero__backdrop" style={{ background: '#141414' }}></div>
+                    <div className="lf-series-hero__content">
+                        <div className="lf-series-hero__poster">
+                            <SkeletonLoader type="rect" width="100%" height="100%" style={{ aspectRatio: '2/3', borderRadius: '8px' }} />
+                        </div>
+
+                        <div className="lf-series-hero__info">
+                            <h1 className="lf-series-hero__title" style={{ marginBottom: '1rem' }}>
+                                <SkeletonLoader type="text" width="60%" height="3rem" />
+                            </h1>
+
+                            <div className="lf-series-hero__meta" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                                <SkeletonLoader type="text" width="60px" />
+                                <SkeletonLoader type="text" width="40px" />
+                                <SkeletonLoader type="text" width="80px" />
+                            </div>
+
+                            <div className="lf-series-hero__details">
+                                <div className="lf-series-hero__description">
+                                    <SkeletonLoader type="text" width="100%" />
+                                    <SkeletonLoader type="text" width="95%" />
+                                    <SkeletonLoader type="text" width="90%" />
+                                </div>
+
+                                <div className="lf-series-hero__cast-info" style={{ marginTop: '1rem' }}>
+                                    <SkeletonLoader type="text" width="80%" />
+                                    <SkeletonLoader type="text" width="70%" />
+                                </div>
+                            </div>
+
+                            <div className="lf-series-hero__actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+                                <SkeletonLoader type="rect" width="180px" height="48px" style={{ borderRadius: '24px' }} />
+                                <SkeletonLoader type="rect" width="160px" height="48px" style={{ borderRadius: '24px' }} />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
     if (!series) return <div className="lf-series-container" style={{ color: 'white' }}>Series not found</div>;
 
     const backdropUrl = jellyfinService.getImageUrl(series, 'Backdrop');
@@ -491,19 +536,28 @@ const SeriesDetail = () => {
             <div className="lf-content-section">
                 <div className="lf-episodes-header">
                     {/* Season Selector */}
-                    {/* Season Selector - Native */}
-                    <div className="lf-season-selector-wrapper">
-                        <select
-                            className="lf-season-select"
-                            value={selectedSeasonId || ''}
-                            onChange={(e) => setSelectedSeasonId(e.target.value)}
+                    <div className={`lf-season-selector ${isSeasonDropdownOpen ? 'is-open' : ''}`} ref={dropdownRef}>
+                        <div
+                            className="lf-season-selector__button"
+                            onClick={() => setIsSeasonDropdownOpen(!isSeasonDropdownOpen)}
                         >
+                            <span>{selectedSeason ? selectedSeason.Name : 'Select Season'}</span>
+                            <span className="material-icons">expand_more</span>
+                        </div>
+                        <div className="lf-season-selector__dropdown">
                             {seasons.map(season => (
-                                <option key={season.Id} value={season.Id}>
-                                    {season.Name}
-                                </option>
+                                <div
+                                    key={season.Id}
+                                    className={`lf-season-selector__option ${selectedSeasonId === season.Id ? 'is-selected' : ''}`}
+                                    onClick={() => {
+                                        setSelectedSeasonId(season.Id);
+                                        setIsSeasonDropdownOpen(false);
+                                    }}
+                                >
+                                    <span>{season.Name}</span>
+                                </div>
                             ))}
-                        </select>
+                        </div>
                     </div>
 
                     {/* Filter / Bulk Controls */}
