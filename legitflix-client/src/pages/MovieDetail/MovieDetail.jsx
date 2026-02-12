@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import jellyfinService from '../../services/jellyfin';
 
 const MovieDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [movie, setMovie] = useState(null);
     const [similars, setSimilars] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -326,7 +327,10 @@ const MovieDetail = () => {
                         </div>
 
                         <div className="lf-movie-hero__actions">
-                            <button className="lf-btn lf-btn--primary lf-btn--ring-hover">
+                            <button
+                                className="lf-btn lf-btn--primary lf-btn--ring-hover"
+                                onClick={() => navigate(`/play/${movie.Id}`)}
+                            >
                                 <span className="material-icons">play_arrow</span>
                                 Start Watching
                             </button>

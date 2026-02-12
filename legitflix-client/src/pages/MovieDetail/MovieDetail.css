@@ -254,10 +254,6 @@
     color: white;
 }
 
-.lf-btn--primary:hover {
-    background: var(--clr-accent-hover);
-}
-
 .lf-btn--glass {
     background: var(--clr-bg-glass);
     color: white;
@@ -536,7 +532,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--clr-text-main);
     padding: 8px 12px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s;

@@ -157,18 +157,36 @@ class JellyfinService {
         return response.data;
     }
 
-    async getItem(userId, itemId) {
-        if (!this.api) this.initialize();
-        const response = await this.api.userLibrary.getItem({ userId, itemId });
-        return response.data;
-    }
+
 
     async markPlayed(userId, itemId, isPlayed) {
         if (!this.api) this.initialize();
-        if (isPlayed) {
-            return await this.api.userLibrary.markPlayedItem({ userId, itemId });
-        } else {
-            return await this.api.userLibrary.markUnplayedItem({ userId, itemId });
+        const method = isPlayed ? 'POST' : 'DELETE';
+        const basePath = this.api.basePath || '';
+        const url = `${basePath}/Users/${userId}/PlayedItems/${itemId}`;
+
+        try {
+            const token = this.api.accessToken;
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (token) {
+                headers['X-Emby-Authorization'] = `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}", Token="${token}"`;
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: headers
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to mark played/unplayed: ${response.status} ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error("markPlayed failed", error);
+            throw error;
         }
     }
 
@@ -248,28 +266,12 @@ class JellyfinService {
         return response;
     }
 
-    async markFavorite(userId, itemId, isFavorite) {
-        if (!this.api) this.initialize();
-        if (isFavorite) {
-            return await this.api.userLibrary.markFavoriteItem({ userId, itemId });
-        } else {
-            return await this.api.userLibrary.unmarkFavoriteItem({ userId, itemId });
-        }
-    }
 
-    async markPlayed(userId, itemId, isPlayed) {
-        if (!this.api) this.initialize();
-        if (isPlayed) {
-            return await this.api.userLibrary.markPlayedItem({ userId, itemId });
-        } else {
-            return await this.api.userLibrary.markUnplayedItem({ userId, itemId });
-        }
-    }
 
     async getItemDetails(userId, itemId) {
         if (!this.api) this.initialize();
         try {
-            const fields = ['RemoteTrailers', 'LocalTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData', 'MediaSources'];
+            const fields = ['RemoteTrailers', 'LocalTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData', 'MediaSources', 'Trickplay'];
             const response = await this.api.userLibrary.getItem({
                 userId,
                 itemId,
@@ -311,9 +313,14 @@ class JellyfinService {
     }
 
     getPlaybackUrl(itemId) {
+        // Returns the internal player route (used with react-router HashRouter)
+        return `#/play/${itemId}`;
+    }
+
+    getTrickplayTileUrl(itemId, width, index) {
         if (!this.api) this.initialize();
         const baseUrl = this.api.configuration.basePath || '';
-        return `${baseUrl}/web/index.html#/details?id=${itemId}`;
+        return `${baseUrl}/Videos/${itemId}/Trickplay/${width}/${index}.jpg`;
     }
 
     async deleteSubtitle(itemId, index) {

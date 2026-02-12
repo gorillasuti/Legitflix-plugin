@@ -11,6 +11,7 @@ import Login from './pages/Auth/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import LegacyRouteHandler from './components/LegacyRouteHandler';
 import ItemRedirect from './pages/ItemRedirect/ItemRedirect';
+import Player from './pages/Player/Player';
 import SkeletonLoader from './components/SkeletonLoader'; // Global loader? Or page level?
 // import './App.css'; // Use index.css primarily
 
@@ -51,6 +52,7 @@ function AppContent() {
             <Route path="/movie/:id" element={<MovieDetail />} />
             <Route path="/item/:id" element={<ItemRedirect />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/play/:id" element={<Player />} />
             <Route path="*" element={<Home />} />
           </Route>
         </Routes>

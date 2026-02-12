@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import Footer from '../../components/Footer';
 
 const SeriesDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [series, setSeries] = useState(null);
     const [seasons, setSeasons] = useState([]);
     const [episodes, setEpisodes] = useState([]);
@@ -163,8 +164,7 @@ const SeriesDetail = () => {
     };
 
     const playEpisode = (episodeId) => {
-        const url = jellyfinService.getPlaybackUrl(episodeId);
-        window.location.href = url;
+        navigate(`/play/${episodeId}`);
     };
 
     const handleEpisodeClick = (episodeId) => {

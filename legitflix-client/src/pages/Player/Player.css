@@ -1,0 +1,397 @@
+/* ============================================
+   LEGITFLIX CUSTOM VIDEO PLAYER
+   ============================================ */
+
+.lf-player {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-primary, 'Inter', sans-serif);
+    color: #fff;
+    cursor: none;
+}
+
+.lf-player.show-controls {
+    cursor: default;
+}
+
+/* Video Element */
+.lf-player__video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+/* Loading Spinner */
+.lf-player__loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    z-index: 10;
+    gap: 16px;
+}
+
+.lf-player__spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--clr-accent, #ff6a00);
+    border-radius: 50%;
+    animation: lf-player-spin 0.8s linear infinite;
+}
+
+@keyframes lf-player-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.lf-player__loading-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.5px;
+}
+
+/* Error State */
+.lf-player__error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    z-index: 10;
+    gap: 16px;
+    padding: 40px;
+    text-align: center;
+}
+
+.lf-player__error .material-icons {
+    font-size: 48px;
+    color: #e53e3e;
+}
+
+.lf-player__error-message {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 400px;
+}
+
+.lf-player__error-btn {
+    margin-top: 8px;
+    padding: 10px 24px;
+    background: var(--clr-accent, #ff6a00);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.lf-player__error-btn:hover {
+    filter: brightness(1.15);
+}
+
+/* Top Bar */
+.lf-player__top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.lf-player.show-controls .lf-player__top-bar {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lf-player__back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.lf-player__back-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.lf-player__title-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lf-player__title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lf-player__subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Bottom Controls */
+.lf-player__controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 24px 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lf-player.show-controls .lf-player__controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Progress Bar */
+.lf-player__progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    transition: height 0.15s ease;
+}
+
+.lf-player__progress:hover {
+    height: 8px;
+}
+
+.lf-player__progress-buffered {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.lf-player__progress-filled {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--clr-accent, #ff6a00);
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.lf-player__progress-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 14px;
+    height: 14px;
+    background: var(--clr-accent, #ff6a00);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: transform 0.15s ease;
+}
+
+.lf-player__progress:hover .lf-player__progress-thumb {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Scrub Preview (Trickplay) */
+.lf-player-scrub-preview {
+    position: absolute;
+    bottom: 30px;
+    /* Position above the scrubber */
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 25;
+    background: #000;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    display: none;
+    /* Hidden by default */
+    width: 160px;
+    /* Default width, will be overridden */
+    aspect-ratio: 16/9;
+}
+
+.lf-player-scrub-preview.is-visible {
+    display: block;
+}
+
+.lf-player-scrub-preview img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Controls Row */
+.lf-player__controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.lf-player__controls-left,
+.lf-player__controls-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lf-player__ctrl-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.15s;
+    padding: 0;
+}
+
+.lf-player__ctrl-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+}
+
+.lf-player__ctrl-btn .material-icons {
+    font-size: 24px;
+}
+
+.lf-player__ctrl-btn--play .material-icons {
+    font-size: 32px;
+}
+
+/* Volume Slider */
+.lf-player__volume-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.lf-player__volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    outline: none;
+    opacity: 0;
+    transition: width 0.2s ease, opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.lf-player__volume-group:hover .lf-player__volume-slider {
+    width: 80px;
+    opacity: 1;
+}
+
+.lf-player__volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.lf-player__volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+/* Time Display */
+.lf-player__time {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* Center Play overlay (click to play/pause) */
+.lf-player__center-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 72px;
+    height: 72px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.lf-player__center-play.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.lf-player__center-play .material-icons {
+    font-size: 40px;
+    color: #fff;
+}
