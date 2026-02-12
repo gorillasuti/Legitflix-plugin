@@ -41,11 +41,26 @@ const PlayerSettingsModal = ({
             <h3 className="setting-title">Quality</h3>
             <p className="setting-desc">Select maximum playback bitrate.</p>
             <div className="settings-list">
-                <button className={`lf-btn ${!maxBitrate ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(null)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>Auto</button>
-                <button className={`lf-btn ${maxBitrate === 120000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(120000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>4K (120Mbps)</button>
-                <button className={`lf-btn ${maxBitrate === 60000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(60000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>1080p High (60Mbps)</button>
-                <button className={`lf-btn ${maxBitrate === 20000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(20000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>1080p (20Mbps)</button>
-                <button className={`lf-btn ${maxBitrate === 10000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(10000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>720p (10Mbps)</button>
+                <button className={`lf-btn ${!maxBitrate ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(null)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                    Auto
+                    {!maxBitrate && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                </button>
+                <button className={`lf-btn ${maxBitrate === 120000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(120000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                    4K (120Mbps)
+                    {maxBitrate === 120000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                </button>
+                <button className={`lf-btn ${maxBitrate === 60000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(60000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                    1080p High (60Mbps)
+                    {maxBitrate === 60000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                </button>
+                <button className={`lf-btn ${maxBitrate === 20000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(20000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                    1080p (20Mbps)
+                    {maxBitrate === 20000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                </button>
+                <button className={`lf-btn ${maxBitrate === 10000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(10000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                    720p (10Mbps)
+                    {maxBitrate === 10000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                </button>
             </div>
         </div>
     );
@@ -63,6 +78,7 @@ const PlayerSettingsModal = ({
                         style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}
                     >
                         {stream.Language || 'Unknown'} - {stream.Codec} {stream.Title ? `(${stream.Title})` : ''}
+                        {selectedAudioIndex === stream.Index && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                     </button>
                 ))}
             </div>
@@ -96,6 +112,7 @@ const PlayerSettingsModal = ({
                             style={{ flex: 1, justifyContent: 'flex-start' }}
                         >
                             {stream.Language || 'Unknown'} {stream.Title ? `(${stream.Title})` : ''} {stream.IsForced ? '[Forced]' : ''} {stream.IsExternal ? '(Ext)' : ''}
+                            {selectedSubtitleIndex === stream.Index && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                         </button>
 
                         {stream.IsExternal && (
@@ -126,6 +143,7 @@ const PlayerSettingsModal = ({
                         style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}
                     >
                         {rate}x
+                        {playbackRate === rate && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                     </button>
                 ))}
             </div>
@@ -214,7 +232,7 @@ const PlayerSettingsModal = ({
                             <span className="material-icons">speed</span> Speed
                         </button>
                         <button className={`sidebar-tab ${settingsTab === 'General' ? 'active' : ''}`} onClick={() => setSettingsTab('General')}>
-                            <span className="material-icons">settings</span> General
+                            <span className="material-icons">room_service</span> General
                         </button>
                     </div>
                 </div>

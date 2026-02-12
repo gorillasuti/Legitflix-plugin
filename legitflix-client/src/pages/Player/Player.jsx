@@ -165,6 +165,12 @@ const Player = () => {
                 if (defaultSub) setSelectedSubtitleIndex(defaultSub.Index);
                 else setSelectedSubtitleIndex(null);
             }
+
+            // --- Season/Episode Fetching ---
+            if (itemData.Type === 'Episode' && itemData.SeriesId) {
+                loadSeasons(user.Id, itemData.SeriesId, itemData.SeasonId);
+            }
+
             setIsLoading(false);
         } catch (err) {
             console.error("Failed to load item", err);
@@ -354,6 +360,14 @@ const Player = () => {
             }
         };
     }, [playbackUrl]); // Re-run when URL changes (e.g. stream switch)
+
+    // --- Audio Synchronization ---
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.volume = isMuted ? 0 : volume;
+            videoRef.current.muted = isMuted;
+        }
+    }, [volume, isMuted]);
 
     // Watch playback rate changes
     useEffect(() => {
@@ -586,7 +600,7 @@ const Player = () => {
         const clickedEl = e.target;
         if (clickedEl.closest('button') || clickedEl.closest('input') || clickedEl.closest('select') ||
             clickedEl.closest('.lf-skip-btn') || clickedEl.closest('.center-play-btn') ||
-            clickedEl.closest('.lf-settings-modal') || clickedEl.closest('.lf-player-back-button')) {
+            clickedEl.closest('.legit-settings-overlay') || clickedEl.closest('.lf-player-back-button')) {
             return;
         }
 

@@ -67,7 +67,6 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setDefaultSubtitleLanguage(config.defaultSubtitleLanguage || 'auto');
             setAutoSkipIntro(config.autoSkipIntro || false);
             setAutoSkipOutro(config.autoSkipOutro || false);
-            setAutoSkipOutro(config.autoSkipOutro || false);
             setSubSize(config.subtitleSize || '100%');
             setSubColor(config.subtitleColor || '#ffffff');
             setSubBackground(config.subtitleBackground || 'drop-shadow');
@@ -143,7 +142,6 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         setJellyseerrUrl('https://request.legitflix.eu');
         setShowLibraryTitles(true);
         setShowNavbarRequests(true);
-        setContentTypes({ Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
         setContentTypes({ Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
         setSortMode('latest');
         setPlayerSeekForward(30);

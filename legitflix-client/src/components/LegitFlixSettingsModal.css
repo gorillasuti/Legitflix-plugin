@@ -9,8 +9,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 5000;
     animation: fadeIn 0.2s ease-out;
+    pointer-events: auto;
 }
 
 @keyframes fadeIn {
@@ -114,8 +115,11 @@
 }
 
 .sidebar-tab.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--clr-accent, #ff7e00);
+    font-weight: 700;
+    box-shadow: inset 4px 0 0 var(--clr-accent, #ff7e00);
+    border-radius: 0 8px 8px 0;
 }
 
 .sidebar-tab.active .material-icons {
