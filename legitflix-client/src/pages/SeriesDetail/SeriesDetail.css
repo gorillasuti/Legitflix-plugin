@@ -71,7 +71,7 @@
     border: none;
 }
 
-/* Trailer Help Button — only visible in clean-view alongside the logo */
+/* Trailer Help Button — always visible when trailer plays */
 .lf-trailer-help-btn {
     position: absolute;
     bottom: 30px;
@@ -90,17 +90,12 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.lf-series-hero.is-clean-view .lf-trailer-help-btn {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 0.5;
     animation: fadeIn 0.5s ease;
 }
 
 .lf-trailer-help-btn:hover {
+    opacity: 1;
     background: rgba(255, 255, 255, 0.1);
     border-color: white;
 }
@@ -284,10 +279,6 @@
     font-weight: 500;
     cursor: pointer;
     transition: color 0.2s ease;
-}
-
-.lf-series-hero__load-more:hover {
-    color: var(--clr-accent-hover);
 }
 
 .lf-series-hero__load-more .material-icons {
@@ -496,6 +487,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
+    min-width: 180px;
     background: var(--clr-bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
@@ -1334,7 +1326,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--clr-text-main);
     padding: 8px 12px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s;

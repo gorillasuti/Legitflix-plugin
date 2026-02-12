@@ -1,6 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import jellyfinService from '../services/jellyfin';
 import PropTypes from 'prop-types';
+import './SubtitleModal.css';
+
+const LANGUAGES = {
+    popular: [
+        { code: 'eng', name: 'English' },
+        { code: 'spa', name: 'Spanish' },
+        { code: 'jpn', name: 'Japanese' },
+        { code: 'hun', name: 'Hungarian' },
+    ],
+    more: [
+        { code: 'ara', name: 'Arabic' },
+        { code: 'bul', name: 'Bulgarian' },
+        { code: 'chi', name: 'Chinese' },
+        { code: 'hrv', name: 'Croatian' },
+        { code: 'cze', name: 'Czech' },
+        { code: 'dan', name: 'Danish' },
+        { code: 'dut', name: 'Dutch' },
+        { code: 'fin', name: 'Finnish' },
+        { code: 'fre', name: 'French' },
+        { code: 'ger', name: 'German' },
+        { code: 'gre', name: 'Greek' },
+        { code: 'heb', name: 'Hebrew' },
+        { code: 'hin', name: 'Hindi' },
+        { code: 'ind', name: 'Indonesian' },
+        { code: 'ita', name: 'Italian' },
+        { code: 'kor', name: 'Korean' },
+        { code: 'may', name: 'Malay' },
+        { code: 'nor', name: 'Norwegian' },
+        { code: 'per', name: 'Persian' },
+        { code: 'pol', name: 'Polish' },
+        { code: 'por', name: 'Portuguese' },
+        { code: 'rum', name: 'Romanian' },
+        { code: 'rus', name: 'Russian' },
+        { code: 'srp', name: 'Serbian' },
+        { code: 'slo', name: 'Slovak' },
+        { code: 'slv', name: 'Slovenian' },
+        { code: 'swe', name: 'Swedish' },
+        { code: 'tha', name: 'Thai' },
+        { code: 'tur', name: 'Turkish' },
+        { code: 'ukr', name: 'Ukrainian' },
+        { code: 'vie', name: 'Vietnamese' },
+    ],
+};
 
 const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpisodeId, isMovie = false }) => {
     const [seasons, setSeasons] = useState([]);
@@ -18,9 +61,7 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
     useEffect(() => {
         if (isOpen && seriesId) {
             if (isMovie) {
-                // For movies, the "Episode" ID is the Movie ID itself
                 setSelectedEpisode(initialEpisodeId || seriesId);
-                // Skip loading seasons/episodes
             } else {
                 loadSeasons();
             }
@@ -60,7 +101,6 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
             if (!selectedEpisode && data.Items.length > 0) {
                 setSelectedEpisode(data.Items[0].Id);
             } else if (selectedEpisode) {
-                // Verify selected episode is in new list, if not select first
                 if (!data.Items.find(e => e.Id === selectedEpisode)) {
                     setSelectedEpisode(data.Items[0] ? data.Items[0].Id : '');
                 }
@@ -89,7 +129,7 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
     const handleDelete = async (index) => {
         if (!window.confirm('Are you sure you want to delete this subtitle?')) return;
         try {
-            await jellyfinService.deleteSubtitle(selectedEpisode, index); // index is usually passed
+            await jellyfinService.deleteSubtitle(selectedEpisode, index);
             loadCurrentSubtitles();
         } catch (err) {
             alert('Failed to delete subtitle');
@@ -124,115 +164,124 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
     if (!isOpen) return null;
 
     return (
-        <div className="lf-modal-overlay" style={{
-            position: 'fixed', inset: 0, bg: 'rgba(0,0,0,0.85)', zIndex: 10000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)'
-        }}>
-            <div style={{
-                background: '#1c1c1c', borderRadius: '12px', width: '100%', maxWidth: '800px',
-                maxHeight: '85vh', display: 'flex', flexDirection: 'column', margin: '20px'
-            }}>
+        <div className="lf-sub-overlay" onClick={onClose}>
+            <div className="lf-sub-modal" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
-                <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0, color: 'white' }}>Subtitles Manager</h3>
-                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
+                <div className="lf-sub-header">
+                    <h3>Subtitles Manager</h3>
+                    <button className="lf-sub-header__close" onClick={onClose}>
                         <span className="material-icons">close</span>
                     </button>
                 </div>
 
                 {/* Content */}
-                <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
-                    {/* Selectors */}
-                    {/* Selectors - Hide for Movies */
-                        !isMovie && (
-                            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '0.85rem' }}>Season</label>
-                                    <select
-                                        value={selectedSeason}
-                                        onChange={e => { setSelectedSeason(e.target.value); setSelectedEpisode(''); }}
-                                        style={{ width: '100%', padding: '10px', background: '#333', color: 'white', border: 'none', borderRadius: '4px' }}
-                                    >
-                                        {seasons.map(s => <option key={s.Id} value={s.Id}>{s.Name}</option>)}
-                                    </select>
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '0.85rem' }}>Episode</label>
-                                    <select
-                                        value={selectedEpisode}
-                                        onChange={e => setSelectedEpisode(e.target.value)}
-                                        style={{ width: '100%', padding: '10px', background: '#333', color: 'white', border: 'none', borderRadius: '4px' }}
-                                    >
-                                        {episodes.map(e => <option key={e.Id} value={e.Id}>{e.IndexNumber}. {e.Name}</option>)}
-                                    </select>
-                                </div>
+                <div className="lf-sub-content">
+                    {/* Selectors — Hide for Movies */}
+                    {!isMovie && (
+                        <div className="lf-sub-selectors">
+                            <div>
+                                <label className="lf-sub-label">Season</label>
+                                <select
+                                    className="lf-sub-select"
+                                    value={selectedSeason}
+                                    onChange={e => { setSelectedSeason(e.target.value); setSelectedEpisode(''); }}
+                                >
+                                    {seasons.map(s => <option key={s.Id} value={s.Id}>{s.Name}</option>)}
+                                </select>
                             </div>
-                        )}
+                            <div>
+                                <label className="lf-sub-label">Episode</label>
+                                <select
+                                    className="lf-sub-select"
+                                    value={selectedEpisode}
+                                    onChange={e => setSelectedEpisode(e.target.value)}
+                                >
+                                    {episodes.map(e => <option key={e.Id} value={e.Id}>{e.IndexNumber}. {e.Name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Current Subtitles */}
-                    <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ color: '#ddd', marginBottom: '10px' }}>Current Subtitles</h4>
-                        {loadingSubs ? <div>Loading...</div> : (
-                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '5px' }}>
-                                {currentSubtitles.length === 0 ? <div style={{ padding: '10px', opacity: 0.7 }}>No subtitles found.</div> :
+                    <div className="lf-sub-section">
+                        <h4 className="lf-sub-section-title">Current Subtitles</h4>
+                        {loadingSubs ? (
+                            <div className="lf-sub-loading">
+                                <span className="material-icons">sync</span>
+                                Loading…
+                            </div>
+                        ) : (
+                            <div className="lf-sub-list">
+                                {currentSubtitles.length === 0 ? (
+                                    <div className="lf-sub-list__empty">No subtitles found.</div>
+                                ) : (
                                     currentSubtitles.map((sub, idx) => (
-                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', borderBottom: '1px solid rgba(255,255,255,0.05)', alignItems: 'center' }}>
+                                        <div key={idx} className="lf-sub-list__item">
                                             <div>
-                                                <div style={{ color: 'white', fontWeight: 500 }}>{sub.DisplayTitle || sub.Language || 'Unknown'}</div>
-                                                <div style={{ color: '#aaa', fontSize: '0.8rem' }}>{sub.IsExternal ? 'External' : 'Embedded'} • {sub.Codec}</div>
+                                                <div className="lf-sub-list__name">{sub.DisplayTitle || sub.Language || 'Unknown'}</div>
+                                                <div className="lf-sub-list__meta">{sub.IsExternal ? 'External' : 'Embedded'} • {sub.Codec}</div>
                                             </div>
                                             {sub.IsExternal && (
                                                 <button
+                                                    className="lf-sub-action-btn lf-sub-action-btn--delete"
                                                     onClick={() => handleDelete(sub.Index)}
-                                                    style={{ background: 'rgba(233, 30, 99, 0.2)', color: '#ff4081', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
                                                 >
+                                                    <span className="material-icons">delete_outline</span>
                                                     Delete
                                                 </button>
                                             )}
                                         </div>
                                     ))
-                                }
+                                )}
                             </div>
                         )}
                     </div>
 
                     {/* Search Section */}
-                    <div>
-                        <h4 style={{ color: '#ddd', marginBottom: '10px' }}>Search New Subtitles</h4>
-                        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                    <div className="lf-sub-section">
+                        <h4 className="lf-sub-section-title">Search Subtitles</h4>
+                        <form onSubmit={handleSearch} className="lf-sub-search-row">
                             <select
+                                className="lf-sub-select"
                                 value={searchLanguage}
                                 onChange={e => setSearchLanguage(e.target.value)}
-                                style={{ flex: 1, padding: '10px', background: '#333', color: 'white', border: 'none', borderRadius: '4px' }}
+                                style={{ flex: 1 }}
                             >
-                                <option value="eng">English</option>
-                                <option value="spa">Spanish</option>
-                                <option value="fre">French</option>
-                                <option value="hun">Hungarian</option>
-                                {/* Add more langs as needed */}
+                                <optgroup label="Popular">
+                                    {LANGUAGES.popular.map(l => (
+                                        <option key={l.code} value={l.code}>{l.name}</option>
+                                    ))}
+                                </optgroup>
+                                <optgroup label="More Languages">
+                                    {LANGUAGES.more.map(l => (
+                                        <option key={l.code} value={l.code}>{l.name}</option>
+                                    ))}
+                                </optgroup>
                             </select>
                             <button
                                 type="submit"
                                 disabled={searching || !selectedEpisode}
-                                style={{ background: '#ff6a00', color: 'white', border: 'none', padding: '0 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                                className="lf-sub-action-btn lf-sub-action-btn--search"
                             >
-                                {searching ? 'Searching...' : 'Search'}
+                                <span className="material-icons">search</span>
+                                {searching ? 'Searching…' : 'Search'}
                             </button>
                         </form>
 
                         {/* Search Results */}
                         {searchResults.length > 0 && (
-                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                            <div className="lf-sub-list">
                                 {searchResults.map((res) => (
-                                    <div key={res.Id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', borderBottom: '1px solid rgba(255,255,255,0.05)', alignItems: 'center' }}>
-                                        <div style={{ overflow: 'hidden', marginRight: '10px' }}>
-                                            <div style={{ color: 'white', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{res.Name}</div>
-                                            <div style={{ color: '#aaa', fontSize: '0.8rem' }}>{res.Format} • {res.ProviderName} • {res.DownloadCount} DLs</div>
+                                    <div key={res.Id} className="lf-sub-list__item">
+                                        <div className="lf-sub-list__info">
+                                            <div className="lf-sub-list__name">{res.Name}</div>
+                                            <div className="lf-sub-list__meta">{res.Format} • {res.ProviderName} • {res.DownloadCount} DLs</div>
                                         </div>
                                         <button
+                                            className="lf-sub-action-btn lf-sub-action-btn--download"
                                             onClick={() => handleDownload(res.Id)}
-                                            style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}
                                         >
+                                            <span className="material-icons">download</span>
                                             Download
                                         </button>
                                     </div>
@@ -240,7 +289,6 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
                             </div>
                         )}
                     </div>
-
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
@@ -29,6 +29,12 @@ const SeriesDetail = () => {
     const [subPref, setSubPref] = useState(localStorage.getItem('legitflix-sub-pref') || 'en');
     const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
+    // Filter & Sort States
+    const [episodeFilter, setEpisodeFilter] = useState('all'); // 'all' | 'unwatched' | 'watched'
+    const [episodeSort, setEpisodeSort] = useState('default'); // 'default' | 'newest' | 'oldest'
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+
     // Trailer / Clean View States
     const [isTrailerPlaying, setIsTrailerPlaying] = useState(false);
     const [isCleanView, setIsCleanView] = useState(false);
@@ -40,6 +46,8 @@ const SeriesDetail = () => {
 
     const dropdownRef = useRef(null);
     const langDropdownRef = useRef(null);
+    const filterDropdownRef = useRef(null);
+    const sortDropdownRef = useRef(null);
     const trailerHelpTimeout = useRef(null);
     const cleanViewTimeout = useRef(null);
     const longPressTimer = useRef(null);
@@ -135,6 +143,12 @@ const SeriesDetail = () => {
             }
             if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
                 setIsLangDropdownOpen(false);
+            }
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+                setIsFilterDropdownOpen(false);
+            }
+            if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+                setIsSortDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -326,6 +340,28 @@ const SeriesDetail = () => {
     };
 
     const smartBtn = getSmartButtonInfo();
+
+    // Filtered & Sorted Episodes
+    const displayEpisodes = useMemo(() => {
+        let result = [...episodes];
+
+        // Filter
+        if (episodeFilter === 'unwatched') {
+            result = result.filter(ep => !ep.UserData?.Played);
+        } else if (episodeFilter === 'watched') {
+            result = result.filter(ep => ep.UserData?.Played);
+        }
+
+        // Sort
+        if (episodeSort === 'newest') {
+            result.sort((a, b) => (b.IndexNumber || 0) - (a.IndexNumber || 0));
+        } else if (episodeSort === 'oldest') {
+            result.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
+        }
+        // 'default' keeps original order
+
+        return result;
+    }, [episodes, episodeFilter, episodeSort]);
 
     // Clean up on unmount
     useEffect(() => {
@@ -641,16 +677,69 @@ const SeriesDetail = () => {
                                 </button>
                             </>
                         ) : (
-                            <button className="lf-filter-btn" onClick={toggleSelectionMode} title="Bulk Edit">
-                                <span className="material-icons">done_all</span>
-                                <span>Select Item</span>
-                            </button>
+                            <>
+                                {/* Filter Dropdown */}
+                                <div className={`lf-filter-dropdown ${isFilterDropdownOpen ? 'is-open' : ''}`} ref={filterDropdownRef}>
+                                    <button
+                                        className={`lf-filter-btn ${episodeFilter !== 'all' ? 'is-active' : ''}`}
+                                        onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                                        title="Filter episodes"
+                                    >
+                                        <span className="material-icons">filter_list</span>
+                                        <span>{episodeFilter === 'all' ? 'Filter' : episodeFilter === 'unwatched' ? 'Unwatched' : 'Watched'}</span>
+                                        <span className="material-icons">expand_more</span>
+                                    </button>
+                                    <div className="lf-filter-dropdown__menu">
+                                        {[{ key: 'all', label: 'All' }, { key: 'unwatched', label: 'Unwatched' }, { key: 'watched', label: 'Watched' }].map(opt => (
+                                            <div
+                                                key={opt.key}
+                                                className={`lf-filter-dropdown__option ${episodeFilter === opt.key ? 'is-selected' : ''}`}
+                                                onClick={() => { setEpisodeFilter(opt.key); setIsFilterDropdownOpen(false); }}
+                                            >
+                                                <span>{opt.label}</span>
+                                                {episodeFilter === opt.key && <span className="material-icons">check</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Sort Dropdown */}
+                                <div className={`lf-filter-dropdown ${isSortDropdownOpen ? 'is-open' : ''}`} ref={sortDropdownRef}>
+                                    <button
+                                        className={`lf-filter-btn ${episodeSort !== 'default' ? 'is-active' : ''}`}
+                                        onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                                        title="Sort episodes"
+                                    >
+                                        <span className="material-icons">sort</span>
+                                        <span>{episodeSort === 'default' ? 'Sort' : episodeSort === 'newest' ? 'Newest' : 'Oldest'}</span>
+                                        <span className="material-icons">expand_more</span>
+                                    </button>
+                                    <div className="lf-filter-dropdown__menu">
+                                        {[{ key: 'default', label: 'Default' }, { key: 'newest', label: 'Newest First' }, { key: 'oldest', label: 'Oldest First' }].map(opt => (
+                                            <div
+                                                key={opt.key}
+                                                className={`lf-filter-dropdown__option ${episodeSort === opt.key ? 'is-selected' : ''}`}
+                                                onClick={() => { setEpisodeSort(opt.key); setIsSortDropdownOpen(false); }}
+                                            >
+                                                <span>{opt.label}</span>
+                                                {episodeSort === opt.key && <span className="material-icons">check</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Bulk Select */}
+                                <button className="lf-filter-btn" onClick={toggleSelectionMode} title="Bulk Edit">
+                                    <span className="material-icons">done_all</span>
+                                    <span>Select Item</span>
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
 
                 <div className="lf-episode-grid">
-                    {episodes.map(ep => {
+                    {displayEpisodes.map(ep => {
                         const isSelected = selectedEpisodes.includes(ep.Id);
                         const isPlayed = ep.UserData?.Played;
 

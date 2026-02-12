@@ -1,0 +1,350 @@
+/* ============================================
+   SUBTITLE MANAGER MODAL
+   ============================================ */
+.lf-sub-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: lf-sub-overlay-in 0.25s ease;
+}
+
+@keyframes lf-sub-overlay-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes lf-sub-modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.lf-sub-modal {
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    animation: lf-sub-modal-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+/* Header */
+.lf-sub-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lf-sub-header h3 {
+    margin: 0;
+    color: var(--clr-text-main);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.lf-sub-header__close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--clr-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.lf-sub-header__close:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--clr-text-main);
+}
+
+.lf-sub-header__close .material-icons {
+    font-size: 18px;
+}
+
+/* Content */
+.lf-sub-content {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Selectors Row */
+.lf-sub-selectors {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 24px;
+}
+
+.lf-sub-selectors>div {
+    flex: 1;
+}
+
+.lf-sub-label {
+    display: block;
+    color: var(--clr-text-muted);
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.lf-sub-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--clr-text-main);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.lf-sub-select:hover,
+.lf-sub-select:focus {
+    border-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.08);
+    outline: none;
+}
+
+.lf-sub-select option {
+    background: #2a2a2a;
+    color: white;
+}
+
+/* Section title */
+.lf-sub-section-title {
+    color: var(--clr-text-main);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* Subtitle list */
+.lf-sub-list {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+.lf-sub-list__empty {
+    padding: 16px;
+    color: var(--clr-text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.lf-sub-list__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.15s ease;
+}
+
+.lf-sub-list__item:last-child {
+    border-bottom: none;
+}
+
+.lf-sub-list__item:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lf-sub-list__name {
+    color: var(--clr-text-main);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.lf-sub-list__meta {
+    color: var(--clr-text-muted);
+    font-size: 0.75rem;
+    margin-top: 2px;
+}
+
+.lf-sub-list__info {
+    overflow: hidden;
+    margin-right: 12px;
+    min-width: 0;
+}
+
+.lf-sub-list__info .lf-sub-list__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ring-hover action buttons */
+.lf-sub-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-primary);
+    font-weight: 500;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.lf-sub-action-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-radius: inherit;
+    transition: all 0.3s ease;
+}
+
+.lf-sub-action-btn:hover::after {
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.lf-sub-action-btn .material-icons {
+    font-size: 16px;
+}
+
+/* Delete variant */
+.lf-sub-action-btn--delete {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--clr-text-muted);
+}
+
+.lf-sub-action-btn--delete:hover {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.lf-sub-action-btn--delete:hover::after {
+    border-color: rgba(255, 107, 107, 0.4);
+}
+
+/* Download variant */
+.lf-sub-action-btn--download {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--clr-text-main);
+}
+
+.lf-sub-action-btn--download:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Search variant */
+.lf-sub-action-btn--search {
+    background: var(--clr-bg-glass);
+    color: var(--clr-text-main);
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.lf-sub-action-btn--search:hover {
+    background: var(--clr-bg-glass-hover);
+}
+
+.lf-sub-action-btn--search:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.lf-sub-action-btn--search:disabled::after {
+    display: none;
+}
+
+/* Search form row */
+.lf-sub-search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+/* Language select optgroup divider */
+.lf-sub-select optgroup {
+    font-weight: 600;
+    color: #999;
+    font-style: normal;
+    padding: 4px 0;
+}
+
+/* Section spacing */
+.lf-sub-section {
+    margin-bottom: 28px;
+}
+
+.lf-sub-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Loading spinner */
+.lf-sub-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    color: var(--clr-text-muted);
+    font-size: 0.85rem;
+}
+
+.lf-sub-loading .material-icons {
+    font-size: 20px;
+    animation: lf-spin 1s linear infinite;
+}
+
+@keyframes lf-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
