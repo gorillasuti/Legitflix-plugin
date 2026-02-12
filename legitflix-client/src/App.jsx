@@ -8,6 +8,7 @@ import Profile from './pages/Profile/Profile';
 import SelectServer from './pages/Auth/SelectServer';
 import SelectUser from './pages/Auth/SelectUser';
 import Login from './pages/Auth/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 import LegacyRouteHandler from './components/LegacyRouteHandler';
 import ItemRedirect from './pages/ItemRedirect/ItemRedirect';
 import SkeletonLoader from './components/SkeletonLoader'; // Global loader? Or page level?
@@ -38,15 +39,20 @@ function AppContent() {
       <Router>
         <LegacyRouteHandler />
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/login/select-server" element={<SelectServer />} />
           <Route path="/login/select-user" element={<SelectUser />} />
-          <Route path="/series/:id" element={<SeriesDetail />} />
-          <Route path="/movie/:id" element={<MovieDetail />} />
-          <Route path="/item/:id" element={<ItemRedirect />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<Home />} />
+
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/series/:id" element={<SeriesDetail />} />
+            <Route path="/movie/:id" element={<MovieDetail />} />
+            <Route path="/item/:id" element={<ItemRedirect />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<Home />} />
+          </Route>
         </Routes>
       </Router>
     </>
