@@ -623,10 +623,6 @@
     cursor: pointer;
 }
 
-.lf-similar-card:hover {
-    transform: translateY(-4px);
-}
-
 .lf-similar-card__poster {
     width: 100%;
     aspect-ratio: 2/3;

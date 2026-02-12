@@ -503,6 +503,21 @@ const Player = () => {
     }, [isPlaying, isMuted, togglePlay, skipBackward, skipForward, toggleFullscreen, toggleMute]); // Dependencies might need tuning based on functions used
 
 
+
+    const toggleFullscreen = useCallback(() => {
+        if (!document.fullscreenElement) {
+            if (containerRef.current) {
+                containerRef.current.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }, []);
+
     const toggleMute = useCallback(() => {
         const video = videoRef.current;
         if (video) {
