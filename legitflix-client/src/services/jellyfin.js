@@ -6,6 +6,7 @@ import { ItemsApi } from '@jellyfin/sdk/lib/generated-client/api/items-api';
 import { TvShowsApi } from '@jellyfin/sdk/lib/generated-client/api/tv-shows-api';
 import { LibraryApi } from '@jellyfin/sdk/lib/generated-client/api/library-api';
 import { SubtitleApi } from '@jellyfin/sdk/lib/generated-client/api/subtitle-api';
+import { PlaystateApi } from '@jellyfin/sdk/lib/generated-client/api/playstate-api';
 
 class JellyfinService {
     constructor() {
@@ -31,6 +32,7 @@ class JellyfinService {
         this.api.tvShows = new TvShowsApi(this.api.configuration);
         this.api.library = new LibraryApi(this.api.configuration);
         this.api.subtitle = new SubtitleApi(this.api.configuration);
+        this.api.playstate = new PlaystateApi(this.api.configuration);
 
         console.log("[LegitFlix] API Initialized. Access Token present:", !!accessToken);
     }
@@ -271,7 +273,7 @@ class JellyfinService {
     async getItemDetails(userId, itemId) {
         if (!this.api) this.initialize();
         try {
-            const fields = ['RemoteTrailers', 'LocalTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData', 'MediaSources', 'Trickplay'];
+            const fields = ['RemoteTrailers', 'LocalTrailers', 'People', 'Studios', 'Genres', 'Overview', 'ProductionYear', 'OfficialRating', 'RunTimeTicks', 'Tags', 'ImageTags', 'MediaStreams', 'UserData', 'MediaSources', 'Trickplay', 'Chapters', 'Width', 'Height'];
             const response = await this.api.userLibrary.getItem({
                 userId,
                 itemId,
@@ -315,6 +317,71 @@ class JellyfinService {
     getPlaybackUrl(itemId) {
         // Returns the internal player route (used with react-router HashRouter)
         return `#/play/${itemId}`;
+    }
+
+    getStreamUrl(itemId, options = {}) {
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        const token = this.api.accessToken;
+        const deviceId = this.jellyfin.deviceInfo.id;
+        const { audioStreamIndex, subtitleStreamIndex, maxBitrate } = options;
+
+        let url = `${baseUrl}/Videos/${itemId}/master.m3u8?MediaSourceId=${itemId}&PlaySessionId=LegitFlix-${Date.now()}&api_key=${token}&DeviceId=${deviceId}&VideoCodec=h264,hevc,vp9,av1&AudioCodec=aac,mp3,opus,vorbis&TranscodingContainer=ts&TranscodingProtocol=hls`;
+
+        if (audioStreamIndex !== undefined && audioStreamIndex !== null) {
+            url += `&AudioStreamIndex=${audioStreamIndex}`;
+        }
+        if (subtitleStreamIndex !== undefined && subtitleStreamIndex !== null) {
+            url += `&SubtitleStreamIndex=${subtitleStreamIndex}`;
+        }
+        if (maxBitrate) {
+            url += `&MaxStreamingBitrate=${maxBitrate}`;
+        }
+
+        return url;
+    }
+
+    async reportPlaybackProgress(itemId, ticks, isPaused) {
+        if (!this.api) this.initialize();
+        try {
+            await this.api.playstate.reportPlaybackProgress({
+                playbackProgressInfo: {
+                    ItemId: itemId,
+                    PositionTicks: ticks,
+                    IsPaused: isPaused,
+                    EventName: 'TimeUpdate'
+                }
+            });
+        } catch (e) {
+            console.warn("Report progress failed (silent)", e);
+        }
+    }
+
+    async reportPlaybackStopped(itemId, ticks) {
+        if (!this.api) this.initialize();
+        try {
+            await this.api.playstate.reportPlaybackStopped({
+                playbackStopInfo: {
+                    ItemId: itemId,
+                    PositionTicks: ticks
+                }
+            });
+        } catch (e) {
+            console.warn("Report stop failed (silent)", e);
+        }
+    }
+
+    // --- Trickplay / BIF ---
+    async getTrickplayBifUrl(itemId, width) {
+        // Jellyfin doesn't have a standard public BIF endpoint for all clients without plugins.
+        // However, we can try to guess or use a placeholder if we want to support it later.
+        // For now, return null to gracefully degrade to no-hover-preview or just tiles.
+        // If your server supports generated BIFs specifically, you'd construct that URL here.
+        return null;
+    }
+
+    async fetchAndParseBif(url) {
+        return []; // Return empty for now as we don't have a real BIF source
     }
 
     getTrickplayTileUrl(itemId, width, index) {
