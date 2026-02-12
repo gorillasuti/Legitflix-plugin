@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { Button } from '../../components/ui/button';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import { useTheme, getDefaultLogo } from '../../context/ThemeContext';
 import './Auth.css';
 
 const SelectUser = () => {
     const navigate = useNavigate();
+    const { config } = useTheme();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,11 @@ const SelectUser = () => {
         <div className="auth-page">
             <div className="auth-container">
                 <div className="auth-logo">
-                    <img src="/default-logo-blue.png" alt="LegitFlix" className="auth-logo-img" />
+                    {config.logoUrl ? (
+                        <img src={config.logoUrl} alt={config.appName} className="auth-logo-img" />
+                    ) : (
+                        <img src={getDefaultLogo(config.accentColor)} alt={config.appName} className="auth-logo-img" />
+                    )}
                     <p>Who's watching?</p>
                 </div>
 
@@ -65,15 +71,15 @@ const SelectUser = () => {
                                     onClick={() => handleUserSelect(user)}
                                 >
                                     <div className="user-avatar-container">
-                                        {user.PrimaryImageTag ? (
+                                        <div className="nav-avatar-wrapper">
                                             <img
-                                                src={jellyfinService.getImageUrl(user, 'Primary', { maxWidth: 200 })}
+                                                src={`${jellyfinService.api.basePath || ''}/Users/${user.Id}/Images/Primary?quality=90`}
                                                 alt={user.Name}
-                                                className="user-avatar"
-                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                                className="nav-avatar"
+                                                onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.nextSibling.style.display = 'flex'; }}
                                             />
-                                        ) : null}
-                                        <div className="user-avatar-placeholder" style={{ display: user.PrimaryImageTag ? 'none' : 'flex' }}>
+                                        </div>
+                                        <div className="user-avatar-placeholder" style={{ display: 'none' }}>
                                             <span className="material-icons">person</span>
                                         </div>
                                     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { Button } from '../../components/ui/button';

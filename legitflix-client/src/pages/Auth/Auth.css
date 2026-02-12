@@ -18,26 +18,23 @@
 .auth-page::before {
     content: '';
     position: absolute;
-    top: -10%;
-    right: -10%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(244, 117, 33, 0.15) 0%, transparent 70%);
+    background: var(--clr-accent-glow, rgba(244, 117, 33, 0.4));
+    filter: blur(120px);
+    /* Massive blur */
     border-radius: 50%;
     z-index: 0;
     pointer-events: none;
+    opacity: 0.6;
 }
 
 .auth-page::after {
-    content: '';
-    position: absolute;
-    bottom: -10%;
-    left: -10%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(20, 20, 20, 0.8) 0%, transparent 70%);
-    z-index: 0;
-    pointer-events: none;
+    display: none;
+    /* Remove secondary blob */
 }
 
 .auth-container {
@@ -82,11 +79,18 @@
 }
 
 .auth-logo p {
-    color: #888;
-    font-size: 0.95rem;
+    color: var(--clr-text-main, #fff);
+    /* Use main text color */
+    font-size: 1.5rem;
+    /* Significantly larger */
     margin: 0;
-    font-weight: 500;
-    letter-spacing: 0.02em;
+    font-weight: 600;
+    /* Bolder */
+    letter-spacing: -0.02em;
+    /* Tighter letter spacing for modern header look */
+    opacity: 0.8;
+    /* Slight transparency for elegance */
+    margin-top: 0.5rem;
 }
 
 /* Form Styles */
@@ -211,9 +215,7 @@
 }
 
 .user-card:hover {
-    /* transform: scale(1.1); REMOVED grow effect */
-    transform: translateY(-5px);
-    /* Subtle lift instead */
+    transform: none;
 }
 
 .user-avatar-container {
@@ -233,12 +235,13 @@
 .user-card:hover .user-avatar-container {
     /* Ring Effect on Hover */
     border-color: var(--clr-accent, #f47521);
-    box-shadow: 0 0 15px rgba(244, 117, 33, 0.4);
+    box-shadow: 0 0 15px var(--clr-accent-glow, rgba(244, 117, 33, 0.4));
     background: transparent;
 }
 
 .user-avatar,
-.user-avatar-placeholder {
+.user-avatar-placeholder,
+.nav-avatar {
     width: 100%;
     height: 100%;
     border-radius: 50%;
@@ -247,6 +250,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+
+.nav-avatar-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
     overflow: hidden;
 }
 
