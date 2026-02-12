@@ -10,7 +10,7 @@ import ProfileModal from './ProfileModal';
 import AvatarPickerModal from './AvatarPickerModal';
 import './Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ alwaysFilled = false }) => {
     const { config } = useTheme();
     const [user, setUser] = useState(null);
     const [libraries, setLibraries] = useState([]);
@@ -109,7 +109,7 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
+            <nav className={`navbar ${isScrolled || alwaysFilled ? 'scrolled' : ''}`}>
                 <div className="nav-content">
 
                     {/* Left Section: Logo & Categories */}

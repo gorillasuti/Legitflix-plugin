@@ -34,11 +34,15 @@ const SeriesDetail = () => {
     const [showTrailerHelp, setShowTrailerHelp] = useState(false);
     const [showBlockedModal, setShowBlockedModal] = useState(false);
     const [trailerKey, setTrailerKey] = useState(null);
+    const [isMuted, setIsMuted] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
 
     const dropdownRef = useRef(null);
     const langDropdownRef = useRef(null);
     const trailerHelpTimeout = useRef(null);
     const cleanViewTimeout = useRef(null);
+    const longPressTimer = useRef(null);
+    const trailerIframeRef = useRef(null);
 
     // Initial Data Load
     useEffect(() => {
@@ -51,6 +55,7 @@ const SeriesDetail = () => {
                 // 1. Fetch Series Details
                 const seriesData = await jellyfinService.getSeries(user.Id, id);
                 setSeries(seriesData);
+                setIsFavorite(seriesData.UserData?.IsFavorite || false);
 
                 // Extract trailer key (if exists)
                 if (seriesData.RemoteTrailers && seriesData.RemoteTrailers.length > 0) {
@@ -158,6 +163,29 @@ const SeriesDetail = () => {
         setIsLangDropdownOpen(false);
     };
 
+    const toggleFavorite = async () => {
+        try {
+            const user = await jellyfinService.getCurrentUser();
+            const newFav = !isFavorite;
+            await jellyfinService.markFavorite(user.Id, series.Id, newFav);
+            setIsFavorite(newFav);
+        } catch (err) {
+            console.error("Favorite toggle failed", err);
+        }
+    };
+
+    // Trailer Logic
+    const toggleMute = () => {
+        const newMute = !isMuted;
+        setIsMuted(newMute);
+        // postMessage to YT player
+        const action = newMute ? 'mute' : 'unMute';
+        trailerIframeRef.current?.contentWindow?.postMessage(
+            JSON.stringify({ event: 'command', func: action, args: [] }),
+            '*'
+        );
+    };
+
     // Trailer Logic
     const startCleanViewTimer = () => {
         if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
@@ -210,6 +238,7 @@ const SeriesDetail = () => {
         setIsCleanView(false);
         setShowTrailerHelp(false);
         setShowBlockedModal(false);
+        setIsMuted(false); // Reset mute on stop
 
         if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
         if (trailerHelpTimeout.current) clearTimeout(trailerHelpTimeout.current);
@@ -219,6 +248,41 @@ const SeriesDetail = () => {
             delete window.lfMessageHandler;
         }
     };
+
+    // Longpress logic
+    const handlePointerDown = (episodeId) => {
+        if (isSelectionMode) return; // Mode already on
+
+        longPressTimer.current = setTimeout(() => {
+            setIsSelectionMode(true);
+            setSelectedEpisodes([episodeId]);
+            // Subtle vibrate if mobile?
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 600); // 600ms longpress
+    };
+
+    const handlePointerUp = () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+
+    // Smart Button Logic
+    const getSmartButtonInfo = () => {
+        if (selectedEpisodes.length === 0) return { label: 'Mark Watched', icon: 'visibility' };
+
+        // Check if any selected is unwatched. If so, default to Mark Watched.
+        // If all are watched, show Mark Unwatched.
+        const allWatched = selectedEpisodes.every(id => {
+            const ep = episodes.find(e => e.Id === id);
+            return ep?.UserData?.Played;
+        });
+
+        if (allWatched) {
+            return { label: 'Mark Unwatched', icon: 'visibility_off', isPlayed: false };
+        }
+        return { label: 'Mark Watched', icon: 'visibility', isPlayed: true };
+    };
+
+    const smartBtn = getSmartButtonInfo();
 
     // Clean up on unmount
     useEffect(() => {
@@ -246,7 +310,7 @@ const SeriesDetail = () => {
 
     return (
         <div className="lf-series-container">
-            <Navbar />
+            <Navbar alwaysFilled={true} />
 
             {/* Hero Section */}
             <section
@@ -260,6 +324,7 @@ const SeriesDetail = () => {
                 <div className={`lf-series-hero__trailer ${isTrailerPlaying ? 'is-playing' : ''}`}>
                     {isTrailerPlaying && trailerKey && (
                         <iframe
+                            ref={trailerIframeRef}
                             src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1&playlist=${trailerKey}&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -267,6 +332,11 @@ const SeriesDetail = () => {
                             allowFullScreen
                             title="Trailer"
                         />
+                    )}
+                    {isTrailerPlaying && (
+                        <button className={`lf-mute-btn ${isMuted ? 'is-muted' : ''}`} onClick={toggleMute}>
+                            <span className="material-icons">{isMuted ? 'volume_off' : 'volume_up'}</span>
+                        </button>
                     )}
                     {showTrailerHelp && (
                         <button
@@ -340,25 +410,29 @@ const SeriesDetail = () => {
                         </div>
 
                         <div className="lf-series-hero__actions">
-                            <button className="lf-btn lf-btn--primary">
+                            <button className="lf-btn lf-btn--primary lf-btn--ring-hover">
                                 <span className="material-icons">play_arrow</span>
                                 Start Watching S1 E1
                             </button>
                             <button
-                                className="lf-btn lf-btn--glass"
+                                className="lf-btn lf-btn--glass lf-btn--ring-hover"
                                 onClick={handleWatchTrailer}
                                 style={!trailerKey ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                             >
                                 <span className="material-icons">{isTrailerPlaying ? 'stop_circle' : 'theaters'}</span>
                                 {isTrailerPlaying ? 'Stop Trailer' : 'Watch Trailer'}
                             </button>
-                            <button className="lf-btn lf-btn--glass">
-                                <span className="material-icons">bookmark_border</span>
-                                Add to List
+                            <button
+                                className={`lf-btn lf-btn--glass lf-btn--icon-only ${isFavorite ? 'is-active' : ''}`}
+                                onClick={toggleFavorite}
+                                title="Add to List"
+                            >
+                                <span className="material-icons">{isFavorite ? 'bookmark' : 'bookmark_border'}</span>
                             </button>
                             <button
-                                className="lf-btn lf-btn--glass"
+                                className="lf-btn lf-btn--glass lf-btn--icon-only"
                                 onClick={() => setIsSubtitleModalOpen(true)}
+                                title="Edit Subtitles"
                             >
                                 <span className="material-icons">subtitles</span>
                             </button>
@@ -366,6 +440,8 @@ const SeriesDetail = () => {
                     </div>
                 </div>
             </section>
+
+            <hr className="lf-section-divider" />
 
             {/* Episodes Section */}
             <div className="lf-content-section">
@@ -454,11 +530,12 @@ const SeriesDetail = () => {
                         {/* Bulk Edit Logic */}
                         {isSelectionMode ? (
                             <>
-                                <button className="lf-filter-btn" onClick={() => markSelectedPlayed(true)} title="Mark Watched">
-                                    <span className="material-icons">visibility</span>
-                                </button>
-                                <button className="lf-filter-btn" onClick={() => markSelectedPlayed(false)} title="Mark Unwatched">
-                                    <span className="material-icons">visibility_off</span>
+                                <button
+                                    className="lf-btn lf-btn--primary lf-btn--ring-hover lf-btn--sm"
+                                    onClick={() => markSelectedPlayed(smartBtn.isPlayed)}
+                                >
+                                    <span className="material-icons">{smartBtn.icon}</span>
+                                    <span>{smartBtn.label}</span>
                                 </button>
                                 <button className="lf-filter-btn is-active" onClick={toggleSelectionMode} title="Cancel">
                                     <span className="material-icons">close</span>
@@ -484,6 +561,9 @@ const SeriesDetail = () => {
                                 key={ep.Id}
                                 className={`lf-episode-card ${isSelectionMode ? 'is-selecting-mode' : ''} ${isSelected ? 'is-selected' : ''} ${isPlayed ? 'is-watched' : ''}`}
                                 onClick={() => handleEpisodeClick(ep.Id)}
+                                onPointerDown={() => handlePointerDown(ep.Id)}
+                                onPointerUp={handlePointerUp}
+                                onPointerLeave={handlePointerUp}
                             >
                                 <div className="lf-episode-card__thumbnail">
                                     <img src={jellyfinService.getImageUrl(ep, 'Primary')} alt={ep.Name} loading="lazy" />
@@ -513,6 +593,8 @@ const SeriesDetail = () => {
                 </div>
             </div>
 
+            <hr className="lf-section-divider" />
+
             {/* Cast & Crew Section */}
             {cast.length > 0 && (
                 <div className="lf-content-section">
@@ -534,6 +616,8 @@ const SeriesDetail = () => {
                 </div>
             )}
 
+            <hr className="lf-section-divider" />
+
             {/* More Like This Section */}
             {similars.length > 0 && (
                 <div className="lf-content-section" style={{ marginBottom: 40 }}>
@@ -553,8 +637,6 @@ const SeriesDetail = () => {
                     </div>
                 </div>
             )}
-
-            <Footer />
 
             <SubtitleModal
                 isOpen={isSubtitleModalOpen}

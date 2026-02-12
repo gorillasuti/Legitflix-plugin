@@ -265,6 +265,7 @@
 
 .lf-series-hero__description-text.is-expanded {
     -webkit-line-clamp: unset;
+    line-clamp: unset;
     display: block;
 }
 
@@ -327,6 +328,11 @@
     border: none;
 }
 
+.lf-btn--sm {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+}
+
 .lf-btn--primary {
     background: var(--clr-accent);
     color: white;
@@ -346,8 +352,35 @@
     background: var(--clr-bg-glass-hover);
 }
 
+.lf-btn--ring-hover {
+    position: relative;
+    overflow: hidden;
+}
+
+.lf-btn--ring-hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-radius: inherit;
+    transition: all 0.3s ease;
+}
+
+.lf-btn--ring-hover:hover::after {
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
 .lf-btn--icon-only {
     padding: 12px;
+}
+
+.lf-btn--icon-only.is-active {
+    color: var(--clr-accent);
+}
+
+.lf-btn--icon-only.is-active .material-icons {
+    color: var(--clr-accent);
 }
 
 .lf-btn--heart {
@@ -382,28 +415,34 @@
     gap: 8px;
 }
 
+.lf-mute-btn:hover {
+    background: var(--clr-bg-glass-hover);
+    border-color: white;
+}
+
 .lf-mute-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    position: absolute;
+    bottom: 30px;
+    right: 210px;
+    /* Offset from Help Button */
+    z-index: 100;
     width: 44px;
     height: 44px;
-    /* Match button height */
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
     cursor: pointer;
     transition: all 0.2s ease;
-}
-
-.lf-mute-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .lf-mute-btn.is-muted {
-    opacity: 0.7;
+    background: var(--clr-accent);
+    border-color: var(--clr-accent);
 }
 
 /* ============================================
@@ -417,7 +456,7 @@
 .lf-section-divider {
     border: none;
     border-top: 1px solid var(--clr-divider);
-    margin: 0 var(--content-padding);
+    margin: 40px var(--content-padding);
 }
 
 .lf-section-header {
@@ -802,9 +841,9 @@
     font-size: 0.9rem;
     margin-bottom: 4px;
     display: -webkit-box;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
     line-clamp: 1;
-    -webkit-box-orient: vertical;
     overflow: hidden;
     color: var(--clr-text-main);
 }
@@ -813,9 +852,9 @@
     color: var(--clr-text-muted);
     font-size: 0.8rem;
     display: -webkit-box;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
@@ -892,7 +931,7 @@
 }
 
 .lf-blocked-modal {
-    background: #1c1c1c;
+    background: var(--clr-bg-surface);
     padding: 40px;
     border-radius: 16px;
     max-width: 450px;
@@ -903,7 +942,8 @@
 
 .lf-blocked-icon {
     font-size: 64px;
-    color: #ff5252;
+    color: var(--clr-accent);
+    /* Use accent instead of hardcoded red for branding consistency */
     margin-bottom: 24px;
 }
 
