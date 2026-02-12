@@ -623,6 +623,9 @@ const Player = () => {
                     setShowSkipIntro(false);
                 }
             }
+
+            // Chapter-based Intro/Outro detection
+            checkForChapters(t);
         }
     };
 
@@ -648,6 +651,16 @@ const Player = () => {
             videoRef.current.currentTime = introEnd;
             flashCenterIcon('fast_forward');
             setShowSkipIntro(false);
+        }
+    };
+
+    const handleSkipOutro = () => {
+        setShowSkipOutro(false);
+        if (nextEpisodeId) {
+            handleNextEpisode();
+        } else if (videoRef.current) {
+            // No next episode, jump to end
+            videoRef.current.currentTime = videoRef.current.duration;
         }
     };
 
@@ -740,7 +753,7 @@ const Player = () => {
                 onMouseLeave={() => isPlaying && setShowControls(false)}
                 onClick={handleVideoClick}
             >
-                <div className="lf-player-video-wrapper" onClick={togglePlay}>
+                <div className="lf-player-video-wrapper">
                     <video
                         ref={videoRef}
                         className="lf-player-video"
@@ -757,6 +770,13 @@ const Player = () => {
                     {showSkipIntro && (
                         <button className="lf-skip-btn" onClick={handleSkipIntro}>
                             Skip Intro
+                        </button>
+                    )}
+
+                    {/* Skip Outro / Next Episode Button */}
+                    {showSkipOutro && !showSkipIntro && (
+                        <button className="lf-skip-btn" onClick={handleSkipOutro}>
+                            {nextEpisodeId ? 'Next Episode' : 'Skip Credits'}
                         </button>
                     )}
 
@@ -802,7 +822,7 @@ const Player = () => {
 
                         {/* Center Play Button (Big) - displayed when paused */}
                         {!isPlaying && !isLoading && !error && !showSettings && (
-                            <button className="center-play-btn" onClick={togglePlay}>
+                            <button className="center-play-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
                                 <span className="material-icons">play_arrow</span>
                             </button>
                         )}
@@ -896,6 +916,81 @@ const Player = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Bottom Controls Bar */}
+                        <div className="lf-player-controls-bottom">
+                            {/* Timeline / Seek Bar */}
+                            <div className="lf-player-timeline-container" onClick={(e) => {
+                                e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const pct = (e.clientX - rect.left) / rect.width;
+                                const seekTime = pct * (duration || 0);
+                                if (videoRef.current) {
+                                    videoRef.current.currentTime = seekTime;
+                                    setCurrentTime(seekTime);
+                                }
+                            }}>
+                                <div className="lf-player-timeline-track">
+                                    <div className="lf-player-timeline-buffered" style={{ width: `${bufferedPct}%` }} />
+                                    <div className="lf-player-timeline-fill" style={{ width: `${progressPercent}%` }}>
+                                        <div className="lf-player-timeline-thumb" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Controls Row */}
+                            <div className="lf-player-controls-row">
+                                <div className="controls-left">
+                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+                                        <span className="material-icons">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                    </button>
+                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); skipBackward(); }}>
+                                        <span className="material-icons">replay_10</span>
+                                    </button>
+                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); skipForward(); }}>
+                                        <span className="material-icons">forward_30</span>
+                                    </button>
+                                    {nextEpisodeId && (
+                                        <button className="icon-btn" onClick={(e) => { e.stopPropagation(); handleNextEpisode(); }} title="Next Episode">
+                                            <span className="material-icons">skip_next</span>
+                                        </button>
+                                    )}
+                                    <div className="volume-container">
+                                        <button className="icon-btn" onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
+                                            <span className="material-icons">
+                                                {isMuted || volume === 0 ? 'volume_off' : volume < 0.5 ? 'volume_down' : 'volume_up'}
+                                            </span>
+                                        </button>
+                                        <div className="volume-slider-wrapper">
+                                            <input
+                                                type="range"
+                                                className="volume-slider"
+                                                min="0"
+                                                max="1"
+                                                step="0.05"
+                                                value={isMuted ? 0 : volume}
+                                                onChange={(e) => {
+                                                    const v = parseFloat(e.target.value);
+                                                    setVolume(v);
+                                                    if (videoRef.current) videoRef.current.volume = v;
+                                                    setIsMuted(v === 0);
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </div>
+                                    </div>
+                                    <span className="time-display">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                </div>
+                                <div className="controls-right">
+                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}>
+                                        <span className="material-icons">settings</span>
+                                    </button>
+                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}>
+                                        <span className="material-icons">{document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen'}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
