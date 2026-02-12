@@ -1,676 +1,692 @@
 /* ============================================
-   LEGITFLIX CUSTOM VIDEO PLAYER
+   LEGITFLIX CUSTOM PLAYER LAYOUT
    ============================================ */
 
-.lf-player {
-    position: fixed;
-    inset: 0;
-    background: #000;
-    z-index: 99999;
+/* Page Wrapper */
+.lf-player-page {
+    background-color: #000;
+    /* Deep dark background */
+    min-height: 100vh;
+    padding-top: 60px;
+    /* Space for fixed Navbar */
     display: flex;
     flex-direction: column;
     font-family: var(--font-primary, 'Inter', sans-serif);
     color: #fff;
-    cursor: none;
+    overflow-x: hidden;
 }
 
-.lf-player.show-controls {
-    cursor: default;
-}
-
-/* Video Element */
-.lf-player__video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: #000;
-}
-
-/* Loading Spinner */
-.lf-player__loading {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-    z-index: 10;
-    gap: 16px;
-}
-
-.lf-player__spinner {
-    width: 48px;
-    height: 48px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--clr-accent, #ff6a00);
-    border-radius: 50%;
-    animation: lf-player-spin 0.8s linear infinite;
-}
-
-@keyframes lf-player-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.lf-player__loading-text {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
-    letter-spacing: 0.5px;
-}
-
-/* Error State */
-.lf-player__error {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-    z-index: 10;
-    gap: 16px;
-    padding: 40px;
-    text-align: center;
-}
-
-.lf-player__error .material-icons {
-    font-size: 48px;
-    color: #e53e3e;
-}
-
-.lf-player__error-message {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.8);
-    max-width: 400px;
-}
-
-.lf-player__error-btn {
-    margin-top: 8px;
-    padding: 10px 24px;
-    background: var(--clr-accent, #ff6a00);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: filter 0.2s;
-}
-
-.lf-player__error-btn:hover {
-    filter: brightness(1.15);
-}
-
-/* Top Bar */
-.lf-player__top-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 20px 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
-    z-index: 20;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-}
-
-.lf-player.show-controls .lf-player__top-bar {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.lf-player__back-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s;
-    flex-shrink: 0;
-}
-
-.lf-player__back-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-}
-
-.lf-player__title-area {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.lf-player__title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    white-space: nowrap;
+/* Remove padding when fullscreen mode (hide navbar space) */
+.lf-player-page.is-fullscreen-mode {
+    padding-top: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
+    /* Prevent scrolling in fullscreen */
 }
 
-.lf-player__subtitle {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+/* ============================================
+   PLAYER CONTAINER
+   ============================================ */
 
-/* Bottom Controls */
-.lf-player__controls {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0 24px 20px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
-    z-index: 20;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
+.lf-player-container {
+    flex: 1;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.lf-player.show-controls .lf-player__controls {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* Progress Bar */
-.lf-player__progress {
+    flex-direction: row;
+    /* Default: Side-by-side */
     width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-    cursor: pointer;
+    max-width: 1600px;
+    /* Constrain width on large screens */
+    margin: 0 auto;
     position: relative;
-    transition: height 0.15s ease;
-}
-
-.lf-player__progress:hover {
-    height: 8px;
-}
-
-.lf-player__progress-buffered {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 2px;
-    pointer-events: none;
-}
-
-.lf-player__progress-filled {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: var(--clr-accent, #ff6a00);
-    border-radius: 2px;
-    pointer-events: none;
-}
-
-.lf-player__progress-thumb {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    width: 14px;
-    height: 14px;
-    background: var(--clr-accent, #ff6a00);
-    border-radius: 50%;
-    pointer-events: none;
-    transition: transform 0.15s ease;
-}
-
-.lf-player__progress:hover .lf-player__progress-thumb {
-    transform: translate(-50%, -50%) scale(1);
-}
-
-/* Scrub Preview (Trickplay) */
-.lf-player-scrub-preview {
-    position: absolute;
-    bottom: 30px;
-    /* Position above the scrubber */
-    transform: translateX(-50%);
-    pointer-events: none;
-    z-index: 25;
     background: #000;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    display: none;
-    /* Hidden by default */
-    width: 160px;
-    /* Default width, will be overridden */
+}
+
+/* Fullscreen Override */
+.lf-player-container.active-fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999;
+    max-width: none;
+    margin: 0;
+    background: #000;
+}
+
+/* ============================================
+   VIDEO WRAPPER (The actual player)
+   ============================================ */
+
+.lf-player-video-wrapper {
+    flex: 1;
+    /* Take remaining space */
+    position: relative;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* In windowed mode, we might want to respect aspect ratio or height */
+    min-height: 480px;
+    max-height: 85vh;
+    /* Don't be taller than viewport */
     aspect-ratio: 16/9;
 }
 
-.lf-player-scrub-preview.is-visible {
-    display: block;
-}
-
-.lf-player-scrub-preview img {
-    display: block;
+.active-fullscreen .lf-player-video-wrapper {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    max-height: none;
+    aspect-ratio: auto;
+    /* Fill screen */
 }
 
-/* Controls Row */
-.lf-player__controls-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+.lf-player-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
-.lf-player__controls-left,
-.lf-player__controls-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+/* ============================================
+   CONTROLS & OVERLAYS
+   ============================================ */
 
-.lf-player__ctrl-btn {
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: transparent;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: background 0.2s, transform 0.15s;
-    padding: 0;
-}
-
-.lf-player__ctrl-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.1);
-}
-
-.lf-player__ctrl-btn .material-icons {
-    font-size: 24px;
-}
-
-.lf-player__ctrl-btn--play .material-icons {
-    font-size: 32px;
-}
-
-/* Volume Slider */
-.lf-player__volume-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.lf-player__volume-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 0;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    outline: none;
-    opacity: 0;
-    transition: width 0.2s ease, opacity 0.2s ease;
-    cursor: pointer;
-}
-
-.lf-player__volume-group:hover .lf-player__volume-slider {
-    width: 80px;
-    opacity: 1;
-}
-
-.lf-player__volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-.lf-player__volume-slider::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    border-radius: 50%;
-    cursor: pointer;
-    border: none;
-}
-
-/* Time Display */
-.lf-player__time {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.8);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    user-select: none;
-}
-
-/* Center Play overlay (click to play/pause) */
-.lf-player__center-play {
+/* Center Play Button Overlay */
+.lf-player-center-icon {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    width: 72px;
-    height: 72px;
+    width: 80px;
+    height: 80px;
     background: rgba(0, 0, 0, 0.5);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 15;
     pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    z-index: 20;
     opacity: 0;
-    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.lf-player__center-play.visible {
-    opacity: 1;
+.lf-player-center-icon.visible {
     transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
 }
 
-.lf-player__center-play .material-icons {
-    font-size: 40px;
+.lf-player-center-icon .material-icons {
+    font-size: 48px;
     color: #fff;
 }
 
-/* ============================================
-   WINDOWED PLAYER STYLES
-   ============================================ */
-
-.lf-player.lf-player--windowed {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    /* Let height be determined by aspect ratio or max-height */
-    height: auto;
-    min-height: 500px;
-    max-height: 85vh;
-    margin: 20px auto;
-    max-width: 1600px;
-    background: #000;
-    display: flex;
-    flex-direction: row;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.lf-player.lf-player--windowed .lf-player__content {
-    flex: 1;
-    position: relative;
-    height: auto;
-    aspect-ratio: 16/9;
-    background: #000;
-    border-right: 1px solid #222;
-}
-
-.lf-player.lf-player--windowed .lf-player__video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.lf-player__sidebar {
-    width: 400px;
-    background: #121212;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    color: #fff;
-    flex-shrink: 0;
-    font-family: var(--font-primary, 'Inter', sans-serif);
-}
-
-.lf-player__metadata {
-    padding: 24px;
-    border-bottom: 1px solid #222;
-    background: #161616;
-}
-
-.lf-player__meta-title {
-    font-size: 1rem;
-    color: #aaa;
-    margin: 0 0 6px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.lf-player__meta-episode-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin: 0 0 12px;
-    color: #fff;
-    line-height: 1.3;
-}
-
-.lf-player__meta-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    font-size: 0.85rem;
-    color: #ccc;
-}
-
-.lf-player__meta-rating {
-    background: #333;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid #444;
-}
-
-.lf-player__meta-desc {
-    font-size: 0.9rem;
-    color: #bbb;
-    line-height: 1.5;
-    margin: 0;
-    max-height: 80px;
-    overflow-y: auto;
-    /* Custom Scrollbar for desc */
-    scrollbar-width: thin;
-    scrollbar-color: #444 transparent;
-}
-
-.lf-player__episodes-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: #121212;
-}
-
-.lf-player__season-select-wrapper {
-    padding: 16px 24px;
-    border-bottom: 1px solid #222;
-    background: #161616;
-}
-
-.lf-player__season-select {
-    width: 100%;
-    padding: 10px 12px;
-    background: #222;
-    border: 1px solid #333;
-    color: #eee;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.lf-player__season-select:hover {
-    border-color: #555;
-    background: #2a2a2a;
-}
-
-.lf-player__season-select:focus {
-    border-color: var(--clr-accent, #ff6a00);
-}
-
-.lf-player__episodes-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0;
-    scrollbar-width: thin;
-    scrollbar-color: #444 transparent;
-}
-
-.lf-player__episodes-loading {
-    padding: 40px;
-    text-align: center;
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.lf-player__episode-item {
-    display: flex;
-    gap: 16px;
-    padding: 12px 24px;
-    cursor: pointer;
-    transition: background 0.2s;
-    align-items: center;
-    border-bottom: 1px solid #1a1a1a;
-}
-
-.lf-player__episode-item:hover {
-    background: #1f1f1f;
-}
-
-.lf-player__episode-item.active {
-    background: rgba(255, 106, 0, 0.1);
-    border-left: 3px solid var(--clr-accent, #ff6a00);
-    padding-left: 21px;
-    /* Adjust for border */
-}
-
-.lf-player__episode-thumb {
-    width: 120px;
-    aspect-ratio: 16/9;
-    background: #222;
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-    flex-shrink: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.lf-player__episode-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-}
-
-.lf-player__episode-item:hover .lf-player__episode-thumb img {
-    transform: scale(1.05);
-}
-
-.lf-player__episode-played {
+/* Center Play Button (Clickable) */
+.center-play-btn {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--clr-accent, #ff6a00);
-    padding: 4px;
-    border-radius: 4px;
-    font-size: 14px;
-    line-height: 1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    z-index: 25;
+    transition: transform 0.2s, background 0.2s;
 }
 
-.lf-player__episode-details {
+.center-play-btn:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    background: var(--clr-accent, #ff6a00);
+}
+
+.center-play-btn .material-icons {
+    font-size: 48px;
+}
+
+/* Loader */
+.lf-player-loader {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--clr-accent, #ff6a00);
+    border-radius: 50%;
+    animation: lf-spin 1s linear infinite;
+}
+
+/* Error */
+.lf-player-error {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 30;
+    color: #fff;
+}
+
+.error-icon {
+    font-size: 3rem;
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.lf-player-error button {
+    padding: 8px 16px;
+    background: #333;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.lf-player-error button:hover {
+    background: #444;
+}
+
+
+/* Controls Container */
+.lf-player-controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.8) 100%);
+    z-index: 30;
+}
+
+.lf-player-controls.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Top Controls */
+.lf-player-controls-top {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 16px;
+}
+
+.player-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.series-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.episode-title {
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+.divider {
+    margin: 0 6px;
+    color: #aaa;
+}
+
+/* Bottom Controls */
+.lf-player-controls-bottom {
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px 20px;
+    gap: 10px;
+}
+
+/* Timeline */
+.lf-player-timeline-container {
+    position: relative;
+    height: 20px;
+    /* hover area height */
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    group: hover;
+}
+
+.lf-player-timeline-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    position: relative;
+    transition: height 0.1s ease;
+}
+
+.lf-player-timeline-container:hover .lf-player-timeline-track {
+    height: 6px;
+}
+
+.lf-player-timeline-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--clr-accent, #ff6a00);
+    border-radius: 2px;
+}
+
+.lf-player-timeline-buffered {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.lf-player-timeline-hover-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+}
+
+.lf-player-timeline-thumb {
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.1s;
+}
+
+.lf-player-timeline-container:hover .lf-player-timeline-thumb {
+    transform: translateY(-50%) scale(1);
+}
+
+/* Tooltip & Thumbnail */
+.lf-timeline-tooltip {
+    position: absolute;
+    bottom: 25px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+}
+
+.lf-timeline-thumbnail {
+    width: 160px;
+    height: 90px;
+    background-color: #000;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.lf-timeline-time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
+}
+
+/* Controls Row (Buttons) */
+.lf-player-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.controls-left,
+.controls-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.icon-btn.back-btn {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.icon-btn.back-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* Volume Slider */
+.volume-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.volume-slider-wrapper {
+    width: 0;
+    overflow: hidden;
+    transition: width 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.volume-container:hover .volume-slider-wrapper {
+    width: 80px;
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.time-display {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    margin-left: 8px;
+    opacity: 0.9;
+}
+
+/* ============================================
+   SIDEBAR (RIGHT PANEL)
+   ============================================ */
+.lf-player-sidebar {
+    width: 380px;
+    background: #121212;
+    border-left: 1px solid #1f1f1f;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    /* In windowed mode, sidebar matches height of video roughly 
+       or grows if video is shorter. */
+}
+
+.lf-player-sidebar-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Metadata */
+.lf-player-meta {
+    padding: 20px;
+    background: #181818;
+    border-bottom: 1px solid #222;
+    flex-shrink: 0;
+}
+
+.lf-player-meta-title {
+    font-size: 0.85rem;
+    color: #ff6a00;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    letter-spacing: 0.5px;
+}
+
+.lf-player-meta-subtitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.lf-player-meta-info {
+    font-size: 0.8rem;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.meta-divider {
+    font-size: 0.6rem;
+    opacity: 0.5;
+}
+
+.lf-player-meta-desc {
+    font-size: 0.9rem;
+    color: #ccc;
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    /* Limit description lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Episodes List */
+.lf-player-episodes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.lf-episodes-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #141414;
+    border-bottom: 1px solid #222;
+}
+
+.section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.season-select-container {
+    position: relative;
+    max-width: 180px;
+}
+
+.lf-season-select {
+    appearance: none;
+    background: #252525;
+    border: 1px solid #333;
+    color: #eee;
+    padding: 6px 28px 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
+    text-overflow: ellipsis;
+}
+
+.lf-season-select:hover {
+    border-color: #555;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #999;
+    pointer-events: none;
+}
+
+/* List */
+.lf-episodes-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #333 #121212;
+}
+
+.lf-episode-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #1d1d1d;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.lf-episode-item:hover {
+    background: #1f1f1f;
+}
+
+.lf-episode-item.current {
+    background: rgba(255, 106, 0, 0.08);
+    position: relative;
+}
+
+.lf-episode-item.current::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--clr-accent, #ff6a00);
+}
+
+.ep-img-container {
+    width: 100px;
+    aspect-ratio: 16/9;
+    background: #222;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.ep-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ep-watched-overlay {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--clr-accent, #ff6a00);
+    border-radius: 50%;
+    padding: 2px;
+    display: flex;
+}
+
+.ep-watched-overlay .material-icons {
+    font-size: 14px;
+}
+
+.ep-playing-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.ep-info {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    justify-content: center;
 }
 
-.lf-player__episode-num {
-    font-size: 0.8rem;
+.ep-number {
+    font-size: 0.75rem;
     color: #888;
-    font-weight: 600;
+    margin-bottom: 2px;
 }
 
-.lf-player__episode-name {
-    font-size: 0.95rem;
-    color: #eee;
+.ep-title {
+    font-size: 0.9rem;
     font-weight: 500;
-    /* Two lines truncation */
+    line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.4;
 }
 
-/* Scrollbar styling for sidebar */
-.lf-player__sidebar ::-webkit-scrollbar {
-    width: 6px;
-}
-
-.lf-player__sidebar ::-webkit-scrollbar-track {
-    background: #121212;
-}
-
-.lf-player__sidebar ::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 3px;
-}
-
-.lf-player__sidebar ::-webkit-scrollbar-thumb:hover {
-    background: #444;
+.loading-txt {
+    padding: 20px;
+    text-align: center;
+    color: #666;
 }
 
 /* Responsive */
 @media (max-width: 1100px) {
-    .lf-player.lf-player--windowed {
+    .lf-player-container {
         flex-direction: column;
-        height: auto;
-        max-height: none;
-        width: 95%;
     }
 
-    .lf-player.lf-player--windowed .lf-player__content {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 16/9;
-        border-right: none;
-        border-bottom: 1px solid #222;
+    .lf-player-video-wrapper {
+        min-height: auto;
+        /* maintain aspect ratio or just fill width */
     }
 
-    .lf-player__sidebar {
+    .lf-player-sidebar {
         width: 100%;
-        height: auto;
-        max-height: 600px;
+        border-left: none;
+        border-top: 1px solid #222;
+        max-height: 500px;
+        /* Constrain height when stacked */
     }
 }

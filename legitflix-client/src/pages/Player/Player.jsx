@@ -1,401 +1,346 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
-import jellyfinService from '../../services/jellyfin';
+import { useParams, useNavigate } from 'react-router-dom';
+import { jellyfinService } from '../../services/jellyfin';
+import Navbar from '../../components/Navbar';
 import './Player.css';
 
 const Player = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const videoRef = useRef(null);
-    const hlsRef = useRef(null);
-    const controlsTimerRef = useRef(null);
-    const containerRef = useRef(null);
+    const containerRef = useRef(null); // Ref for fullscreen toggling
 
-    const [item, setItem] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [playing, setPlaying] = useState(false);
+    // Player State
+    const [isPlaying, setIsPlaying] = useState(true); // Auto-play
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [buffered, setBuffered] = useState(0);
     const [volume, setVolume] = useState(1);
-    const [muted, setMuted] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
     const [showControls, setShowControls] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [buffered, setBuffered] = useState(0);
+    const [isWindowed, setIsWindowed] = useState(true); // Default to windowed
+
+    // Data State
+    const [item, setItem] = useState(null);
+    const [playbackUrl, setPlaybackUrl] = useState(null);
     const [centerIcon, setCenterIcon] = useState(null);
 
-    // Trickplay State
-    const [trickplayData, setTrickplayData] = useState(null);
+    // Trickplay (BIF) State
+    const [trickplayImages, setTrickplayImages] = useState(null);
     const [hoverTime, setHoverTime] = useState(null);
-    const [hoverX, setHoverX] = useState(0);
+    const [hoverPosition, setHoverPosition] = useState(0); // Standardized 0-1 position
+    const [isHoveringTimeline, setIsHoveringTimeline] = useState(false);
+    const [thumbnailUrl, setThumbnailUrl] = useState(null);
 
-    // Windowed Mode & Metadata State
-    const [isWindowed, setIsWindowed] = useState(true);
+    // Season/Episode State
     const [seasons, setSeasons] = useState([]);
     const [currentSeasonId, setCurrentSeasonId] = useState(null);
     const [episodes, setEpisodes] = useState([]);
-    const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+    const [episodesLoading, setEpisodesLoading] = useState(false);
 
-    // Format seconds to hh:mm:ss or mm:ss
-    const formatTime = (seconds) => {
-        if (isNaN(seconds) || seconds < 0) return '0:00';
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        return `${m}:${String(s).padStart(2, '0')}`;
-    };
+    const controlsTimeoutRef = useRef(null);
+    const hlsRef = useRef(null);
+    const progressInterval = useRef(null);
 
-    // Show controls temporarily
-    const showControlsTemporarily = useCallback(() => {
-        setShowControls(true);
-        if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
-        controlsTimerRef.current = setTimeout(() => {
-            if (playing) setShowControls(false);
-        }, 3000);
-    }, [playing]);
-
-    // Load item details and start playback
+    // --- 1. Fetch Item & Playback Info ---
     useEffect(() => {
-        const loadAndPlay = async () => {
+        const loadItem = async () => {
             try {
-                setLoading(true);
+                setIsLoading(true);
                 setError(null);
-
                 const user = await jellyfinService.getCurrentUser();
-                if (!user) {
-                    setError('Not logged in.');
-                    setLoading(false);
-                    return;
-                }
+                if (!user) { navigate('/login'); return; }
 
-                const itemData = await jellyfinService.getItemDetails(user.Id, id);
-                if (!itemData) {
-                    setError('Item not found.');
-                    setLoading(false);
-                    return;
-                }
+                const itemData = await jellyfinService.getItem(user.Id, id);
                 setItem(itemData);
 
-                // Extract trickplay info if available
-                if (itemData.Trickplay && itemData.Trickplay.Width && itemData.Trickplay.Interval) {
-                    setTrickplayData({
-                        width: itemData.Trickplay.Width,
-                        height: itemData.Trickplay.Height,
-                        interval: itemData.Trickplay.Interval, // in ms
-                        thumbnailWidth: 320 // Default or calculated width for display
-                    });
-                    console.log('[LegitFlix Player] Trickplay data found:', itemData.Trickplay);
-                } else {
-                    // Fallback: check if we can infer or if it's missing
-                    console.log('[LegitFlix Player] No detailed Trickplay data found.');
-                    // We could try to assume default 10s interval if Width/Height aren't explicitly there but that might be risky without knowing if images exist.
-                    // The server usually sends Trickplay object if generation is enabled.
-                }
-
-                // Build the stream URL
-                const basePath = jellyfinService.api?.configuration?.basePath || jellyfinService.api?.basePath || '';
-                const token = jellyfinService.api?.accessToken || '';
-
-                // Try direct stream first (mp4/mkv via Jellyfin's API)
-                const mediaSource = itemData.MediaSources?.[0];
-                if (!mediaSource) {
-                    setError('No media source available for this item.');
-                    setLoading(false);
-                    return;
-                }
-
-                const mediaSourceId = mediaSource.Id;
-                const container = mediaSource.Container || 'mp4';
-
-                // Construct the stream URL - Jellyfin supports HLS and direct stream
-                // Try HLS first for broad format support (Jellyfin will transcode if needed)
-                const hlsUrl = `${basePath}/Videos/${id}/master.m3u8?MediaSourceId=${mediaSourceId}&api_key=${token}&VideoCodec=h264&AudioCodec=aac&TranscodingMaxAudioChannels=2`;
-
-                // Direct stream URL (works for natively supported formats like mp4)
-                const directUrl = `${basePath}/Videos/${id}/stream.${container}?Static=true&MediaSourceId=${mediaSourceId}&api_key=${token}`;
-
-                const video = videoRef.current;
-                if (!video) return;
-
-                // Attempt HLS first
-                if (Hls.isSupported()) {
-                    const hls = new Hls({
-                        startLevel: -1, // Auto quality
-                        maxBufferLength: 30,
-                        maxMaxBufferLength: 60,
-                    });
-                    hlsRef.current = hls;
-
-                    hls.on(Hls.Events.ERROR, (event, data) => {
-                        console.warn('[LegitFlix Player] HLS error:', data.type, data.details);
-                        if (data.fatal) {
-                            // Fallback to direct stream
-                            console.log('[LegitFlix Player] HLS fatal error, falling back to direct stream');
-                            hls.destroy();
-                            hlsRef.current = null;
-                            video.src = directUrl;
-                            video.load();
-                        }
-                    });
-
-                    hls.loadSource(hlsUrl);
-                    hls.attachMedia(video);
-
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        setLoading(false);
-                        video.play().catch(() => setPlaying(false));
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Native HLS (Safari)
-                    video.src = hlsUrl;
-                    video.addEventListener('loadedmetadata', () => {
-                        setLoading(false);
-                        video.play().catch(() => setPlaying(false));
-                    }, { once: true });
-                } else {
-                    // Fallback: direct stream
-                    video.src = directUrl;
-                    video.addEventListener('loadedmetadata', () => {
-                        setLoading(false);
-                        video.play().catch(() => setPlaying(false));
-                    }, { once: true });
-                }
-
-                // Resume from where user left off
-                if (itemData.UserData?.PlaybackPositionTicks) {
-                    const resumeSeconds = itemData.UserData.PlaybackPositionTicks / 10000000;
-                    video.addEventListener('canplay', () => {
-                        if (video.currentTime < 1) {
-                            video.currentTime = resumeSeconds;
-                        }
-                    }, { once: true });
-                }
-
-                // Fetch Seasons and Episodes if it's an episode
+                // If it's an episode, fetch seasons
                 if (itemData.Type === 'Episode' && itemData.SeriesId) {
-                    try {
-                        const seasonsData = await jellyfinService.getSeasons(user.Id, itemData.SeriesId);
-                        if (seasonsData && seasonsData.Items) {
-                            setSeasons(seasonsData.Items);
-                            // Set current season
-                            const seasonId = itemData.SeasonId || seasonsData.Items[0]?.Id;
-                            setCurrentSeasonId(seasonId);
-
-                            // Fetch episodes for this season
-                            if (seasonId) {
-                                setLoadingEpisodes(true);
-                                const episodesData = await jellyfinService.getEpisodes(user.Id, itemData.SeriesId, seasonId);
-                                if (episodesData && episodesData.Items) {
-                                    setEpisodes(episodesData.Items);
-                                }
-                                setLoadingEpisodes(false);
-                            }
-                        }
-                    } catch (seasonErr) {
-                        console.warn('[LegitFlix Player] Failed to load seasons/episodes:', seasonErr);
-                    }
+                    loadSeasons(user.Id, itemData.SeriesId, itemData.SeasonId);
                 }
-            } catch (err) {
-                console.error('[LegitFlix Player] Failed to load:', err);
-                setError('Failed to load video. Please try again.');
-                setLoading(false);
+
+                // Get Stream URL
+                const url = jellyfinService.getStreamUrl(itemData.Id);
+                setPlaybackUrl(url);
+
+                // Fetch Trickplay Data
+                loadTrickplayData(itemData.Id);
+
+            } catch (error) {
+                console.error("Failed to load item", error);
+                setError("Failed to load content.");
+                setIsLoading(false);
             }
         };
+        loadItem();
+    }, [id, navigate]);
 
-        loadAndPlay();
+    // --- 2. Fetch Seasons & Episodes ---
+    const loadSeasons = async (userId, seriesId, initialSeasonId) => {
+        try {
+            const seasonsData = await jellyfinService.getSeasons(userId, seriesId);
+            setSeasons(seasonsData.Items || []);
 
-        return () => {
-            // Cleanup
+            // Set current season (either the episode's season or the first one)
+            const seasonToLoad = initialSeasonId || (seasonsData.Items?.[0]?.Id);
+            setCurrentSeasonId(seasonToLoad);
+        } catch (error) {
+            console.error("Failed to load seasons", error);
+        }
+    };
+
+    // Load episodes when season changes
+    useEffect(() => {
+        if (currentSeasonId && item?.SeriesId) {
+            const fetchEpisodes = async () => {
+                setEpisodesLoading(true);
+                try {
+                    const user = await jellyfinService.getCurrentUser();
+                    const eps = await jellyfinService.getEpisodes(user.Id, item.SeriesId, currentSeasonId);
+                    setEpisodes(eps.Items || []);
+                } catch (err) {
+                    console.error("Failed to load episodes", err);
+                } finally {
+                    setEpisodesLoading(false);
+                }
+            };
+            fetchEpisodes();
+        }
+    }, [currentSeasonId, item?.SeriesId]);
+
+    // --- 3. Trickplay Logic ---
+    const loadTrickplayData = async (itemId) => {
+        try {
+            const width = 320; // Preferred width
+            const bifUrl = await jellyfinService.getTrickplayBifUrl(itemId, width);
+
+            if (bifUrl) {
+                // Parse BIF
+                const bifData = await jellyfinService.fetchAndParseBif(bifUrl);
+                setTrickplayImages(bifData);
+            }
+        } catch (e) {
+            console.warn("Failed to load trickplay data", e);
+        }
+    };
+
+    const handleTimelineHover = (e) => {
+        if (!duration) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percent = Math.max(0, Math.min(1, x / rect.width));
+        const time = percent * duration;
+
+        setHoverTime(time);
+        setHoverPosition(percent); // Store exact percent for positioning
+        setIsHoveringTimeline(true);
+
+        // Find matching frame
+        if (trickplayImages && trickplayImages.length > 0) {
+            // Find the image frame for this timestamp
+            const frame = trickplayImages.find(img => time >= img.startTime && time < img.endTime);
+            if (frame) {
+                setThumbnailUrl(frame.url);
+            } else {
+                setThumbnailUrl(null);
+            }
+        }
+    };
+
+    const handleTimelineLeave = () => {
+        setIsHoveringTimeline(false);
+        setHoverTime(null);
+        setThumbnailUrl(null);
+    };
+
+
+    // --- 4. HLS & Video Setup ---
+    useEffect(() => {
+        if (!playbackUrl) return;
+
+        if (Hls.isSupported()) {
             if (hlsRef.current) {
                 hlsRef.current.destroy();
-                hlsRef.current = null;
             }
-            if (controlsTimerRef.current) {
-                clearTimeout(controlsTimerRef.current);
-            }
-            // Report playback stop
-            reportPlaybackStopped();
-        };
-    }, [id]);
 
-    // Report playback progress to Jellyfin
-    const reportPlaybackStopped = async () => {
-        try {
-            const user = await jellyfinService.getCurrentUser();
-            if (!user || !videoRef.current) return;
-            const positionTicks = Math.floor(videoRef.current.currentTime * 10000000);
-            const basePath = jellyfinService.api?.configuration?.basePath || jellyfinService.api?.basePath || '';
-            const token = jellyfinService.api?.accessToken || '';
-            await fetch(`${basePath}/Sessions/Playing/Stopped`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Emby-Authorization': `MediaBrowser Client="LegitFlix", Device="Web", DeviceId="legitflix-web", Version="1.0.0", Token="${token}"`
-                },
-                body: JSON.stringify({
-                    ItemId: id,
-                    PositionTicks: positionTicks,
-                })
+            const hls = new Hls({
+                capLevelToPlayerSize: true,
+                autoStartLoad: true
             });
-        } catch (e) {
-            console.warn('[LegitFlix Player] Failed to report playback stop', e);
+
+            hls.loadSource(playbackUrl);
+            hls.attachMedia(videoRef.current);
+            hlsRef.current = hls;
+
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                if (videoRef.current && isPlaying) {
+                    videoRef.current.play().catch(e => console.log("Autoplay prevented", e));
+                }
+                setIsLoading(false);
+            });
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                    console.error("HLS Fatal Error", data);
+                    // Try to recover
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            hls.destroy();
+                            break;
+                    }
+                }
+            });
+
+        } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+            // Native HLS support (Safari)
+            videoRef.current.src = playbackUrl;
+            videoRef.current.addEventListener('loadedmetadata', () => {
+                if (isPlaying) videoRef.current.play();
+                setIsLoading(false);
+            });
+        } else {
+            // Fallback to src
+            videoRef.current.src = playbackUrl;
+            videoRef.current.addEventListener('loadedmetadata', () => {
+                if (isPlaying) videoRef.current.play();
+                setIsLoading(false);
+            });
         }
-    };
-
-    // Video event handlers
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const onPlay = () => setPlaying(true);
-        const onPause = () => setPlaying(false);
-        const onTimeUpdate = () => {
-            setCurrentTime(video.currentTime);
-            // Update buffered
-            if (video.buffered.length > 0) {
-                setBuffered(video.buffered.end(video.buffered.length - 1));
-            }
-        };
-        const onDurationChange = () => setDuration(video.duration || 0);
-        const onVolumeChange = () => {
-            setVolume(video.volume);
-            setMuted(video.muted);
-        };
-        const onEnded = () => {
-            setPlaying(false);
-            setShowControls(true);
-        };
-        const onError = (e) => {
-            console.error('[LegitFlix Player] Video error:', e);
-            if (!loading) setError('Playback error occurred.');
-        };
-        const onWaiting = () => setLoading(true);
-        const onCanPlay = () => setLoading(false);
-
-        video.addEventListener('play', onPlay);
-        video.addEventListener('pause', onPause);
-        video.addEventListener('timeupdate', onTimeUpdate);
-        video.addEventListener('durationchange', onDurationChange);
-        video.addEventListener('volumechange', onVolumeChange);
-        video.addEventListener('ended', onEnded);
-        video.addEventListener('error', onError);
-        video.addEventListener('waiting', onWaiting);
-        video.addEventListener('canplay', onCanPlay);
 
         return () => {
-            video.removeEventListener('play', onPlay);
-            video.removeEventListener('pause', onPause);
-            video.removeEventListener('timeupdate', onTimeUpdate);
-            video.removeEventListener('durationchange', onDurationChange);
-            video.removeEventListener('volumechange', onVolumeChange);
-            video.removeEventListener('ended', onEnded);
-            video.removeEventListener('error', onError);
-            video.removeEventListener('waiting', onWaiting);
-            video.removeEventListener('canplay', onCanPlay);
-        };
-    }, [loading]);
-
-    // Keyboard shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            const video = videoRef.current;
-            if (!video) return;
-
-            showControlsTemporarily();
-
-            switch (e.key) {
-                case ' ':
-                case 'k':
-                    e.preventDefault();
-                    video.paused ? video.play() : video.pause();
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    video.currentTime = Math.max(0, video.currentTime - 10);
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    video.volume = Math.min(1, video.volume + 0.1);
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    video.volume = Math.max(0, video.volume - 0.1);
-                    break;
-                case 'f':
-                    e.preventDefault();
-                    toggleFullscreen();
-                    break;
-                case 'm':
-                    e.preventDefault();
-                    video.muted = !video.muted;
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    handleBack();
-                    break;
-                default:
-                    break;
+            if (hlsRef.current) {
+                hlsRef.current.destroy();
             }
         };
+    }, [playbackUrl]);
 
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showControlsTemporarily]);
 
-    // Fetch episodes when season changes
+    // --- 5. Playback Reporting (Resume) ---
     useEffect(() => {
-        const fetchEpisodes = async () => {
-            if (!item || !currentSeasonId || !item.SeriesId) return;
+        if (!item || !videoRef.current) return;
 
-            try {
-                setLoadingEpisodes(true);
-                const user = await jellyfinService.getCurrentUser();
-                const episodesData = await jellyfinService.getEpisodes(user.Id, item.SeriesId, currentSeasonId);
-                if (episodesData && episodesData.Items) {
-                    setEpisodes(episodesData.Items);
+        // Initial seek if resuming
+        if (item.UserData && item.UserData.PlaybackPositionTicks) {
+            const startSeconds = item.UserData.PlaybackPositionTicks / 10000000;
+            const handleLoaded = () => {
+                if (startSeconds > 0 && startSeconds < videoRef.current.duration) {
+                    videoRef.current.currentTime = startSeconds;
                 }
-                setLoadingEpisodes(false);
-            } catch (err) {
-                console.warn('Failed to fetch episodes for season:', err);
-                setLoadingEpisodes(false);
+            };
+            // HLS sometimes needs a slight delay or check
+            videoRef.current.addEventListener('loadedmetadata', handleLoaded);
+            // Also try immediately if readyState is enough
+            if (videoRef.current.readyState >= 1) handleLoaded();
+
+            return () => videoRef.current?.removeEventListener('loadedmetadata', handleLoaded);
+        }
+    }, [item]);
+
+    // Periodic Reporting
+    useEffect(() => {
+        if (!item) return;
+
+        progressInterval.current = setInterval(() => {
+            if (videoRef.current && !videoRef.current.paused) {
+                const time = videoRef.current.currentTime;
+                // Report to Jellyfin
+                jellyfinService.reportPlaybackProgress(
+                    item.Id,
+                    time * 10000000,
+                    false // IsPaused
+                ).catch(err => console.warn("Report progress failed", err));
             }
+        }, 10000); // Every 10s
+
+        return () => clearInterval(progressInterval.current);
+    }, [item]);
+
+    const reportStop = useCallback(() => {
+        if (item && videoRef.current) {
+            jellyfinService.reportPlaybackStopped(
+                item.Id,
+                Math.floor(videoRef.current.currentTime * 10000000)
+            );
+        }
+    }, [item]);
+
+    // Report stop on unmount
+    useEffect(() => {
+        return () => {
+            reportStop();
         };
+    }, [reportStop]);
 
-        // Only fetch if we have a season ID and it's different from the initial load (which is handled in loadAndPlay)
-        // Actually, loadAndPlay handles the initial fetch. 
-        // We need this effect to run ONLY when user manually changes season, 
-        // BUT we need to avoid double fetching on mount.
-        // For now, let's just use a separate handler for dropdown change.
-    }, []);
 
-    const handleSeasonChange = async (seasonId) => {
-        setCurrentSeasonId(seasonId);
-        if (!item || !item.SeriesId) return;
+    // --- 6. Event Handlers ---
 
-        try {
-            setLoadingEpisodes(true);
-            const user = await jellyfinService.getCurrentUser();
-            const episodesData = await jellyfinService.getEpisodes(user.Id, item.SeriesId, seasonId);
-            if (episodesData && episodesData.Items) {
-                setEpisodes(episodesData.Items);
+    const togglePlay = () => {
+        if (videoRef.current) {
+            if (videoRef.current.paused) {
+                videoRef.current.play();
+                setIsPlaying(true);
+                flashCenterIcon('play_arrow');
+            } else {
+                videoRef.current.pause();
+                setIsPlaying(false);
+                flashCenterIcon('pause');
             }
-            setLoadingEpisodes(false);
-        } catch (err) {
-            console.warn('Failed to fetch episodes:', err);
-            setLoadingEpisodes(false);
         }
     };
 
-    // Toggle Windowed/Fullscreen Mode
+    const flashCenterIcon = (icon) => {
+        setCenterIcon(icon);
+        setTimeout(() => setCenterIcon(null), 600);
+    };
+
+    const handleVolumeChange = (e) => {
+        const val = parseFloat(e.target.value);
+        setVolume(val);
+        if (videoRef.current) {
+            videoRef.current.volume = val;
+            setIsMuted(val === 0);
+        }
+    };
+
+    const toggleMute = () => {
+        if (videoRef.current) {
+            const newMuted = !isMuted;
+            setIsMuted(newMuted);
+            videoRef.current.muted = newMuted;
+            if (newMuted) setVolume(0);
+            else {
+                setVolume(1);
+                videoRef.current.volume = 1;
+            }
+        }
+    };
+
+    const handleSeek = (e) => {
+        const time = parseFloat(e.target.value);
+        if (videoRef.current) {
+            videoRef.current.currentTime = time;
+            setCurrentTime(time);
+        }
+    };
+
+    const handleBack = () => {
+        reportStop();
+        navigate(-1);
+    };
+
     const toggleWindowedMode = () => {
         if (!isWindowed) {
             // We are currently in Fullscreen (via our state), so we want to go to Windowed.
-            // But we might ALSO be in browser fullscreen.
             if (document.fullscreenElement) {
                 document.exitFullscreen().catch(err => console.warn(err));
             }
@@ -406,315 +351,305 @@ const Player = () => {
         }
     };
 
-    const handleEpisodeClick = (episodeId) => {
-        // Navigate to the new episode
-        // This will trigger the useEffect([id]) to reload the player
-        navigate(`/play/${episodeId}`);
-    };
-
-
-    // Toggle play/pause
-    const togglePlay = () => {
-        const video = videoRef.current;
-        if (!video) return;
-        if (video.paused) {
-            video.play();
-            flashCenterIcon('play_arrow');
-        } else {
-            video.pause();
-            flashCenterIcon('pause');
-        }
-    };
-
-    // Flash center icon
-    const flashCenterIcon = (icon) => {
-        setCenterIcon(icon);
-        setTimeout(() => setCenterIcon(null), 600);
-    };
-
-    // Seek
-    const handleProgressClick = (e) => {
-        const video = videoRef.current;
-        if (!video || !duration) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const pct = x / rect.width;
-        video.currentTime = pct * duration;
-    };
-
-    const handleProgressMouseMove = (e) => {
-        if (!duration) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const pct = Math.max(0, Math.min(1, x / rect.width));
-        setHoverTime(pct * duration);
-        setHoverX(x);
-    };
-
-    const handleProgressMouseLeave = () => {
-        setHoverTime(null);
-    };
-
-
-    // Volume
-    const handleVolumeChange = (e) => {
-        const video = videoRef.current;
-        if (!video) return;
-        const val = parseFloat(e.target.value);
-        video.volume = val;
-        video.muted = val === 0;
-    };
-
-    // Fullscreen
     const toggleFullscreen = () => {
-        const el = containerRef.current;
-        if (!el) return;
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
+        // Toggle browser fullscreen on the specific container
+        if (!containerRef.current) return;
+
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+            setIsWindowed(false);
         } else {
-            el.requestFullscreen();
+            document.exitFullscreen();
+            setIsWindowed(true);
         }
     };
 
-    // Back
-    const handleBack = () => {
-        navigate(-1);
+    const handleTimeUpdate = () => {
+        if (videoRef.current) {
+            setCurrentTime(videoRef.current.currentTime);
+            setDuration(videoRef.current.duration || 0);
+            if (videoRef.current.buffered.length > 0) {
+                setBuffered(videoRef.current.buffered.end(videoRef.current.buffered.length - 1));
+            }
+        }
     };
 
-    // Mouse move handler
     const handleMouseMove = () => {
-        showControlsTemporarily();
-    };
-
-    // Build title info
-    const getTitle = () => {
-        if (!item) return { title: '', subtitle: '' };
-        if (item.Type === 'Episode') {
-            return {
-                title: item.SeriesName || '',
-                subtitle: `S${item.ParentIndexNumber} E${item.IndexNumber} · ${item.Name}`
-            };
+        setShowControls(true);
+        if (controlsTimeoutRef.current) {
+            clearTimeout(controlsTimeoutRef.current);
         }
-        return { title: item.Name || '', subtitle: item.ProductionYear ? String(item.ProductionYear) : '' };
+        controlsTimeoutRef.current = setTimeout(() => {
+            if (isPlaying) setShowControls(false);
+        }, 3000);
     };
 
-    const { title, subtitle } = getTitle();
-    const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
-    const bufferedPct = duration > 0 ? (buffered / duration) * 100 : 0;
+    const handleSeasonChange = (seasonId) => {
+        setCurrentSeasonId(seasonId);
+    };
+
+    const handleEpisodeClick = (epId) => {
+        if (epId === item.Id) return;
+        reportStop();
+        navigate(`/play/${epId}`);
+    };
+
+
+    // --- 7. Format Helpers ---
+    const formatTime = (seconds) => {
+        if (!seconds || isNaN(seconds)) return "0:00";
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        if (h > 0) {
+            return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
+    // Calculate progress percentage
+    const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+    const bufferedPct = duration ? (buffered / duration) * 100 : 0;
 
     return (
-        <div
-            ref={containerRef}
-            className={`lf-player ${showControls ? 'show-controls' : ''} ${isWindowed ? 'lf-player--windowed' : ''}`}
-            onMouseMove={handleMouseMove}
-            onClick={(e) => {
-                // Only toggle play if clicking the video area or the content wrapper
-                if (e.target === videoRef.current || e.target.classList.contains('lf-player__content')) {
-                    togglePlay();
-                }
-            }}
-        >
-            <div className="lf-player__content">
-                <video ref={videoRef} className="lf-player__video" />
+        <div className={`lf-player-page ${!isWindowed ? 'is-fullscreen-mode' : ''}`}>
+            {/* Navbar is only visible in Windowed Mode */}
+            {isWindowed && <Navbar alwaysFilled={true} />}
 
-                {/* Center Play/Pause Flash */}
-                <div className={`lf-player__center-play ${centerIcon ? 'visible' : ''}`}>
-                    <span className="material-icons">{centerIcon}</span>
-                </div>
+            <div
+                ref={containerRef}
+                className={`lf-player-container ${!isWindowed ? 'active-fullscreen' : ''}`}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={() => isPlaying && setShowControls(false)}
+            >
+                {/* --- Main Player Area --- */}
+                <div className="lf-player-video-wrapper">
+                    <video
+                        ref={videoRef}
+                        className="lf-player-video"
+                        onClick={togglePlay}
+                        onTimeUpdate={handleTimeUpdate}
+                        onEnded={() => { setIsPlaying(false); reportStop(); setShowControls(true); }}
+                        onWaiting={() => setIsLoading(true)}
+                        onCanPlay={() => setIsLoading(false)}
+                    />
 
-                {/* Loading */}
-                {
-                    loading && !error && (
-                        <div className="lf-player__loading">
-                            <div className="lf-player__spinner" />
-                            <span className="lf-player__loading-text">Loading...</span>
+                    {/* Loader */}
+                    {isLoading && (
+                        <div className="lf-player-loader">
+                            <div className="spinner"></div>
                         </div>
-                    )
-                }
+                    )}
 
-                {/* Error */}
-                {
-                    error && (
-                        <div className="lf-player__error">
-                            <span className="material-icons">error_outline</span>
-                            <p className="lf-player__error-message">{error}</p>
-                            <button className="lf-player__error-btn" onClick={handleBack}>
-                                Go Back
-                            </button>
+                    {/* Error */}
+                    {error && (
+                        <div className="lf-player-error">
+                            <div className="error-icon">!</div>
+                            <p>{error}</p>
+                            <button onClick={handleBack}>Go Back</button>
                         </div>
-                    )
-                }
+                    )}
 
-                {/* Top Bar */}
-                <div className="lf-player__top-bar">
-                    <button className="lf-player__back-btn" onClick={handleBack}>
-                        <span className="material-icons">arrow_back</span>
-                    </button>
-                    <div className="lf-player__title-area">
-                        <div className="lf-player__title">{title}</div>
-                        {subtitle && <div className="lf-player__subtitle">{subtitle}</div>}
+                    {/* Center Flash Icon */}
+                    <div className={`lf-player-center-icon ${centerIcon ? 'visible' : ''}`}>
+                        <span className="material-icons">{centerIcon}</span>
                     </div>
-                </div>
 
-                {/* Bottom Controls */}
-                {
-                    !error && (
-                        <div className="lf-player__controls">
-                            {/* Progress Bar */}
+                    {/* Controls Overlay */}
+                    <div className={`lf-player-controls ${showControls ? 'visible' : ''}`}>
+
+                        {/* Top Bar (Back Button & Title) */}
+                        <div className="lf-player-controls-top">
+                            <button className="icon-btn back-btn" onClick={handleBack}>
+                                <span className="material-icons">arrow_back</span>
+                            </button>
+                            <div className="player-title">
+                                {item ? (
+                                    <>
+                                        <span className="series-title">{item.SeriesName}</span>
+                                        {item.SeriesName && item.Name && <span className="divider">•</span>}
+                                        <span className="episode-title">{item.Name}</span>
+                                    </>
+                                ) : 'Loading...'}
+                            </div>
+                        </div>
+
+                        {/* Center Play Button (Big) - displayed when paused */}
+                        {!isPlaying && !isLoading && !error && (
+                            <button className="center-play-btn" onClick={togglePlay}>
+                                <span className="material-icons">play_arrow</span>
+                            </button>
+                        )}
+
+                        {/* Bottom Bar */}
+                        <div className="lf-player-controls-bottom">
+
+                            {/* Detailed Timeline with Thumbnails */}
                             <div
-                                className="lf-player__progress"
-                                onClick={handleProgressClick}
-                                onMouseMove={handleProgressMouseMove}
-                                onMouseLeave={handleProgressMouseLeave}
+                                className="lf-player-timeline-container"
+                                onMouseMove={handleTimelineHover}
+                                onMouseLeave={handleTimelineLeave}
+                                onClick={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const percent = x / rect.width;
+                                    const newTime = percent * duration;
+                                    if (videoRef.current) {
+                                        videoRef.current.currentTime = newTime;
+                                        setCurrentTime(newTime);
+                                    }
+                                }}
                             >
-                                {/* Trickplay Thumbnail */}
-                                {trickplayData && hoverTime !== null && (
+                                {/* Thumbnail Popup */}
+                                {isHoveringTimeline && (
                                     <div
-                                        className="lf-player-scrub-preview is-visible"
-                                        style={{ left: hoverX }}
+                                        className="lf-timeline-tooltip"
+                                        style={{ left: `${hoverPosition * 100}%` }}
                                     >
-                                        <img
-                                            src={jellyfinService.getTrickplayTileUrl(
-                                                id,
-                                                trickplayData.width,
-                                                Math.floor((hoverTime * 1000) / trickplayData.interval)
-                                            )}
-                                            alt="Preview"
-                                        />
-                                        <div style={{
-                                            position: 'absolute',
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            background: 'rgba(0,0,0,0.7)',
-                                            color: '#fff',
-                                            fontSize: '12px',
-                                            textAlign: 'center',
-                                            padding: '2px 0'
-                                        }}>
-                                            {formatTime(hoverTime)}
-                                        </div>
+                                        {thumbnailUrl ? (
+                                            <div
+                                                className="lf-timeline-thumbnail"
+                                                style={{ backgroundImage: `url('${thumbnailUrl}')` }}
+                                            ></div>
+                                        ) : null}
+                                        <span className="lf-timeline-time">{formatTime(hoverTime)}</span>
                                     </div>
                                 )}
 
-                                <div className="lf-player__progress-buffered" style={{ width: `${bufferedPct}%` }} />
-                                <div className="lf-player__progress-filled" style={{ width: `${progressPct}%` }} />
-                                <div className="lf-player__progress-thumb" style={{ left: `${progressPct}%` }} />
+                                <div className="lf-player-timeline-track">
+                                    <div className="lf-player-timeline-bg"></div>
+                                    <div
+                                        className="lf-player-timeline-buffered"
+                                        style={{ width: `${bufferedPct}%` }}
+                                    ></div>
+                                    <div
+                                        className="lf-player-timeline-fill"
+                                        style={{ width: `${progressPercent}%` }}
+                                    >
+                                        <div className="lf-player-timeline-thumb"></div>
+                                    </div>
+                                    {/* Hover Ghost Fill */}
+                                    {isHoveringTimeline && (
+                                        <div
+                                            className="lf-player-timeline-hover-fill"
+                                            style={{ width: `${hoverPosition * 100}%` }}
+                                        ></div>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Controls Row */}
-                            <div className="lf-player__controls-row">
-                                <div className="lf-player__controls-left">
-                                    {/* Play/Pause */}
-                                    <button className="lf-player__ctrl-btn lf-player__ctrl-btn--play" onClick={togglePlay}>
-                                        <span className="material-icons">{playing ? 'pause' : 'play_arrow'}</span>
+                            <div className="lf-player-controls-row">
+                                <div className="controls-left">
+                                    <button className="icon-btn" onClick={togglePlay}>
+                                        <span className="material-icons">{isPlaying ? 'pause' : 'play_arrow'}</span>
                                     </button>
 
-                                    {/* Skip Back/Forward */}
-                                    <button className="lf-player__ctrl-btn" onClick={() => {
-                                        if (videoRef.current) videoRef.current.currentTime -= 10;
-                                    }}>
-                                        <span className="material-icons">replay_10</span>
-                                    </button>
-                                    <button className="lf-player__ctrl-btn" onClick={() => {
-                                        if (videoRef.current) videoRef.current.currentTime += 30;
-                                    }}>
-                                        <span className="material-icons">forward_30</span>
-                                    </button>
-
-                                    {/* Volume */}
-                                    <div className="lf-player__volume-group">
-                                        <button className="lf-player__ctrl-btn" onClick={() => {
-                                            if (videoRef.current) videoRef.current.muted = !videoRef.current.muted;
-                                        }}>
+                                    <div className="volume-container">
+                                        <button className="icon-btn" onClick={toggleMute}>
                                             <span className="material-icons">
-                                                {muted || volume === 0 ? 'volume_off' : volume < 0.5 ? 'volume_down' : 'volume_up'}
+                                                {isMuted || volume === 0 ? 'volume_off' : volume < 0.5 ? 'volume_down' : 'volume_up'}
                                             </span>
                                         </button>
-                                        <input
-                                            type="range"
-                                            className="lf-player__volume-slider"
-                                            min="0"
-                                            max="1"
-                                            step="0.05"
-                                            value={muted ? 0 : volume}
-                                            onChange={handleVolumeChange}
-                                        />
+                                        <div className="volume-slider-wrapper">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="1"
+                                                step="0.05"
+                                                value={isMuted ? 0 : volume}
+                                                onChange={handleVolumeChange}
+                                                className="volume-slider"
+                                            />
+                                        </div>
                                     </div>
 
-                                    {/* Time */}
-                                    <span className="lf-player__time">
+                                    <div className="time-display">
                                         {formatTime(currentTime)} / {formatTime(duration)}
-                                    </span>
+                                    </div>
                                 </div>
 
-                                <div className="lf-player__controls-right">
-                                    {/* Fullscreen / Windowed Toggle */}
-                                    <button className="lf-player__ctrl-btn" onClick={toggleWindowedMode} title={isWindowed ? "Enter Fullscreen" : "Exit Fullscreen"}>
-                                        <span className="material-icons">{isWindowed ? 'fullscreen' : 'fullscreen_exit'}</span>
+                                <div className="controls-right">
+                                    <button className="icon-btn" onClick={toggleWindowedMode} title={isWindowed ? "Cinema Mode" : "Windowed Mode"}>
+                                        <span className="material-icons">
+                                            {isWindowed ? 'crop_16_9' : 'picture_in_picture_alt'}
+                                        </span>
+                                    </button>
+                                    <button className="icon-btn" onClick={toggleFullscreen} title="Fullscreen">
+                                        <span className="material-icons">
+                                            {document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen'}
+                                        </span>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    )
-                }
-            </div>
+                    </div>
+                </div>
 
-            {/* Sidebar for Windowed Mode */}
-            {
-                isWindowed && item && item.Type === 'Episode' && (
-                    <div className="lf-player__sidebar">
-                        <div className="lf-player__metadata">
-                            <h2 className="lf-player__meta-title">{item.SeriesName}</h2>
-                            <h3 className="lf-player__meta-episode-title">{item.Name}</h3>
-                            <div className="lf-player__meta-info">
-                                <span>S{item.ParentIndexNumber} E{item.IndexNumber}</span>
-                                {item.OfficialRating && <span className="lf-player__meta-rating">{item.OfficialRating}</span>}
-                            </div>
-                            <p className="lf-player__meta-desc">{item.Overview}</p>
-                        </div>
-
-                        <div className="lf-player__episodes-container">
-                            <div className="lf-player__season-select-wrapper">
-                                <select
-                                    className="lf-player__season-select"
-                                    value={currentSeasonId || ''}
-                                    onChange={(e) => handleSeasonChange(e.target.value)}
-                                >
-                                    {seasons.map(s => <option key={s.Id} value={s.Id}>{s.Name}</option>)}
-                                </select>
+                {/* Sidebar for Windowed Mode (Visible ONLY if Windowed) */}
+                {isWindowed && item && item.Type === 'Episode' && (
+                    <div className="lf-player-sidebar">
+                        <div className="lf-player-sidebar-content">
+                            {/* Metadata Section */}
+                            <div className="lf-player-meta">
+                                <h2 className="lf-player-meta-title">{item.SeriesName}</h2>
+                                <h3 className="lf-player-meta-subtitle">{item.Name}</h3>
+                                <div className="lf-player-meta-info">
+                                    <span>S{item.ParentIndexNumber} E{item.IndexNumber}</span>
+                                    {item.ProductionYear && <><span className="meta-divider">•</span><span>{item.ProductionYear}</span></>}
+                                </div>
+                                <p className="lf-player-meta-desc">{item.Overview}</p>
                             </div>
 
-                            <div className="lf-player__episodes-list">
-                                {loadingEpisodes ? (
-                                    <div className="lf-player__episodes-loading">Loading episodes...</div>
-                                ) : (
-                                    episodes.map(ep => (
-                                        <div
-                                            key={ep.Id}
-                                            className={`lf-player__episode-item ${ep.Id === item.Id ? 'active' : ''}`}
-                                            onClick={() => handleEpisodeClick(ep.Id)}
+                            {/* Episode List Section */}
+                            <div className="lf-player-episodes">
+                                <div className="lf-episodes-header">
+                                    <h4 className="section-title">Episodes</h4>
+                                    <div className="season-select-container">
+                                        <select
+                                            className="lf-season-select"
+                                            value={currentSeasonId || ''}
+                                            onChange={(e) => handleSeasonChange(e.target.value)}
                                         >
-                                            <div className="lf-player__episode-thumb">
-                                                <img
-                                                    src={jellyfinService.getImageUrl(ep, 'Primary', { maxWidth: 200 })}
-                                                    alt={ep.Name}
-                                                    onError={(e) => e.target.style.display = 'none'}
-                                                />
-                                                {ep.UserData?.Played && <span className="lf-player__episode-played">✓</span>}
+                                            {seasons.map(s => <option key={s.Id} value={s.Id}>{s.Name}</option>)}
+                                        </select>
+                                        <span className="material-icons select-arrow">expand_more</span>
+                                    </div>
+                                </div>
+
+                                <div className="lf-episodes-list">
+                                    {episodesLoading ? (
+                                        <div className="loading-txt">Loading...</div>
+                                    ) : (
+                                        episodes.map(ep => (
+                                            <div
+                                                key={ep.Id}
+                                                className={`lf-episode-item ${ep.Id === item.Id ? 'current' : ''}`}
+                                                onClick={() => handleEpisodeClick(ep.Id)}
+                                            >
+                                                <div className="ep-img-container">
+                                                    <img
+                                                        src={jellyfinService.getImageUrl(ep, 'Primary', { maxWidth: 300 })}
+                                                        alt={ep.Name}
+                                                        onError={(e) => e.target.style.display = 'none'}
+                                                    />
+                                                    {ep.UserData?.Played && <div className="ep-watched-overlay"><span className="material-icons">check</span></div>}
+                                                    {ep.Id === item.Id && <div className="ep-playing-overlay"><span className="material-icons">play_circle</span></div>}
+                                                </div>
+                                                <div className="ep-info">
+                                                    <div className="ep-number">E{ep.IndexNumber}</div>
+                                                    <div className="ep-title">{ep.Name}</div>
+                                                </div>
                                             </div>
-                                            <div className="lf-player__episode-details">
-                                                <span className="lf-player__episode-num">E{ep.IndexNumber}</span>
-                                                <span className="lf-player__episode-name">{ep.Name}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
-                )
-            }
+                )}
+            </div>
         </div>
     );
 };
