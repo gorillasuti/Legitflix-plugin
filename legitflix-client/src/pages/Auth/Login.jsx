@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { Button } from '../../components/ui/button';
+import { useTheme, getDefaultLogo } from '../../context/ThemeContext';
 import './Auth.css';
 
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { config } = useTheme();
     const prefilledUsername = location.state?.username || '';
 
     const [username, setUsername] = useState(prefilledUsername);

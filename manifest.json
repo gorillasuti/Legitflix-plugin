@@ -9,12 +9,12 @@
         "imageUrl": "https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-blue.png",
         "versions": [
             {
-                "version": "1.0.0.44",
-                "changelog": "General security patches and bug fixes.",
+                "version": "1.0.0.45",
+                "changelog": "Resolved minor UI inconsistencies",
                 "targetAbi": "10.11.5.0",
-                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.44/LegitFlix.Plugin_1.0.0.44.zip",
-                "checksum": "c32c0303eacbdbf203f9d054d2b1e72b",
-                "timestamp": "2026-02-12T02:13:53Z"
+                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.45/LegitFlix.Plugin_1.0.0.45.zip",
+                "checksum": "17bd001820ed2b6f1349867e4f6ea537",
+                "timestamp": "2026-02-12T02:41:59Z"
             }
         ]
     }

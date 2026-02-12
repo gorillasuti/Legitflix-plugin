@@ -195,8 +195,8 @@ const Home = () => {
                                             <div
                                                 key={item.Id}
                                                 className="backdrop-card"
-                                                onClick={() => navigate(`/details/${item.Id}`)}
-                                                title={item.Name}
+                                                onClick={() => window.location.href = `/web/index.html?classic=true#!/playback?id=${item.Id}`}
+                                                title={`Resume: ${item.Name}`}
                                             >
                                                 <div className="backdrop-card-image">
                                                     <img
@@ -247,7 +247,7 @@ const Home = () => {
                                         <div
                                             key={item.Id}
                                             className="backdrop-card"
-                                            onClick={() => navigate(`/details/${item.Id}`)}
+                                            onClick={() => navigate(`/item/${item.Id}`)}
                                             title={item.Name}
                                         >
                                             <div className="backdrop-card-image">
@@ -257,7 +257,7 @@ const Home = () => {
                                                     onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
                                                 />
                                                 <div className="backdrop-play-overlay">
-                                                    <span className="material-icons">play_arrow</span>
+                                                    <span className="material-icons">info</span>
                                                 </div>
                                             </div>
                                             <div className="backdrop-card-info">
@@ -281,7 +281,7 @@ const Home = () => {
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '50px' }}>
                                 <div className="promo2-wrapper">
                                     {/* ── Hero Banner (Item 1) ── */}
-                                    <div className="promo2-hero" onClick={() => openModal(promoItems[0].Id)}>
+                                    <div className="promo2-hero" onClick={() => navigate(`/item/${promoItems[0].Id}`)}>
                                         <img
                                             src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Backdrop/0?maxWidth=1400&quality=90`}
                                             className="promo2-hero-img"
@@ -326,7 +326,7 @@ const Home = () => {
                                                 variant="ringHover"
                                                 size="lg"
                                                 className="promo2-btn"
-                                                onClick={(e) => { e.stopPropagation(); navigate(`/details/${promoItems[0].Id}`); }}
+                                                onClick={(e) => { e.stopPropagation(); navigate(`/item/${promoItems[0].Id}`); }}
                                             >
                                                 WATCH NOW
                                             </Button>
@@ -337,7 +337,7 @@ const Home = () => {
                                     {(promoItems[1] || promoItems[2]) && (
                                         <div className="promo2-row">
                                             {promoItems.slice(1, 3).map(item => (
-                                                <div key={item.Id} className="promo2-card" onClick={() => openModal(item.Id)}>
+                                                <div key={item.Id} className="promo2-card" onClick={() => navigate(`/item/${item.Id}`)}>
                                                     <div className="promo2-card-text">
                                                         {item.ImageTags?.Logo ? (
                                                             <img
@@ -373,7 +373,7 @@ const Home = () => {
                                                         <Button
                                                             variant="ringHover"
                                                             className="promo2-btn"
-                                                            onClick={(e) => { e.stopPropagation(); navigate(`/details/${item.Id}`); }}
+                                                            onClick={(e) => { e.stopPropagation(); navigate(`/item/${item.Id}`); }}
                                                         >
                                                             START WATCHING
                                                         </Button>
@@ -399,7 +399,7 @@ const Home = () => {
                                 key={lib.Id}
                                 title={`Latest ${lib.Name}`}
                                 libraryId={lib.Id}
-                                onCardClick={(item) => openModal(item.Id)}
+                                onCardClick={(item) => navigate(`/item/${item.Id}`)}
                             />
                         ))}
 

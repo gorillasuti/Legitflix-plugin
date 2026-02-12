@@ -37,11 +37,19 @@ const LegacyRouteHandler = () => {
             }
 
             // 4. Admin Dashboard / Plugins -> Fallback to Classic
-            const classicPages = ['dashboard', 'plugins', 'wizard', 'scheduledtasks'];
+            // expanded list to cover more admin/legacy pages
+            const classicPages = [
+                'dashboard', 'plugins', 'wizard', 'scheduledtasks', 'server',
+                'networking', 'devices', 'api', 'logs', 'notifications',
+                'librarydisplay', 'playback', 'transcoding', 'live-tv', 'dlna',
+                'intro-s', 'activity', 'itemdetails', 'edititem'
+            ];
+
             if (classicPages.some(page => hash.includes(page))) {
                 console.log('[LegitFlix] Redirecting to Classic Mode for:', hash);
                 // Force a hard reload to ensure we break out of the React app
-                window.location.replace(`/?classic=true${hash}`);
+                // MUST point to /web/index.html to avoid Jellyfin's root redirect stripping the query param
+                window.location.replace(`/web/index.html?classic=true${hash}`);
                 return;
             }
         }

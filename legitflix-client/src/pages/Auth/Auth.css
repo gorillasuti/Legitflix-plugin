@@ -68,6 +68,10 @@
 /* Logo */
 .auth-logo {
     margin-bottom: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .auth-logo-img {
@@ -75,7 +79,7 @@
     /* Reduced from massive text */
     width: auto;
     margin-bottom: 1rem;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+    /* Removed drop-shadow as requested */
 }
 
 .auth-logo p {
@@ -241,7 +245,7 @@
 
 .user-avatar,
 .user-avatar-placeholder,
-.nav-avatar {
+.auth-avatar {
     width: 100%;
     height: 100%;
     border-radius: 50%;
@@ -253,7 +257,7 @@
     overflow: hidden;
 }
 
-.nav-avatar-wrapper {
+.auth-avatar-wrapper {
     width: 100%;
     height: 100%;
     display: flex;

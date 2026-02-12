@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Navbar';
+import { useTheme, getDefaultLogo } from '../../context/ThemeContext';
 import './Auth.css';
 
 const SelectServer = () => {
     const navigate = useNavigate();
+    const { config } = useTheme();
     const [url, setUrl] = useState(window.location.origin); // Default to current origin
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');

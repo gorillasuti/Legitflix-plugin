@@ -51,6 +51,7 @@ export const ThemeProvider = ({ children }) => {
                 const parsed = JSON.parse(localConfig);
                 setConfig(prev => ({ ...prev, ...parsed }));
                 if (parsed.accentColor) applyAccentColor(parsed.accentColor);
+                if (parsed.faviconUrl) applyFavicon(parsed.faviconUrl);
             } catch (e) {
                 console.error("Failed to parse local config", e);
             }
@@ -67,11 +68,22 @@ export const ThemeProvider = ({ children }) => {
         document.documentElement.style.setProperty('--clr-accent-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
     };
 
+    const applyFavicon = (url) => {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = url || '/favicon.jpg';
+    };
+
     const updateConfig = (newConfig) => {
         setConfig(prev => {
             const updated = { ...prev, ...newConfig };
             localStorage.setItem('LegitFlix_Config', JSON.stringify(updated));
             if (newConfig.accentColor) applyAccentColor(newConfig.accentColor);
+            if (newConfig.faviconUrl !== undefined) applyFavicon(newConfig.faviconUrl);
             return updated;
         });
     };

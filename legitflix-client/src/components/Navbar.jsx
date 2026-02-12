@@ -92,26 +92,16 @@ const Navbar = () => {
         if (!file || !user?.Id) return;
         setUploading(true);
         try {
-            const res = await fetch(
-                `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': file.type,
-                        'X-Emby-Authorization': jellyfinService.api.authHeader,
-                    },
-                    body: file,
-                }
-            );
-            if (res.ok) {
-                setShowAvatarPicker(false);
-                // Dispatch event to update avatar everywhere
-                window.dispatchEvent(new CustomEvent('userUpdated', { detail: user }));
-                // Force reload image logic might be needed but browser cache handles it usually with query param
-                window.location.reload();
-            }
+            await jellyfinService.uploadUserImage(user.Id, 'Primary', file);
+
+            setShowAvatarPicker(false);
+            // Dispatch event to update avatar everywhere
+            window.dispatchEvent(new CustomEvent('userUpdated', { detail: user }));
+            // Force reload to ensure cache busting isn't the only reliance
+            window.location.reload();
         } catch (err) {
             console.error("Avatar upload failed", err);
+            alert("Failed to upload avatar. Please try again.");
         } finally {
             setUploading(false);
         }
@@ -174,7 +164,7 @@ const Navbar = () => {
 
                             {/* Random button (Jellyfin Enhanced) */}
                             {hasEnhancedPlugin && (
-                                <button className="nav-icon-btn" onClick={() => { window.location.href = '/web/index.html#!/randomitems'; }} title="Random">
+                                <button className="nav-icon-btn" onClick={() => { window.location.href = '/web/index.html?classic#!/randomitems'; }} title="Random">
                                     <span className="material-icons">shuffle</span>
                                 </button>
                             )}
@@ -231,17 +221,17 @@ const Navbar = () => {
                                         <button onClick={() => { setShowMenu(false); setShowSearch(true); }}>
                                             <span className="material-icons">search</span> Search
                                         </button>
-                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/remotecontrol'; }}>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/remotecontrol'; }}>
                                             <span className="material-icons">cast</span> Cast to Device
                                         </button>
-                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/syncplay'; }}>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/syncplay'; }}>
                                             <span className="material-icons">sync</span> SyncPlay
                                         </button>
-                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/playback'; }}>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/playback'; }}>
                                             <span className="material-icons">play_circle</span> Player
                                         </button>
                                         {hasEnhancedPlugin && (
-                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/randomitems'; }}>
+                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/randomitems'; }}>
                                                 <span className="material-icons">shuffle</span> Random
                                             </button>
                                         )}
@@ -251,7 +241,7 @@ const Navbar = () => {
                                             <>
                                                 <div className="dropdown-divider"></div>
                                                 <div className="menu-section-label">Administration</div>
-                                                <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/dashboard'; }}>
+                                                <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/dashboard'; }}>
                                                     <span className="material-icons">dashboard</span> Dashboard
                                                 </button>
                                             </>
@@ -260,14 +250,14 @@ const Navbar = () => {
                                         {/* Preferences */}
                                         <div className="dropdown-divider"></div>
                                         <div className="menu-section-label">Preferences</div>
-                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/mypreferencesmenu'; }}>
+                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/mypreferencesmenu'; }}>
                                             <span className="material-icons">settings</span> Settings
                                         </button>
                                         <button onClick={() => { setShowMenu(false); setShowLegitSettings(true); }}>
                                             <span className="material-icons">palette</span> Theme Settings
                                         </button>
                                         {hasEnhancedPlugin && (
-                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/configurationpage?name=JellyfinEnhanced'; }}>
+                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/configurationpage?name=JellyfinEnhanced'; }}>
                                                 <span className="material-icons">auto_awesome</span> Jellyfin Enhanced
                                             </button>
                                         )}
@@ -281,7 +271,7 @@ const Navbar = () => {
                                         <button onClick={() => { setShowMenu(false); setShowQuickConnect(true); }}>
                                             <span className="material-icons">qr_code</span> Quick Connect
                                         </button>
-                                        <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/selectserver'; }}>
+                                        <button onClick={() => { setShowMenu(false); navigate('/login/select-server'); }}>
                                             <span className="material-icons">dns</span> Change Server
                                         </button>
                                         <button onClick={() => {

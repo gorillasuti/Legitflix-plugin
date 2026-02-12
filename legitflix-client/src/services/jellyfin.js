@@ -499,18 +499,24 @@ class JellyfinService {
     async uploadUserImage(userId, type, file) {
         if (!this.api) this.initialize();
 
+        // Ensure we have a valid token
+        const token = this.api.accessToken;
+        if (!token) throw new Error("No access token available for upload");
+
         // Jellyfin expects the raw binary in body for image upload
         const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
             method: 'POST',
             headers: {
-                'Content-Type': file.type,
-                'Authorization': `MediaBrowser Token="${this.api.accessToken}"`
+                'Content-Type': file.type || 'image/png',
+                'Authorization': `MediaBrowser Token="${token}"`
             },
             body: file,
         });
 
         if (!response.ok) {
-            throw new Error('Failed to upload image');
+            const txt = await response.text();
+            console.error("Upload failed response:", txt);
+            throw new Error(`Failed to upload image: ${response.status} ${response.statusText}`);
         }
         return true;
     }

@@ -105,7 +105,7 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
                         <MediaCard
                             key={item.Id}
                             item={item}
-                            onClick={() => onCardClick ? onCardClick(item.Id) : navigate(`/details/${item.Id}`)}
+                            onClick={() => onCardClick ? onCardClick(item) : navigate(`/item/${item.Id}`)}
                         />
                     ))}
                 </div>

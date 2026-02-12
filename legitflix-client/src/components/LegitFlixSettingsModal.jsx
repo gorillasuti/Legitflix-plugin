@@ -192,6 +192,25 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             )
         },
         {
+            id: 'faviconUrl',
+            tab: 'appearance',
+            label: 'Custom Favicon URL',
+            keywords: ['favicon', 'icon', 'tab', 'browser', 'branding'],
+            render: () => (
+                <div className="setting-section" key="faviconUrl">
+                    <h3>Custom Favicon URL</h3>
+                    <p className="setting-desc">Enter a direct URL to an image to use as the browser tab icon.</p>
+                    <input
+                        type="text"
+                        className="legit-input"
+                        placeholder="https://example.com/favicon.ico"
+                        value={config.faviconUrl || ''}
+                        onChange={(e) => updateConfig({ faviconUrl: e.target.value })}
+                    />
+                </div>
+            )
+        },
+        {
             id: 'avatar',
             tab: 'appearance',
             label: 'Profile Avatar',

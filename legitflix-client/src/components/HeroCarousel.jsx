@@ -264,6 +264,8 @@ const HeroCarousel = ({ onInfoClick }) => {
                         key={item.Id}
                         className={`hero-slide ${isActive ? 'active' : ''}`}
                         data-index={index}
+                        onClick={() => navigate(`/item/${item.Id}`)}
+                        style={{ cursor: 'pointer' }}
                     >
                         <div
                             className="hero-backdrop"
@@ -301,7 +303,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                             <div className="hero-actions flex gap-3 items-center">
                                 <Button
                                     variant="ringHover"
-                                    onClick={() => navigate(`/details/${item.Id}`)}
+                                    onClick={(e) => { e.stopPropagation(); window.location.href = `/web/index.html?classic=true#!/playback?id=${item.Id}`; }}
                                 >
                                     <i className="material-icons">play_arrow</i>
                                     <span>{btnText} <small className="text-sm ml-1">{btnSubText}</small></span>
@@ -322,7 +324,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                                     variant="outline"
                                     size="icon"
                                     className="rounded-full w-12 h-12 border-2 border-white/20 bg-black/40 hover:bg-white/10 hover:border-white text-white"
-                                    onClick={() => onInfoClick(item.Id)}
+                                    onClick={(e) => { e.stopPropagation(); onInfoClick(item.Id); }}
                                     title="More Info"
                                 >
                                     <span className="material-icons-outlined">info</span>

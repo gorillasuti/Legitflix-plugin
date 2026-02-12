@@ -71,11 +71,11 @@ const SelectUser = () => {
                                     onClick={() => handleUserSelect(user)}
                                 >
                                     <div className="user-avatar-container">
-                                        <div className="nav-avatar-wrapper">
+                                        <div className="auth-avatar-wrapper">
                                             <img
                                                 src={`${jellyfinService.api.basePath || ''}/Users/${user.Id}/Images/Primary?quality=90`}
                                                 alt={user.Name}
-                                                className="nav-avatar"
+                                                className="auth-avatar"
                                                 onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.nextSibling.style.display = 'flex'; }}
                                             />
                                         </div>

@@ -40,13 +40,13 @@ const ItemRedirect = () => {
                             navigate(`/series/${item.SeriesId}`, { replace: true });
                         } else {
                             // Fallback if no SeriesId (e.g. special cases)
-                            window.location.href = `/?classic=true#!/details?id=${item.Id}`;
+                            window.location.href = `/web/index.html?classic=true#!/details?id=${item.Id}`;
                         }
                         break;
                     default:
                         // Fallback to classic UI for unsupported types (Music, BoxSet, etc.)
                         console.log('[LegitFlix] Unsupported item type, falling back to classic:', item.Type);
-                        window.location.href = `/?classic=true#!/details?id=${item.Id}`;
+                        window.location.href = `/web/index.html?classic=true#!/details?id=${item.Id}`;
                         break;
                 }
 
@@ -55,7 +55,7 @@ const ItemRedirect = () => {
                 setError('Failed to resolve item link.');
                 // Fallback to classic on error?
                 setTimeout(() => {
-                    window.location.href = `/?classic=true#!/details?id=${id}`;
+                    window.location.href = `/web/index.html?classic=true#!/details?id=${id}`;
                 }, 2000);
             }
         };
