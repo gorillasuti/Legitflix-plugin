@@ -483,7 +483,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    min-width: 180px;
+    width: fit-content;
     background: var(--clr-bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
@@ -513,7 +513,7 @@
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
-    min-width: 180px;
+    width: fill-available;
     background: var(--clr-bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
@@ -535,7 +535,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 8px 14px;
     color: var(--clr-text-muted);
     cursor: pointer;
     transition: all 0.15s ease;
@@ -741,7 +741,6 @@
 }
 
 .lf-episode-card:hover {
-    transform: translateY(-4px) scale(1.02);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -1084,6 +1083,7 @@
     text-overflow: ellipsis;
     transition: color 0.2s ease;
     color: var(--clr-text-main);
+    text-align: left;
 }
 
 .lf-cast-card:hover .lf-cast-card__name {
@@ -1096,6 +1096,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: left;
 }
 
 /* ============================================
@@ -1115,10 +1116,6 @@
     color: inherit;
     transition: transform 0.2s ease;
     cursor: pointer;
-}
-
-.lf-similar-card:hover {
-    transform: translateY(-4px);
 }
 
 .lf-similar-card__poster {
