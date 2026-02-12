@@ -31,13 +31,17 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
             const response = await fetch(url);
             const blob = await response.blob();
 
+            // Fix 401: Construct robust auth header
+            const token = jellyfinService.api.accessToken;
+            const authHeader = `MediaBrowser Client="${jellyfinService.jellyfin.clientInfo.name}", Device="${jellyfinService.jellyfin.deviceInfo.name}", DeviceId="${jellyfinService.jellyfin.deviceInfo.id}", Version="${jellyfinService.jellyfin.clientInfo.version}", Token="${token}"`;
+
             const res = await fetch(
                 `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Banner`,
                 {
                     method: 'POST',
                     headers: {
                         'Content-Type': blob.type,
-                        'X-Emby-Authorization': jellyfinService.api.authHeader,
+                        'X-Emby-Authorization': authHeader,
                     },
                     body: blob,
                 }
@@ -123,97 +127,99 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
     };
 
     return (
-        <div className="pm-overlay" onClick={onClose}>
-            <div className="pm-modal" onClick={e => e.stopPropagation()}>
-                <div className="pm-header">
-                    <h2>Edit Profile</h2>
-                    <button className="pm-close" onClick={onClose}>&times;</button>
-                </div>
+        <>
+            <div className="pm-overlay" onClick={onClose}>
+                <div className="pm-modal" onClick={e => e.stopPropagation()}>
+                    <div className="pm-header">
+                        <h2>Edit Profile</h2>
+                        <button className="pm-close" onClick={onClose}>&times;</button>
+                    </div>
 
-                <div className="pm-body">
-                    {/* Banner Section */}
-                    <div className="pm-avatar-section" style={{ marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px' }}>
-                        <div className="pm-avatar-preview" style={{ width: '160px', height: '90px', borderRadius: '8px' }}>
-                            {currentBannerUrl ? (
-                                <img
-                                    src={currentBannerUrl}
-                                    alt="Banner"
-                                    className="pm-avatar-img"
-                                    style={{ borderRadius: '8px', objectFit: 'cover' }}
-                                />
-                            ) : (
-                                <div style={{ width: '100%', height: '100%', background: '#333', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <span className="material-icons" style={{ fontSize: '32px', opacity: 0.5 }}>image</span>
+                    <div className="pm-body">
+                        {/* Banner Section */}
+                        <div className="pm-avatar-section" style={{ marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px' }}>
+                            <div className="pm-avatar-preview" style={{ width: '160px', height: '90px', borderRadius: '8px' }}>
+                                {currentBannerUrl ? (
+                                    <img
+                                        src={currentBannerUrl}
+                                        alt="Banner"
+                                        className="pm-avatar-img"
+                                        style={{ borderRadius: '8px', objectFit: 'cover' }}
+                                    />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', background: '#333', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <span className="material-icons" style={{ fontSize: '32px', opacity: 0.5 }}>image</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="pm-avatar-info">
+                                <h3>Profile Banner</h3>
+                                <p>Customize your profile background</p>
+                                <div className="pm-avatar-actions">
+                                    <button
+                                        className="pm-btn pm-btn-accent"
+                                        onClick={() => setShowBannerPicker(true)}
+                                    >
+                                        <span className="material-icons">wallpaper</span>
+                                        Change Banner
+                                    </button>
                                 </div>
-                            )}
-                        </div>
-                        <div className="pm-avatar-info">
-                            <h3>Profile Banner</h3>
-                            <p>Customize your profile background</p>
-                            <div className="pm-avatar-actions">
-                                <button
-                                    className="pm-btn pm-btn-accent"
-                                    onClick={() => setShowBannerPicker(true)}
-                                >
-                                    <span className="material-icons">wallpaper</span>
-                                    Change Banner
-                                </button>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Avatar Section */}
-                    <div className="pm-avatar-section">
-                        <div className="pm-avatar-preview">
-                            <img
-                                src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90&t=${Date.now()}`}
-                                alt={user.Name}
-                                className="pm-avatar-img"
-                                onError={(e) => { e.target.style.display = 'none'; }}
+                        {/* Avatar Section */}
+                        <div className="pm-avatar-section">
+                            <div className="pm-avatar-preview">
+                                <img
+                                    src={`${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary?quality=90&t=${Date.now()}`}
+                                    alt={user.Name}
+                                    className="pm-avatar-img"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                />
+                                <div className="pm-avatar-overlay" onClick={() => avatarInputRef.current?.click()}>
+                                    <span className="material-icons">photo_camera</span>
+                                </div>
+                            </div>
+                            <div className="pm-avatar-info">
+                                <h3>{user.Name}</h3>
+                                <p>{user?.Policy?.IsAdministrator ? 'Administrator' : 'User'}</p>
+                                <div className="pm-avatar-actions">
+                                    <button
+                                        className="pm-btn pm-btn-accent"
+                                        onClick={() => setShowAvatarPicker(true)}
+                                        disabled={uploading}
+                                    >
+                                        <span className="material-icons">face</span>
+                                        Choose Avatar
+                                    </button>
+                                    <button
+                                        className="pm-btn pm-btn-outline"
+                                        onClick={() => avatarInputRef.current?.click()}
+                                        disabled={uploading}
+                                    >
+                                        <span className="material-icons">upload</span>
+                                        Upload Custom
+                                    </button>
+                                    <button
+                                        className="pm-btn pm-btn-outline"
+                                        onClick={handleDeleteAvatar}
+                                        disabled={uploading}
+                                    >
+                                        <span className="material-icons">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <input
+                                ref={avatarInputRef}
+                                type="file"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={handleAvatarUpload}
                             />
-                            <div className="pm-avatar-overlay" onClick={() => avatarInputRef.current?.click()}>
-                                <span className="material-icons">photo_camera</span>
-                            </div>
                         </div>
-                        <div className="pm-avatar-info">
-                            <h3>{user.Name}</h3>
-                            <p>{user?.Policy?.IsAdministrator ? 'Administrator' : 'User'}</p>
-                            <div className="pm-avatar-actions">
-                                <button
-                                    className="pm-btn pm-btn-accent"
-                                    onClick={() => setShowAvatarPicker(true)}
-                                    disabled={uploading}
-                                >
-                                    <span className="material-icons">face</span>
-                                    Choose Avatar
-                                </button>
-                                <button
-                                    className="pm-btn pm-btn-outline"
-                                    onClick={() => avatarInputRef.current?.click()}
-                                    disabled={uploading}
-                                >
-                                    <span className="material-icons">upload</span>
-                                    Upload Custom
-                                </button>
-                                <button
-                                    className="pm-btn pm-btn-outline"
-                                    onClick={handleDeleteAvatar}
-                                    disabled={uploading}
-                                >
-                                    <span className="material-icons">delete</span>
-                                </button>
-                            </div>
-                        </div>
-                        <input
-                            ref={avatarInputRef}
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={handleAvatarUpload}
-                        />
-                    </div>
 
-                    {status && <p className="pm-status">{status}</p>}
+                        {status && <p className="pm-status">{status}</p>}
+                    </div>
                 </div>
             </div>
             <BannerPickerModal
@@ -231,7 +237,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
                 onSave={handleAvatarFile}
                 userId={user?.Id}
             />
-        </div>
+        </>
     );
 };
 

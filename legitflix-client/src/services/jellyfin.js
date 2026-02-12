@@ -79,13 +79,18 @@ class JellyfinService {
     async validateServer(url) {
         // Strip trailing slash
         const baseUrl = url.replace(/\/$/, "");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
         try {
-            const response = await fetch(`${baseUrl}/System/Info/Public`);
+            const response = await fetch(`${baseUrl}/System/Info/Public`, { signal: controller.signal });
+            clearTimeout(timeoutId);
             if (response.ok) {
                 const data = await response.json();
                 return { valid: true, data, baseUrl }; // Return cleaned URL
             }
         } catch (e) {
+            clearTimeout(timeoutId);
             console.error("Server validation failed", e);
         }
         return { valid: false };
@@ -504,11 +509,14 @@ class JellyfinService {
         if (!token) throw new Error("No access token available for upload");
 
         // Jellyfin expects the raw binary in body for image upload
+        // Fix 401: Use standard X-Emby-Authorization header with Client/Device info
+        const authHeader = `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}", Token="${token}"`;
+
         const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
             method: 'POST',
             headers: {
                 'Content-Type': file.type || 'image/png',
-                'Authorization': `MediaBrowser Token="${token}"`
+                'X-Emby-Authorization': authHeader
             },
             body: file,
         });

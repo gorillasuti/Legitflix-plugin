@@ -18,23 +18,32 @@ const SelectServer = () => {
         setLoading(true);
         setError('');
 
-        const res = await jellyfinService.validateServer(url);
-        if (res.valid) {
-            // Re-init service with new base URL
-            jellyfinService.jellyfin.configuration.basePath = res.baseUrl;
-            // Persist server URL preference if needed, or just pass to next step
-            navigate('/login/select-user');
-        } else {
-            setError('Could not connect to server. Please check the URL.');
+        try {
+            const res = await jellyfinService.validateServer(url);
+            if (res && res.valid) {
+                // Re-init service with new base URL
+                jellyfinService.jellyfin.configuration.basePath = res.baseUrl;
+                navigate('/login/select-user');
+            } else {
+                setError('Could not connect to server. Please check the URL.');
+            }
+        } catch (e) {
+            console.error("Validation error", e);
+            setError('An error occurred while connecting.');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (
         <div className="auth-page">
             <div className="auth-container">
                 <div className="auth-logo">
-                    <h1>LegitFlix</h1>
+                    {config.logoUrl ? (
+                        <img src={config.logoUrl} alt="LegitFlix" className="auth-logo-img" />
+                    ) : (
+                        <img src={getDefaultLogo(config.accentColor)} alt="LegitFlix" className="auth-logo-img" />
+                    )}
                     <p>Connect to Server</p>
                 </div>
 
@@ -52,7 +61,7 @@ const SelectServer = () => {
 
                     {error && <div className="auth-error">{error}</div>}
 
-                    <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
+                    <Button type="submit" variant="ringHover" size="lg" disabled={loading} className="w-full">
                         {loading ? 'Connecting...' : 'Connect'}
                     </Button>
                 </form>

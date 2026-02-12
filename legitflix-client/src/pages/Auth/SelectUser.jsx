@@ -43,13 +43,12 @@ const SelectUser = () => {
             <div className="auth-container">
                 <div className="auth-logo">
                     {config.logoUrl ? (
-                        <img src={config.logoUrl} alt={config.appName} className="auth-logo-img" />
+                        <img src={config.logoUrl} alt="LegitFlix" className="auth-logo-img" />
                     ) : (
-                        <img src={getDefaultLogo(config.accentColor)} alt={config.appName} className="auth-logo-img" />
+                        <img src={getDefaultLogo(config.accentColor)} alt="LegitFlix" className="auth-logo-img" />
                     )}
                     <p>Who's watching?</p>
                 </div>
-
                 {loading ? (
                     <div className="user-grid">
                         {[1, 2, 3].map((i) => (

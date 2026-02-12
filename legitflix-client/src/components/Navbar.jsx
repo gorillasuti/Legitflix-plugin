@@ -251,7 +251,7 @@ const Navbar = () => {
                                         <div className="dropdown-divider"></div>
                                         <div className="menu-section-label">Preferences</div>
                                         <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/mypreferencesmenu'; }}>
-                                            <span className="material-icons">settings</span> Settings
+                                            <span className="material-icons">settings</span> User Settings
                                         </button>
                                         <button onClick={() => { setShowMenu(false); setShowLegitSettings(true); }}>
                                             <span className="material-icons">palette</span> Theme Settings

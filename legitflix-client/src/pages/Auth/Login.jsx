@@ -92,7 +92,11 @@ const Login = () => {
         <div className="auth-page">
             <div className="auth-container">
                 <div className="auth-logo">
-                    <img src="/default-logo-blue.png" alt="LegitFlix" className="auth-logo-img" />
+                    {config.logoUrl ? (
+                        <img src={config.logoUrl} alt="LegitFlix" className="auth-logo-img" />
+                    ) : (
+                        <img src={getDefaultLogo(config.accentColor)} alt="LegitFlix" className="auth-logo-img" />
+                    )}
                     <p>{isQuickConnect ? 'Quick Connect' : 'Sign In'}</p>
                 </div>
 
@@ -145,7 +149,7 @@ const Login = () => {
                         {error && <div className="auth-error">{error}</div>}
 
                         <div className="auth-btn-group">
-                            <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
+                            <Button type="submit" variant="ringHover" size="lg" disabled={loading} className="w-full">
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
 
