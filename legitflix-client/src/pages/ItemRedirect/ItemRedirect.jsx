@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import jellyfinService from '../../services/jellyfin';
 import Navbar from '../../components/Navbar';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const ItemRedirect = () => {
     const { id } = useParams();
@@ -75,7 +76,10 @@ const ItemRedirect = () => {
                         <p>Redirecting to classic view...</p>
                     </div>
                 ) : (
-                    <h2>Opening content...</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+                        <SkeletonLoader type="rect" width="300px" height="400px" style={{ borderRadius: '12px' }} />
+                        <SkeletonLoader type="text" width="200px" height="24px" />
+                    </div>
                 )}
             </div>
         </div>

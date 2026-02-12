@@ -3,11 +3,11 @@
     "versions": [
         {
             "changelog": "Global UI Polish",
-            "version": "1.0.0.52",
-            "checksum": "0d62d4d5ccec620b93fac4a398f70b9b",
-            "timestamp": "2026-02-12T12:40:33Z",
+            "version": "1.0.0.53",
+            "checksum": "9bb8b24245a3312a33d47a0316a804ce",
+            "timestamp": "2026-02-12T12:56:57Z",
             "targetAbi": "10.11.5.0",
-            "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.52/LegitFlix.Plugin_1.0.0.52.zip"
+            "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.53/LegitFlix.Plugin_1.0.0.53.zip"
         }
     ],
     "overview": "A complete overhaul of the Jellyfin web interface.",

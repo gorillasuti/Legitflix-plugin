@@ -3,9 +3,25 @@
    ============================================ */
 .lf-series-container {
     /* Local specific colors */
+    --clr-accent: #ff6a00;
+    --clr-accent-hover: #FF8C00;
+    --clr-bg-main: #141414;
+    --clr-bg-surface: #1f1f1f;
+    --clr-bg-glass: rgba(255, 255, 255, 0.1);
+    --clr-bg-glass-hover: rgba(255, 255, 255, 0.2);
+    --clr-text-main: #ffffff;
+    --clr-text-muted: #bcbcbc;
+    --clr-divider: rgba(255, 255, 255, 0.1);
     --clr-heart: #e91e63;
     --clr-success: #4caf50;
     --clr-rating-star: #ffc107;
+
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Outfit', sans-serif;
+
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
     --content-padding: 3%;
 
     width: 100%;
@@ -445,7 +461,7 @@
 .lf-section-divider {
     border: none;
     border-top: 1px solid var(--clr-divider);
-    margin: 40px var(--content-padding);
+    margin: 0 var(--content-padding);
 }
 
 .lf-section-header {
@@ -481,7 +497,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
+    padding: 8px 16px;
     background: var(--clr-bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
