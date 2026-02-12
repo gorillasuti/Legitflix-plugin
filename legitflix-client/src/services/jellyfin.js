@@ -314,31 +314,6 @@ class JellyfinService {
         return `${baseUrl}/Items/${item.Id}/Images/${type}?maxWidth=${maxWidth}&quality=${quality}${tag}`;
     }
 
-    async getItemDetails(userId, itemId) {
-        if (!this.api || !this.user) {
-            throw new Error('Jellyfin service not initialized');
-        }
-
-        try {
-            const fields = [
-                'MediaSources',
-                'mo',
-                'Chapters',
-                'MediaStreams',
-                'Trickplay'
-            ];
-
-            const response = await this.api.get(`/Users/${userId}/Items/${itemId}`, {
-                params: {
-                    Fields: fields.join(',')
-                }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching item details:', error);
-            throw error;
-        }
-    }
 
     getPlaybackUrl(itemId) {
         // Returns the internal player route (used with react-router HashRouter)
@@ -346,9 +321,10 @@ class JellyfinService {
     }
 
     getStreamUrl(itemId, audioStreamIndex = null, subtitleStreamIndex = null, mediaSourceId = null, maxBitrate = null) {
-        const token = this.user?.AccessToken;
-        const deviceId = this.deviceInfo.id;
-        const baseUrl = this.config.serverUrl;
+        if (!this.api) this.initialize();
+        const token = this.api.accessToken;
+        const deviceId = this.jellyfin.deviceInfo.id;
+        const baseUrl = this.api.configuration.basePath;
 
         let url = `${baseUrl}/Videos/${itemId}/master.m3u8?PlaySessionId=LegitFlix-${Date.now()}&api_key=${token}&DeviceId=${deviceId}&VideoCodec=h264,hevc,vp9,av1&AudioCodec=aac,mp3,opus,vorbis&TranscodingContainer=ts&TranscodingProtocol=hls`;
 
@@ -364,8 +340,8 @@ class JellyfinService {
             url += `&SubtitleStreamIndex=${subtitleStreamIndex}`;
         }
 
-        if (maxStreamingBitrate) {
-            url += `&VideoBitrate=${maxStreamingBitrate}`;
+        if (maxBitrate) {
+            url += `&VideoBitrate=${maxBitrate}`;
         }
 
         return url;
