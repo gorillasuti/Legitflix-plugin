@@ -1,32 +1,72 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
-import SkeletonLoader from '../../components/SkeletonLoader';
 import { Button } from '@/components/ui/button';
 import './MovieDetail.css';
 import jellyfinService from '../../services/jellyfin';
+// Footer removed as per SeriesDetail changes
 
 const MovieDetail = () => {
     const { id } = useParams();
     const [movie, setMovie] = useState(null);
-    const [similar, setSimilar] = useState([]);
+    const [similars, setSimilars] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubtitleModalOpen, setIsSubtitleModalOpen] = useState(false);
 
+    // UI States
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
+
+    // Preferences
+    const [audioPref, setAudioPref] = useState(localStorage.getItem('legitflix-audio-pref') || 'en');
+    const [subPref, setSubPref] = useState(localStorage.getItem('legitflix-sub-pref') || 'en');
+    const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+
+    // Trailer / Clean View States
+    const [isTrailerPlaying, setIsTrailerPlaying] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const [isCleanView, setIsCleanView] = useState(false);
+    const [showTrailerHelp, setShowTrailerHelp] = useState(false);
+    const [showBlockedModal, setShowBlockedModal] = useState(false);
+    const [trailerKey, setTrailerKey] = useState(null);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [isPlayed, setIsPlayed] = useState(false);
+
+    const dropdownRef = useRef(null); // For generic dropdowns/season if needed, but not used here
+    const langDropdownRef = useRef(null);
+    const trailerHelpTimeout = useRef(null);
+    const cleanViewTimeout = useRef(null);
+    const trailerIframeRef = useRef(null);
+
+    // Initial Data Load
     useEffect(() => {
         const loadData = async () => {
+            setLoading(true);
             try {
                 const user = await jellyfinService.getCurrentUser();
                 if (!user) return;
 
                 // 1. Fetch Movie Details
-                const movieData = await jellyfinService.getItem(user.Id, id);
+                // Use getItemDetails or getItem. Series uses getSeries. Movies use getItem usually or getItemDetails.
+                // SeriesDetail used jellyfinService.getSeries which calls userLibrary.getItem with specific fields.
+                // We'll effectively do the same for Movie.
+                const movieData = await jellyfinService.getItemDetails(user.Id, id);
                 setMovie(movieData);
+                setIsFavorite(movieData.UserData?.IsFavorite || false);
+                setIsPlayed(movieData.UserData?.Played || false);
+
+                // Extract trailer key (if exists)
+                if (movieData.RemoteTrailers && movieData.RemoteTrailers.length > 0) {
+                    const url = movieData.RemoteTrailers[0].Url;
+                    const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                    if (ytMatch && ytMatch[1]) {
+                        setTrailerKey(ytMatch[1]);
+                    }
+                }
 
                 // 2. Fetch Similar Items
                 const similarData = await jellyfinService.getSimilarItems(user.Id, id);
-                setSimilar(similarData.Items || []);
+                setSimilars(similarData.Items || []);
 
             } catch (error) {
                 console.error("Failed to load movie data", error);
@@ -37,67 +77,147 @@ const MovieDetail = () => {
         loadData();
     }, [id]);
 
-    if (loading) {
-        return (
-            <div className="lf-movie-container">
-                <Navbar />
-                <div style={{ position: 'relative', height: '80vh', backgroundColor: '#141414', overflow: 'hidden' }}>
-                    <SkeletonLoader width="100%" height="100%" />
-                    <div className="lf-movie-hero__content">
-                        <div style={{ width: '300px', height: '450px', flexShrink: 0 }}>
-                            <SkeletonLoader width="100%" height="100%" style={{ borderRadius: '12px' }} />
-                        </div>
-                        <div className="lf-movie-hero__info" style={{ marginLeft: '40px', flex: 1 }}>
-                            <SkeletonLoader width="60%" height="60px" style={{ marginBottom: '20px' }} />
-                            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
-                                <SkeletonLoader width="60px" height="24px" />
-                                <SkeletonLoader width="40px" height="24px" />
-                                <SkeletonLoader width="80px" height="24px" />
-                            </div>
-                            <SkeletonLoader width="100%" height="20px" style={{ marginBottom: '10px' }} />
-                            <SkeletonLoader width="90%" height="20px" style={{ marginBottom: '10px' }} />
-                            <SkeletonLoader width="95%" height="20px" style={{ marginBottom: '30px' }} />
-                            <div style={{ display: 'flex', gap: '20px' }}>
-                                <SkeletonLoader width="150px" height="50px" style={{ borderRadius: '30px' }} />
-                                <SkeletonLoader width="150px" height="50px" style={{ borderRadius: '30px' }} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    // Click outside handler for dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
+                setIsLangDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handlePrefChange = (type, value) => {
+        if (type === 'audio') {
+            setAudioPref(value);
+            localStorage.setItem('legitflix-audio-pref', value);
+        } else {
+            setSubPref(value);
+            localStorage.setItem('legitflix-sub-pref', value);
+        }
+        setIsLangDropdownOpen(false);
+    };
+
+    const toggleFavorite = async () => {
+        try {
+            const user = await jellyfinService.getCurrentUser();
+            const newFav = !isFavorite;
+            await jellyfinService.markFavorite(user.Id, movie.Id, newFav);
+            setIsFavorite(newFav);
+        } catch (err) {
+            console.error("Favorite toggle failed", err);
+        }
+    };
+
+    const togglePlayed = async () => {
+        try {
+            const user = await jellyfinService.getCurrentUser();
+            const newPlayed = !isPlayed;
+            await jellyfinService.markPlayed(user.Id, movie.Id, newPlayed);
+            setIsPlayed(newPlayed);
+            // Update local state
+            setMovie(prev => ({ ...prev, UserData: { ...prev.UserData, Played: newPlayed } }));
+        } catch (err) {
+            console.error("Played toggle failed", err);
+        }
+    };
+
+    // Trailer Logic
+    const toggleMute = () => {
+        const newMute = !isMuted;
+        setIsMuted(newMute);
+        const action = newMute ? 'mute' : 'unMute';
+        trailerIframeRef.current?.contentWindow?.postMessage(
+            JSON.stringify({ event: 'command', func: action, args: [] }),
+            '*'
         );
-    }
-    if (!movie) return <div className="lf-movie-container" style={{ color: 'white', padding: '100px', textAlign: 'center' }}>Movie not found</div>;
+    };
+
+    const startCleanViewTimer = () => {
+        if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
+        cleanViewTimeout.current = setTimeout(() => {
+            if (isTrailerPlaying) {
+                setIsCleanView(true);
+            }
+        }, 5000);
+    };
+
+    const resetCleanViewTimer = () => {
+        setIsCleanView(false);
+        if (isTrailerPlaying) {
+            startCleanViewTimer();
+        }
+    };
+
+    const handleWatchTrailer = () => {
+        if (isTrailerPlaying) {
+            handleStopTrailer();
+            return;
+        }
+
+        setIsTrailerPlaying(true);
+        setIsCleanView(false);
+        startCleanViewTimer();
+
+        let receivedMessage = false;
+        const messageHandler = (event) => {
+            if (typeof event.data === 'string' && (event.data.includes('"event"') || event.data.includes('"id"'))) {
+                receivedMessage = true;
+                if (trailerHelpTimeout.current) clearTimeout(trailerHelpTimeout.current);
+            }
+        };
+        window.addEventListener('message', messageHandler);
+        window.lfMessageHandler = messageHandler;
+
+        trailerHelpTimeout.current = setTimeout(() => {
+            if (!receivedMessage && isTrailerPlaying) {
+                console.log('Possible block detected: No YT API message received.');
+                setShowTrailerHelp(true);
+            }
+        }, 4000);
+    };
+
+    const handleStopTrailer = () => {
+        setIsTrailerPlaying(false);
+        setIsCleanView(false);
+        setShowTrailerHelp(false);
+        setShowBlockedModal(false);
+        setIsMuted(false);
+
+        if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
+        if (trailerHelpTimeout.current) clearTimeout(trailerHelpTimeout.current);
+        if (window.lfMessageHandler) {
+            window.removeEventListener('message', window.lfMessageHandler);
+            delete window.lfMessageHandler;
+        }
+    };
+
+    // Clean up on unmount
+    useEffect(() => {
+        return () => {
+            // Check if refs exist before accessing .current (React safety)
+            // But for timeouts it's just ID.
+            if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
+            if (trailerHelpTimeout.current) clearTimeout(trailerHelpTimeout.current);
+            if (window.lfMessageHandler) window.removeEventListener('message', window.lfMessageHandler);
+        };
+    }, []);
+
+    if (loading) return <div className="lf-movie-container" style={{ color: 'white' }}>Loading...</div>;
+    if (!movie) return <div className="lf-movie-container" style={{ color: 'white' }}>Movie not found</div>;
 
     const backdropUrl = jellyfinService.getImageUrl(movie, 'Backdrop');
-    const logoUrl = movie.ImageTags && movie.ImageTags.Logo ? jellyfinService.getImageUrl(movie, 'Logo') : null;
     const posterUrl = jellyfinService.getImageUrl(movie, 'Primary');
+    const logoUrl = jellyfinService.getImageUrl(movie, 'Logo');
 
-    // Cast processing: Take top 15
-    const cast = movie.People ? movie.People.filter(p => p.Type === 'Actor').slice(0, 15) : [];
+    // Cast processing: Take top 10
+    const cast = movie.People ? movie.People.slice(0, 10) : [];
 
-    const handleToggleFavorite = async () => {
-        try {
-            const newStatus = !movie.UserData?.IsFavorite;
-            await jellyfinService.markFavorite(jellyfinService.getCurrentUser().then(u => u.Id), movie.Id, newStatus);
-            setMovie(prev => ({ ...prev, UserData: { ...prev.UserData, IsFavorite: newStatus } }));
-        } catch (error) {
-            console.error("Failed to toggle favorite", error);
-        }
-    };
+    // Dummy options
+    const audioOptions = [{ code: 'en', name: 'English' }, { code: 'ja', name: 'Japanese' }];
+    const subOptions = [{ code: 'en', name: 'English' }, { code: 'es', name: 'Spanish' }, { code: 'hu', name: 'Hungarian' }];
 
-    const handleTogglePlayed = async () => {
-        try {
-            const newStatus = !movie.UserData?.Played;
-            const user = await jellyfinService.getCurrentUser(); // properly await user
-            await jellyfinService.markPlayed(user.Id, movie.Id, newStatus);
-            setMovie(prev => ({ ...prev, UserData: { ...prev.UserData, Played: newStatus } }));
-        } catch (error) {
-            console.error("Failed to toggle played", error);
-        }
-    };
-
-    // Format duration
     const formatDuration = (ticks) => {
         if (!ticks) return '';
         const minutes = Math.floor(ticks / 600000000);
@@ -108,25 +228,58 @@ const MovieDetail = () => {
 
     return (
         <div className="lf-movie-container">
-            <Navbar />
+            <Navbar alwaysFilled={true} />
 
-            {/* HERO SECTION */}
-            <section className="lf-movie-hero" id="lfMovieHero">
-                <div className="lf-movie-hero__backdrop" style={{ backgroundImage: `url('${backdropUrl}')` }}></div>
-                <div className="lf-movie-hero__backdrop" style={{
-                    position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to top, #141414 0%, rgba(20,20,20,0.85) 25%, rgba(20,20,20,0.4) 60%, transparent 100%)',
-                    zIndex: 1
-                }}></div>
+            {/* Hero Section */}
+            <section
+                className={`lf-movie-hero ${isCleanView ? 'is-clean-view' : ''}`}
+                onMouseMove={resetCleanViewTimer}
+                onClick={resetCleanViewTimer}
+            >
+                <div className={`lf-movie-hero__backdrop ${isTrailerPlaying ? 'is-hidden' : ''}`} style={{ backgroundImage: `url('${backdropUrl}')` }}></div>
+
+                {/* Trailer Container */}
+                <div className={`lf-movie-hero__trailer ${isTrailerPlaying ? 'is-playing' : ''}`}>
+                    {isTrailerPlaying && trailerKey && (
+                        <iframe
+                            ref={trailerIframeRef}
+                            src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1&playlist=${trailerKey}&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            allowFullScreen
+                            title="Trailer"
+                        />
+                    )}
+                    {/* Help Button - Always show when playing */}
+                    {isTrailerPlaying && (
+                        <button
+                            className="lf-trailer-help-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowBlockedModal(true);
+                            }}
+                        >
+                            <span className="material-icons">help_outline</span>
+                            <span>Trouble playing?</span>
+                        </button>
+                    )}
+                </div>
+
+                {/* Clean View Logo */}
+                {logoUrl && (
+                    <img
+                        className="lf-movie-hero__logo"
+                        src={logoUrl}
+                        alt={movie.Name}
+                    />
+                )}
 
                 <div className="lf-movie-hero__content">
                     <img className="lf-movie-hero__poster" src={posterUrl} alt={movie.Name} />
 
                     <div className="lf-movie-hero__info">
-                        {logoUrl ?
-                            <img src={logoUrl} alt={movie.Name} className="lf-movie-hero__logo" style={{ opacity: 1, position: 'relative', bottom: 'auto', left: 'auto' }} />
-                            : <h1 className="lf-movie-hero__title">{movie.Name}</h1>
-                        }
+                        <h1 className="lf-movie-hero__title">{movie.Name}</h1>
 
                         <div className="lf-movie-hero__meta">
                             <span>{movie.ProductionYear}</span>
@@ -143,95 +296,163 @@ const MovieDetail = () => {
 
                         <div className="lf-movie-hero__details">
                             <div className="lf-movie-hero__description">
-                                <p className="lf-movie-hero__description-text">{movie.Overview}</p>
-
-                                <div className="lf-movie-hero__cast-info" style={{ marginTop: '20px' }}>
-                                    {cast.length > 0 && (
-                                        <div style={{ marginBottom: 5 }}>
-                                            <strong>Starring: </strong>
-                                            {cast.slice(0, 3).map(p => p.Name).join(', ')}
-                                        </div>
-                                    )}
-                                    {movie.Genres && (
-                                        <div>
-                                            <strong>Genres: </strong>
-                                            {movie.Genres.join(', ')}
-                                        </div>
-                                    )}
-                                </div>
+                                <p className={`lf-movie-hero__description-text ${isDescExpanded ? 'is-expanded' : ''}`}>
+                                    {movie.Overview}
+                                </p>
+                                {movie.Overview && movie.Overview.length > 200 && (
+                                    <button
+                                        className={`lf-movie-hero__load-more ${isDescExpanded ? 'is-expanded' : ''}`}
+                                        onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                    >
+                                        {isDescExpanded ? 'Show Less' : 'Read More'}
+                                        <span className="material-icons">expand_more</span>
+                                    </button>
+                                )}
                             </div>
+
+                            {cast.length > 0 && (
+                                <div className="lf-movie-hero__cast-info">
+                                    <div style={{ marginBottom: 8 }}>
+                                        <strong>Starring: </strong>
+                                        {cast.slice(0, 3).map(p => p.Name).join(', ')}
+                                        {cast.length > 3 && <span>...</span>}
+                                    </div>
+                                    <div>
+                                        <strong>Genres: </strong>
+                                        {movie.Genres ? movie.Genres.join(', ') : ''}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="lf-movie-hero__actions" style={{ marginTop: 20, display: 'flex', gap: '10px' }}>
-                            <Button
-                                variant="ringHover"
-                                size="lg"
-                                className="h-12 px-8 text-lg font-bold rounded-md gap-2"
-                            >
+                        <div className="lf-movie-hero__actions">
+                            <button className="lf-btn lf-btn--primary lf-btn--ring-hover">
                                 <span className="material-icons">play_arrow</span>
-                                Watch Now
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                className="h-12 px-6 text-lg rounded-md gap-2 border-2 bg-white/5 border-white/20 hover:bg-white/10 hover:border-white text-white"
+                                Start Watching
+                            </button>
+                            <button
+                                className="lf-btn lf-btn--glass lf-btn--ring-hover-secondary"
+                                onClick={handleWatchTrailer}
+                                style={!trailerKey ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                             >
-                                <span className="material-icons">theaters</span>
-                                Trailer
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className={`h-12 w-12 rounded-md border-2 bg-white/5 border-white/20 hover:bg-white/10 hover:border-white ${movie.UserData?.IsFavorite ? 'text-primary border-primary' : 'text-white'}`}
-                                onClick={handleToggleFavorite}
+                                <span className="material-icons">{isTrailerPlaying ? 'stop_circle' : 'theaters'}</span>
+                                {isTrailerPlaying ? 'Stop Trailer' : 'Watch Trailer'}
+                            </button>
+                            {isTrailerPlaying && (
+                                <button className={`lf-btn lf-btn--glass lf-btn--icon-only ${isMuted ? 'is-muted' : ''}`} onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                                    <span className="material-icons">{isMuted ? 'volume_off' : 'volume_up'}</span>
+                                </button>
+                            )}
+                            <button
+                                className={`lf-btn lf-btn--glass lf-btn--icon-only ${isFavorite ? 'is-active' : ''}`}
+                                onClick={toggleFavorite}
+                                title="Add to List"
                             >
-                                <span className="material-icons">{movie.UserData?.IsFavorite ? 'favorite' : 'favorite_border'}</span>
-                            </Button>
+                                <span className="material-icons">{isFavorite ? 'bookmark' : 'bookmark_border'}</span>
+                            </button>
+                            <button
+                                className="lf-btn lf-btn--glass lf-btn--icon-only"
+                                onClick={() => setIsSubtitleModalOpen(true)}
+                                title="Edit Subtitles"
+                            >
+                                <span className="material-icons">subtitles</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* PLAYER SECTION (Direct Player Placeholder) */}
+            <hr className="lf-section-divider" />
+
+            {/* PLAYER SECTION (Replaces Episodes) */}
             <div className="lf-content-section" id="lfDirectPlayer">
+                {/* Header for Player Section - similar to Episode Header but simplified */}
                 <div className="lf-section-header">
                     <h2 className="lf-section-title">{movie.Name}</h2>
-                    <div className="lf-filter-controls flex gap-3">
-                        <Button
-                            variant="outline"
-                            className="gap-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                            onClick={() => setIsSubtitleModalOpen(true)}
+
+                    {/* Filter Controls (Audio/Subs and Mark Watched) */}
+                    <div className="lf-filter-controls">
+                        {/* Audio & Subs Dropdown */}
+                        <div className={`lf-filter-dropdown ${isLangDropdownOpen ? 'is-open' : ''}`} ref={langDropdownRef}>
+                            <button
+                                className="lf-filter-btn"
+                                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                                title="Audio & Subtitles"
+                            >
+                                <span className="material-icons">subtitles</span>
+                                <span>Audio & Subs</span>
+                                <span className="material-icons">expand_more</span>
+                            </button>
+                            {/* Dropdown Menu - Simplified for readability here, reusing same structure */}
+                            <div className="lf-filter-dropdown__menu lf-lang-menu">
+                                <div className="lf-lang-section">
+                                    <div className="lf-dropdown-section-title">Audio</div>
+                                    {audioOptions.map(opt => (
+                                        <div
+                                            key={opt.code}
+                                            className={`lf-filter-dropdown__option ${audioPref === opt.code ? 'is-selected' : ''}`}
+                                            onClick={() => handlePrefChange('audio', opt.code)}
+                                        >
+                                            <span>{opt.name}</span>
+                                            {audioPref === opt.code && <span className="material-icons">check</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="lf-lang-separator"></div>
+                                <div className="lf-lang-section">
+                                    <div className="lf-dropdown-section-title">Subtitles</div>
+                                    {subOptions.map(opt => (
+                                        <div
+                                            key={opt.code}
+                                            className={`lf-filter-dropdown__option ${subPref === opt.code ? 'is-selected' : ''}`}
+                                            onClick={() => handlePrefChange('sub', opt.code)}
+                                        >
+                                            <span>{opt.name}</span>
+                                            {subPref === opt.code && <span className="material-icons">check</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="lf-lang-footer">
+                                    <button
+                                        className="lf-edit-subs-btn"
+                                        onClick={() => {
+                                            setIsLangDropdownOpen(false);
+                                            setIsSubtitleModalOpen(true);
+                                        }}
+                                    >
+                                        <span className="material-icons">edit</span>
+                                        <span>Edit Subtitles</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mark Watched Toggle (Replaces Bulk Edit) */}
+                        <button
+                            className="lf-filter-btn"
+                            onClick={togglePlayed}
+                            title={isPlayed ? "Mark as Unwatched" : "Mark as Watched"}
                         >
-                            <span className="material-icons">subtitles</span>
-                            <span>Audio & Subs</span>
-                            <span className="material-icons">expand_more</span>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className={`gap-2 border-white/20 bg-transparent hover:bg-white/10 ${movie.UserData?.Played ? 'text-primary border-primary/50' : 'text-white'}`}
-                            onClick={handleTogglePlayed}
-                        >
-                            <span className="material-icons">{movie.UserData?.Played ? 'check_circle' : 'check_circle_outline'}</span>
-                            <span>{movie.UserData?.Played ? 'Played' : 'Mark Played'}</span>
-                        </Button>
+                            <span className="material-icons">{isPlayed ? 'visibility_off' : 'visibility'}</span>
+                            <span>{isPlayed ? 'Mark Unwatched' : 'Mark Watched'}</span>
+                        </button>
                     </div>
                 </div>
 
-                <div className="lf-player-wrapper">
-                    <div className="lf-player-placeholder">
+                <div className="lf-movie-player-main">
+                    <div className="lf-movie-player-placeholder">
                         <span className="material-icons" style={{ fontSize: '64px', opacity: 0.5 }}>play_circle_outline</span>
-                        <p style={{ marginTop: '10px', fontWeight: 500 }}>Click Play to Start</p>
+                        <p style={{ marginTop: '10px', fontWeight: 500 }}>Click 'Start Watching' to play movie</p>
                     </div>
                 </div>
             </div>
 
-            {/* CAST SECTION */}
+            <hr className="lf-section-divider" />
+
+            {/* Cast & Crew Section */}
             {cast.length > 0 && (
                 <div className="lf-content-section">
-                    <div className="lf-section-divider"></div>
-                    <div className="lf-section-header" style={{ marginTop: 30 }}>
-                        <h2 className="lf-section-title">Cast & Crew</h2>
-                    </div>
+                    <h2 className="lf-section-title">Cast & Crew</h2>
                     <div className="lf-cast-grid">
                         {cast.map(person => (
                             <div key={person.Id || person.Name} className="lf-cast-card">
@@ -249,24 +470,23 @@ const MovieDetail = () => {
                 </div>
             )}
 
-            {/* MORE LIKE THIS SECTION */}
-            {similar.length > 0 && (
-                <div className="lf-content-section">
-                    <div className="lf-section-divider"></div>
-                    <div className="lf-section-header" style={{ marginTop: 30 }}>
-                        <h2 className="lf-section-title">More Like This</h2>
-                    </div>
+            <hr className="lf-section-divider" />
+
+            {/* More Like This Section */}
+            {similars.length > 0 && (
+                <div className="lf-content-section" style={{ marginBottom: 40 }}>
+                    <h2 className="lf-section-title">More Like This</h2>
                     <div className="lf-similar-grid">
-                        {similar.map(item => (
-                            <div key={item.Id} className="lf-similar-card" onClick={() => window.location.href = `/movie/${item.Id}`}>
+                        {similars.map(item => (
+                            <Link to={`/movie/${item.Id}`} key={item.Id} className="lf-similar-card">
                                 <img
+                                    className="lf-similar-card__poster"
                                     src={jellyfinService.getImageUrl(item, 'Primary')}
                                     alt={item.Name}
-                                    className="lf-similar-card__poster"
                                     loading="lazy"
                                 />
                                 <div className="lf-similar-card__title">{item.Name}</div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -275,11 +495,31 @@ const MovieDetail = () => {
             <SubtitleModal
                 isOpen={isSubtitleModalOpen}
                 onClose={() => setIsSubtitleModalOpen(false)}
-                seriesId={movie.Id}
-                initialSeasonId={null} // Movies don't have seasons/episodes in the same way
-                initialEpisodeId={movie.Id} // For movies, element ID is the playable item
+                seriesId={movie ? movie.Id : ''}
+                initialSeasonId={null}
+                initialEpisodeId={movie ? movie.Id : ''}
                 isMovie={true}
             />
+
+            {/* Blocked Modal */}
+            {showBlockedModal && (
+                <div className="lf-blocked-modal-overlay">
+                    <div className="lf-blocked-modal">
+                        <span className="material-icons lf-blocked-icon">block</span>
+                        <h3>Content blocked by browser</h3>
+                        <p>The trailer cannot be played because your browser blocked it. This usually happens due to tracking protection or ad blockers affecting the YouTube player.</p>
+                        <button
+                            className="lf-btn lf-btn--primary"
+                            onClick={() => {
+                                setShowBlockedModal(false);
+                                handleStopTrailer();
+                            }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

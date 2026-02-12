@@ -68,12 +68,36 @@ const SeriesDetail = () => {
 
                 // 2. Fetch Seasons
                 const seasonsData = await jellyfinService.getSeasons(user.Id, id);
+                let defaultSeasonId = null;
+
                 if (seasonsData.Items && seasonsData.Items.length > 0) {
                     setSeasons(seasonsData.Items);
-                    setSelectedSeasonId(seasonsData.Items[0].Id);
+                    defaultSeasonId = seasonsData.Items[0].Id;
                 }
 
-                // 3. Fetch Similar Items
+                // 3. Smart Season Logic (Check Next Up)
+                try {
+                    const nextUpData = await jellyfinService.getNextUp(user.Id, id);
+                    if (nextUpData && nextUpData.Items && nextUpData.Items.length > 0) {
+                        const nextUpEp = nextUpData.Items[0];
+                        // If we have Next Up, try to find its season in our list
+                        // Note: NextUp item usually has SeasonId
+                        if (nextUpEp.SeasonId) {
+                            const seasonExists = seasonsData.Items.find(s => s.Id === nextUpEp.SeasonId);
+                            if (seasonExists) {
+                                defaultSeasonId = nextUpEp.SeasonId;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Failed to fetch Next Up for smart season selection", e);
+                }
+
+                if (defaultSeasonId) {
+                    setSelectedSeasonId(defaultSeasonId);
+                }
+
+                // 4. Fetch Similar Items
                 const similarData = await jellyfinService.getSimilarItems(user.Id, id);
                 setSimilars(similarData.Items || []);
 
@@ -146,10 +170,20 @@ const SeriesDetail = () => {
         // Refresh episodes to show new status
         await loadEpisodes();
 
-        // Exit selection mode or clear selection? Let's just clear selection
+        // Clear selection
         setSelectedEpisodes([]);
-        // Optional: Exit mode?
-        // setIsSelectionMode(false);
+    };
+
+    const handleSelectAll = () => {
+        // If all currently visible episodes are selected, deselect all. Otherwise, select all.
+        const allEpisodeIds = episodes.map(ep => ep.Id);
+        const allSelected = allEpisodeIds.every(id => selectedEpisodes.includes(id));
+
+        if (allSelected) {
+            setSelectedEpisodes([]);
+        } else {
+            setSelectedEpisodes(allEpisodeIds);
+        }
     };
 
     const handlePrefChange = (type, value) => {
@@ -210,6 +244,7 @@ const SeriesDetail = () => {
         }
 
         setIsTrailerPlaying(true);
+        setIsCleanView(false); // Reset clean view start state
         startCleanViewTimer();
 
         // YouTube Blocking Detection
@@ -225,6 +260,7 @@ const SeriesDetail = () => {
         // Store handler to remove later if needed (though we rely on state reset)
         window.lfMessageHandler = messageHandler;
 
+        // Auto-show help if no message received (but we now always show the button too)
         trailerHelpTimeout.current = setTimeout(() => {
             if (!receivedMessage && isTrailerPlaying) {
                 console.log('Possible block detected: No YT API message received.');
@@ -240,8 +276,14 @@ const SeriesDetail = () => {
         setShowBlockedModal(false);
         setIsMuted(false); // Reset mute on stop
 
-        if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
-        if (trailerHelpTimeout.current) clearTimeout(trailerHelpTimeout.current);
+        if (cleanViewTimeout.current) {
+            clearTimeout(cleanViewTimeout.current);
+            cleanViewTimeout.current = null;
+        }
+        if (trailerHelpTimeout.current) {
+            clearTimeout(trailerHelpTimeout.current);
+            trailerHelpTimeout.current = null;
+        }
 
         if (window.lfMessageHandler) {
             window.removeEventListener('message', window.lfMessageHandler);
@@ -333,12 +375,8 @@ const SeriesDetail = () => {
                             title="Trailer"
                         />
                     )}
+                    {/* Help Button - Always show when playing */}
                     {isTrailerPlaying && (
-                        <button className={`lf-mute-btn ${isMuted ? 'is-muted' : ''}`} onClick={toggleMute}>
-                            <span className="material-icons">{isMuted ? 'volume_off' : 'volume_up'}</span>
-                        </button>
-                    )}
-                    {showTrailerHelp && (
                         <button
                             className="lf-trailer-help-btn"
                             onClick={(e) => {
@@ -415,13 +453,18 @@ const SeriesDetail = () => {
                                 Start Watching S1 E1
                             </button>
                             <button
-                                className="lf-btn lf-btn--glass lf-btn--ring-hover"
+                                className="lf-btn lf-btn--glass lf-btn--ring-hover-secondary"
                                 onClick={handleWatchTrailer}
                                 style={!trailerKey ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                             >
                                 <span className="material-icons">{isTrailerPlaying ? 'stop_circle' : 'theaters'}</span>
                                 {isTrailerPlaying ? 'Stop Trailer' : 'Watch Trailer'}
                             </button>
+                            {isTrailerPlaying && (
+                                <button className={`lf-btn lf-btn--glass lf-btn--icon-only ${isMuted ? 'is-muted' : ''}`} onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                                    <span className="material-icons">{isMuted ? 'volume_off' : 'volume_up'}</span>
+                                </button>
+                            )}
                             <button
                                 className={`lf-btn lf-btn--glass lf-btn--icon-only ${isFavorite ? 'is-active' : ''}`}
                                 onClick={toggleFavorite}
@@ -531,11 +574,19 @@ const SeriesDetail = () => {
                         {isSelectionMode ? (
                             <>
                                 <button
-                                    className="lf-btn lf-btn--primary lf-btn--ring-hover lf-btn--sm"
+                                    className="lf-edit-subs-btn"
+                                    style={{ width: 'auto', padding: '8px 16px' }}
                                     onClick={() => markSelectedPlayed(smartBtn.isPlayed)}
                                 >
                                     <span className="material-icons">{smartBtn.icon}</span>
                                     <span>{smartBtn.label}</span>
+                                </button>
+                                <button
+                                    className="lf-filter-btn"
+                                    onClick={handleSelectAll}
+                                >
+                                    <span className="material-icons">select_all</span>
+                                    <span>{episodes.length > 0 && episodes.every(e => selectedEpisodes.includes(e.Id)) ? 'Deselect All' : 'Select All'}</span>
                                 </button>
                                 <button className="lf-filter-btn is-active" onClick={toggleSelectionMode} title="Cancel">
                                     <span className="material-icons">close</span>
