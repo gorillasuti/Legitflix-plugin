@@ -163,7 +163,7 @@ const Player = () => {
                 // Set default/selected sub
                 const defaultSub = subs.find(s => s.Index === source.DefaultSubtitleStreamIndex);
                 if (defaultSub) setSelectedSubtitleIndex(defaultSub.Index);
-                else setSelectedSubtitleIndex(null);
+                else setSelectedSubtitleIndex(-1); // Explicitly set to -1 for "Off" to distinguish from null (loading)
             }
 
             // --- Season/Episode Fetching ---
@@ -390,7 +390,7 @@ const Player = () => {
             video.textTracks[i].mode = 'disabled';
         }
 
-        if (selectedSubtitleIndex === null || !item?.Id || !mediaSourceId) {
+        if (selectedSubtitleIndex === null || selectedSubtitleIndex === -1 || !item?.Id || !mediaSourceId) {
             console.log('[Subtitles] Subtitles off');
             return;
         }
@@ -748,6 +748,9 @@ const Player = () => {
                 } else {
                     setShowSkipIntro(false);
                 }
+            } else if (introStart === null && introEnd === null && !item?.Chapters) {
+                // Fallback if no chapters but we want to confirm no intro
+                setShowSkipIntro(false);
             }
 
             // Chapter-based Intro/Outro detection
@@ -773,8 +776,8 @@ const Player = () => {
     };
 
     const handleSkipIntro = () => {
-        if (videoRef.current && introEnd) {
-            videoRef.current.currentTime = introEnd;
+        if (videoRef.current && skipTargetTime) {
+            videoRef.current.currentTime = skipTargetTime;
             flashCenterIcon('fast_forward');
             setShowSkipIntro(false);
         }
@@ -887,11 +890,16 @@ const Player = () => {
                     <video
                         ref={videoRef}
                         className="lf-player-video"
+                        playsInline
+                        autoPlay={autoPlay}
+                        muted={isMuted}
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={handleLoadedMetadata}
                         onEnded={handleEnded}
                         onWaiting={() => setIsLoading(true)}
                         onCanPlay={() => setIsLoading(false)}
+                        onClick={handleVideoClick}
+                        onDoubleClick={handleDoubleClick}
                         crossOrigin="anonymous"
                     />
 
