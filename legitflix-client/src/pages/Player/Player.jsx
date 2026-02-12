@@ -21,12 +21,13 @@ const Player = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [buffered, setBuffered] = useState(0);
-    const [isWindowed, setIsWindowed] = useState(true); // Default to windowed
 
     // Data State
     const [item, setItem] = useState(null);
     const [playbackUrl, setPlaybackUrl] = useState(null);
     const [centerIcon, setCenterIcon] = useState(null);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
 
     // Trickplay (BIF) State
     const [trickplayImages, setTrickplayImages] = useState(null);
@@ -57,9 +58,17 @@ const Player = () => {
                 const itemData = await jellyfinService.getItem(user.Id, id);
                 setItem(itemData);
 
-                // If it's an episode, fetch seasons
+                // If it's an episode, fetch seasons & series info for watchlist
                 if (itemData.Type === 'Episode' && itemData.SeriesId) {
                     loadSeasons(user.Id, itemData.SeriesId, itemData.SeasonId);
+
+                    // Fetch Series to get Favorite status
+                    try {
+                        const sData = await jellyfinService.getItem(user.Id, itemData.SeriesId);
+                        setIsFavorite(sData.UserData?.IsFavorite || false);
+                    } catch (err) {
+                        console.warn("Failed to fetch series data for favorite status", err);
+                    }
                 }
 
                 // Get Stream URL
@@ -338,19 +347,6 @@ const Player = () => {
         navigate(-1);
     };
 
-    const toggleWindowedMode = () => {
-        if (!isWindowed) {
-            // We are currently in Fullscreen (via our state), so we want to go to Windowed.
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(err => console.warn(err));
-            }
-            setIsWindowed(true);
-        } else {
-            // Go to "Cinema Mode" (our fullscreen state)
-            setIsWindowed(false);
-        }
-    };
-
     const toggleFullscreen = () => {
         // Toggle browser fullscreen on the specific container
         if (!containerRef.current) return;
@@ -359,10 +355,8 @@ const Player = () => {
             containerRef.current.requestFullscreen().catch(err => {
                 console.error(`Error attempting to enable full-screen mode: ${err.message}`);
             });
-            setIsWindowed(false);
         } else {
             document.exitFullscreen();
-            setIsWindowed(true);
         }
     };
 
@@ -396,6 +390,18 @@ const Player = () => {
         navigate(`/play/${epId}`);
     };
 
+    const toggleFavorite = async () => {
+        if (!item || !item.SeriesId) return;
+        try {
+            const user = await jellyfinService.getCurrentUser();
+            const newFav = !isFavorite;
+            await jellyfinService.markFavorite(user.Id, item.SeriesId, newFav);
+            setIsFavorite(newFav);
+        } catch (err) {
+            console.error("Favorite toggle failed", err);
+        }
+    };
+
 
     // --- 7. Format Helpers ---
     const formatTime = (seconds) => {
@@ -414,17 +420,16 @@ const Player = () => {
     const bufferedPct = duration ? (buffered / duration) * 100 : 0;
 
     return (
-        <div className={`lf-player-page ${!isWindowed ? 'is-fullscreen-mode' : ''}`}>
-            {/* Navbar is only visible in Windowed Mode */}
-            {isWindowed && <Navbar alwaysFilled={true} />}
+        <div className="lf-player-page">
+            <Navbar alwaysFilled={true} />
 
+            {/* --- Main Video Container (Use Ref for Fullscreen) --- */}
             <div
                 ref={containerRef}
-                className={`lf-player-container ${!isWindowed ? 'active-fullscreen' : ''}`}
+                className={`lf-player-video-container ${document.fullscreenElement ? 'is-fullscreen' : ''}`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => isPlaying && setShowControls(false)}
             >
-                {/* --- Main Player Area --- */}
                 <div className="lf-player-video-wrapper">
                     <video
                         ref={videoRef}
@@ -571,11 +576,6 @@ const Player = () => {
                                 </div>
 
                                 <div className="controls-right">
-                                    <button className="icon-btn" onClick={toggleWindowedMode} title={isWindowed ? "Cinema Mode" : "Windowed Mode"}>
-                                        <span className="material-icons">
-                                            {isWindowed ? 'crop_16_9' : 'picture_in_picture_alt'}
-                                        </span>
-                                    </button>
                                     <button className="icon-btn" onClick={toggleFullscreen} title="Fullscreen">
                                         <span className="material-icons">
                                             {document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen'}
@@ -586,70 +586,115 @@ const Player = () => {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Sidebar for Windowed Mode (Visible ONLY if Windowed) */}
-                {isWindowed && item && item.Type === 'Episode' && (
-                    <div className="lf-player-sidebar">
-                        <div className="lf-player-sidebar-content">
-                            {/* Metadata Section */}
-                            <div className="lf-player-meta">
-                                <h2 className="lf-player-meta-title">{item.SeriesName}</h2>
-                                <h3 className="lf-player-meta-subtitle">{item.Name}</h3>
-                                <div className="lf-player-meta-info">
-                                    <span>S{item.ParentIndexNumber} E{item.IndexNumber}</span>
-                                    {item.ProductionYear && <><span className="meta-divider">•</span><span>{item.ProductionYear}</span></>}
+            {/* --- Content Below Player --- */}
+            {item && item.Type === 'Episode' && (
+                <div className="lf-player-content-container">
+
+                    {/* Left Column: Metadata */}
+                    <div className="lf-player-column-left">
+                        <div className="lf-player-header-row">
+                            <div className="lf-player-title-block">
+                                <h4
+                                    className="lf-series-link"
+                                    onClick={() => navigate(`/series/${item.SeriesId}`)}
+                                >
+                                    {item.SeriesName}
+                                </h4>
+                                <h1 className="lf-episode-name">
+                                    E{item.IndexNumber} - {item.Name}
+                                </h1>
+                            </div>
+                            <div className="lf-player-actions">
+                                <button
+                                    className={`lf-action-btn ${isFavorite ? 'is-active' : ''}`}
+                                    onClick={toggleFavorite}
+                                    title={isFavorite ? "Remove from Watchlist" : "Add to Watchlist"}
+                                >
+                                    <span className="material-icons">
+                                        {isFavorite ? 'bookmark' : 'bookmark_border'}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="lf-player-tags-row">
+                            {item.OfficialRating && (
+                                <span className="lf-tag-rating">{item.OfficialRating}</span>
+                            )}
+                            <span className="lf-tag-text">Sub | Dub</span>
+                            {item.PremiereDate && (
+                                <span className="lf-release-date">
+                                    Released on {new Date(item.PremiereDate).toLocaleDateString()}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="lf-player-description-block">
+                            <p className={`lf-description-text ${isDescExpanded ? 'is-expanded' : ''}`}>
+                                {item.Overview}
+                            </p>
+                            {item.Overview && item.Overview.length > 200 && (
+                                <button
+                                    className="lf-expand-btn"
+                                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                >
+                                    {isDescExpanded ? 'Show Less' : 'Show More'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Column: Episodes */}
+                    <div className="lf-player-column-right">
+                        <div className="lf-player-episodes-panel">
+                            <div className="lf-episodes-panel-header">
+                                <span className="lf-panel-title">Episodes</span>
+                                <div className="season-select-wrapper">
+                                    <select
+                                        className="lf-season-dropdown"
+                                        value={currentSeasonId || ''}
+                                        onChange={(e) => handleSeasonChange(e.target.value)}
+                                    >
+                                        {seasons.map(s => <option key={s.Id} value={s.Id}>{s.Name}</option>)}
+                                    </select>
+                                    <span className="material-icons dropdown-icon">expand_more</span>
                                 </div>
-                                <p className="lf-player-meta-desc">{item.Overview}</p>
                             </div>
 
-                            {/* Episode List Section */}
-                            <div className="lf-player-episodes">
-                                <div className="lf-episodes-header">
-                                    <h4 className="section-title">Episodes</h4>
-                                    <div className="season-select-container">
-                                        <select
-                                            className="lf-season-select"
-                                            value={currentSeasonId || ''}
-                                            onChange={(e) => handleSeasonChange(e.target.value)}
+                            <div className="lf-episodes-grid">
+                                {episodesLoading ? (
+                                    <div className="loading-txt">Loading...</div>
+                                ) : (
+                                    episodes.map(ep => (
+                                        <div
+                                            key={ep.Id}
+                                            className={`lf-episode-card-small ${ep.Id === item.Id ? 'current' : ''}`}
+                                            onClick={() => handleEpisodeClick(ep.Id)}
                                         >
-                                            {seasons.map(s => <option key={s.Id} value={s.Id}>{s.Name}</option>)}
-                                        </select>
-                                        <span className="material-icons select-arrow">expand_more</span>
-                                    </div>
-                                </div>
-
-                                <div className="lf-episodes-list">
-                                    {episodesLoading ? (
-                                        <div className="loading-txt">Loading...</div>
-                                    ) : (
-                                        episodes.map(ep => (
-                                            <div
-                                                key={ep.Id}
-                                                className={`lf-episode-item ${ep.Id === item.Id ? 'current' : ''}`}
-                                                onClick={() => handleEpisodeClick(ep.Id)}
-                                            >
-                                                <div className="ep-img-container">
-                                                    <img
-                                                        src={jellyfinService.getImageUrl(ep, 'Primary', { maxWidth: 300 })}
-                                                        alt={ep.Name}
-                                                        onError={(e) => e.target.style.display = 'none'}
-                                                    />
-                                                    {ep.UserData?.Played && <div className="ep-watched-overlay"><span className="material-icons">check</span></div>}
-                                                    {ep.Id === item.Id && <div className="ep-playing-overlay"><span className="material-icons">play_circle</span></div>}
-                                                </div>
-                                                <div className="ep-info">
-                                                    <div className="ep-number">E{ep.IndexNumber}</div>
-                                                    <div className="ep-title">{ep.Name}</div>
-                                                </div>
+                                            <div className="ep-card-img">
+                                                <img
+                                                    src={jellyfinService.getImageUrl(ep, 'Primary', { maxWidth: 300 })}
+                                                    alt={ep.Name}
+                                                    onError={(e) => e.target.style.display = 'none'}
+                                                />
+                                                {ep.Id === item.Id && <div className="ep-playing-overlay"><span className="material-icons">play_circle</span></div>}
                                             </div>
-                                        ))
-                                    )}
-                                </div>
+                                            <div className="ep-card-info">
+                                                <div className="ep-card-title">
+                                                    <span className="ep-prefix">E{ep.IndexNumber}</span> - {ep.Name}
+                                                </div>
+                                                <div className="ep-card-meta">Sub | Dub</div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 };

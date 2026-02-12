@@ -4,11 +4,11 @@
 
 /* Page Wrapper */
 .lf-player-page {
-    background-color: #000;
-    /* Deep dark background */
+    background-color: #141414;
+    /* Standard Dark Background */
     min-height: 100vh;
-    padding-top: 60px;
-    /* Space for fixed Navbar */
+    padding-top: 64px;
+    /* Space for Navbar */
     display: flex;
     flex-direction: column;
     font-family: var(--font-primary, 'Inter', sans-serif);
@@ -16,67 +16,33 @@
     overflow-x: hidden;
 }
 
-/* Remove padding when fullscreen mode (hide navbar space) */
-.lf-player-page.is-fullscreen-mode {
-    padding-top: 0;
-    overflow: hidden;
-    /* Prevent scrolling in fullscreen */
-}
-
 /* ============================================
-   PLAYER CONTAINER
+   VIDEO SECTION (Full Width, 85vh)
    ============================================ */
-
-.lf-player-container {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    /* Default: Side-by-side */
+.lf-player-video-container {
     width: 100%;
-    max-width: 1600px;
-    /* Constrain width on large screens */
-    margin: 0 auto;
-    position: relative;
+    height: 85vh;
     background: #000;
+    position: relative;
+    z-index: 10;
 }
 
-/* Fullscreen Override */
-.lf-player-container.active-fullscreen {
+.lf-player-video-container.is-fullscreen {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 99999;
-    max-width: none;
-    margin: 0;
-    background: #000;
+    z-index: 9999;
 }
-
-/* ============================================
-   VIDEO WRAPPER (The actual player)
-   ============================================ */
 
 .lf-player-video-wrapper {
-    flex: 1;
-    /* Take remaining space */
-    position: relative;
-    background: #000;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    /* In windowed mode, we might want to respect aspect ratio or height */
-    min-height: 480px;
-    max-height: 85vh;
-    /* Don't be taller than viewport */
-    aspect-ratio: 16/9;
-}
-
-.active-fullscreen .lf-player-video-wrapper {
     width: 100%;
     height: 100%;
-    max-height: none;
-    aspect-ratio: auto;
-    /* Fill screen */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
 }
 
 .lf-player-video {
@@ -84,6 +50,7 @@
     height: 100%;
     object-fit: contain;
 }
+
 
 /* ============================================
    CONTROLS & OVERLAYS
@@ -167,6 +134,12 @@
     animation: lf-spin 1s linear infinite;
 }
 
+@keyframes lf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Error */
 .lf-player-error {
     position: absolute;
@@ -230,22 +203,24 @@
 
 .player-title {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .series-title {
     font-size: 1.1rem;
     font-weight: 700;
-    line-height: 1.2;
+    color: #ff6a00;
 }
 
 .episode-title {
-    font-size: 0.9rem;
-    color: #ddd;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #fff;
 }
 
 .divider {
-    margin: 0 6px;
     color: #aaa;
 }
 
@@ -253,7 +228,7 @@
 .lf-player-controls-bottom {
     display: flex;
     flex-direction: column;
-    padding: 0 20px 20px;
+    padding: 0 24px 24px;
     gap: 10px;
 }
 
@@ -261,11 +236,9 @@
 .lf-player-timeline-container {
     position: relative;
     height: 20px;
-    /* hover area height */
     display: flex;
     align-items: center;
     cursor: pointer;
-    group: hover;
 }
 
 .lf-player-timeline-track {
@@ -327,12 +300,15 @@
 /* Tooltip & Thumbnail */
 .lf-timeline-tooltip {
     position: absolute;
-    bottom: 25px;
+    bottom: 30px;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
     pointer-events: none;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 4px;
+    border-radius: 4px;
 }
 
 .lf-timeline-thumbnail {
@@ -341,19 +317,17 @@
     background-color: #000;
     background-size: cover;
     background-position: center;
-    border: 2px solid #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 4px;
-    margin-bottom: 6px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    margin-bottom: 4px;
 }
 
 .lf-timeline-time {
     font-size: 0.8rem;
     font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
 }
 
-/* Controls Row (Buttons) */
+/* Controls Row */
 .lf-player-controls-row {
     display: flex;
     justify-content: space-between;
@@ -364,7 +338,7 @@
 .controls-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .icon-btn {
@@ -385,12 +359,13 @@
 }
 
 .icon-btn.back-btn {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .icon-btn.back-btn:hover {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.8);
 }
+
 
 /* Volume Slider */
 .volume-container {
@@ -429,264 +404,326 @@
 }
 
 .time-display {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-variant-numeric: tabular-nums;
-    margin-left: 8px;
-    opacity: 0.9;
+    font-weight: 500;
 }
+
 
 /* ============================================
-   SIDEBAR (RIGHT PANEL)
+   CONTENT SECTION (Below Video)
    ============================================ */
-.lf-player-sidebar {
-    width: 380px;
-    background: #121212;
-    border-left: 1px solid #1f1f1f;
+
+.lf-player-content-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+}
+
+/* --- Left Column: Metadata --- */
+.lf-player-column-left {
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
-    /* In windowed mode, sidebar matches height of video roughly 
-       or grows if video is shorter. */
 }
 
-.lf-player-sidebar-content {
+.lf-player-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.lf-player-title-block {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden;
+    gap: 4px;
 }
 
-/* Metadata */
-.lf-player-meta {
-    padding: 20px;
-    background: #181818;
-    border-bottom: 1px solid #222;
-    flex-shrink: 0;
+.lf-series-link {
+    color: var(--clr-accent, #ff6a00);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+    transition: color 0.2s;
 }
 
-.lf-player-meta-title {
-    font-size: 0.85rem;
-    color: #ff6a00;
-    text-transform: uppercase;
-    font-weight: 600;
-    margin: 0 0 6px 0;
-    letter-spacing: 0.5px;
+.lf-series-link:hover {
+    color: #fff;
 }
 
-.lf-player-meta-subtitle {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0 0 8px 0;
+.lf-episode-name {
+    font-size: 1.5rem;
+    font-weight: 400;
+    /* Regular weight like crunchyroll */
+    margin: 0;
     line-height: 1.3;
 }
 
-.lf-player-meta-info {
-    font-size: 0.8rem;
-    color: #999;
+.lf-player-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 12px;
 }
 
-.meta-divider {
-    font-size: 0.6rem;
-    opacity: 0.5;
+.lf-action-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
 }
 
-.lf-player-meta-desc {
-    font-size: 0.9rem;
+.lf-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.lf-action-btn.is-active {
+    color: var(--clr-accent, #ff6a00);
+}
+
+.lf-action-btn .material-icons {
+    font-size: 24px;
+}
+
+/* Tags Row */
+.lf-player-tags-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    color: #a0a0a0;
+    font-size: 0.85rem;
+}
+
+.lf-tag-rating {
+    display: flex;
+    align-items: center;
+}
+
+/* Description */
+.lf-player-description-block {
+    border-top: 1px solid #333;
+    padding-top: 20px;
+}
+
+.lf-description-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
     color: #ccc;
-    line-height: 1.5;
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 3;
-    line-clamp: 3;
-    /* Limit description lines */
     -webkit-box-orient: vertical;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
-/* Episodes List */
-.lf-player-episodes {
-    flex: 1;
+.lf-description-text.is-expanded {
+    -webkit-line-clamp: unset;
+}
+
+.lf-expand-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.lf-expand-btn:hover {
+    color: var(--clr-accent, #ff6a00);
+}
+
+
+/* --- Right Column: Episodes --- */
+.lf-player-column-right {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
-.lf-episodes-header {
-    padding: 16px 20px;
+.lf-player-episodes-panel {
+    background: #1f1f1f;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 600px;
+    /* Constrain height */
+}
+
+.lf-episodes-panel-header {
+    background: #2b2b2b;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #141414;
-    border-bottom: 1px solid #222;
 }
 
-.section-title {
-    font-size: 0.95rem;
+.lf-panel-title {
     font-weight: 600;
-    margin: 0;
+    font-size: 1rem;
 }
 
-.season-select-container {
+.season-select-wrapper {
     position: relative;
-    max-width: 180px;
+    width: 60%;
 }
 
-.lf-season-select {
-    appearance: none;
-    background: #252525;
-    border: 1px solid #333;
-    color: #eee;
-    padding: 6px 28px 6px 12px;
-    border-radius: 4px;
-    font-size: 0.85rem;
+.lf-season-dropdown {
     width: 100%;
+    background: #141414;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 8px 30px 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    appearance: none;
     cursor: pointer;
-    font-family: inherit;
-    text-overflow: ellipsis;
+    outline: none;
 }
 
-.lf-season-select:hover {
+.lf-season-dropdown:hover {
     border-color: #555;
 }
 
-.select-arrow {
+.dropdown-icon {
     position: absolute;
-    right: 6px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 18px;
-    color: #999;
     pointer-events: none;
+    font-size: 20px;
+    color: #aaa;
 }
 
-/* List */
-.lf-episodes-list {
+
+/* Episodes Grid (or List) */
+.lf-episodes-grid {
     flex: 1;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #333 #121212;
-}
-
-.lf-episode-item {
+    padding: 12px;
     display: flex;
-    gap: 12px;
-    padding: 12px 20px;
-    border-bottom: 1px solid #1d1d1d;
-    cursor: pointer;
-    transition: background 0.2s;
+    flex-direction: column;
+    gap: 8px;
+    /* Custom Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #444 #1f1f1f;
 }
 
-.lf-episode-item:hover {
+.lf-episodes-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lf-episodes-grid::-webkit-scrollbar-track {
     background: #1f1f1f;
 }
 
-.lf-episode-item.current {
-    background: rgba(255, 106, 0, 0.08);
-    position: relative;
+.lf-episodes-grid::-webkit-scrollbar-thumb {
+    background-color: #444;
+    border-radius: 3px;
 }
 
-.lf-episode-item.current::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--clr-accent, #ff6a00);
+
+.lf-episode-card-small {
+    display: flex;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+    background: rgba(255, 255, 255, 0.02);
 }
 
-.ep-img-container {
-    width: 100px;
+.lf-episode-card-small:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.lf-episode-card-small.current {
+    background: rgba(255, 106, 0, 0.15);
+    border-left: 3px solid var(--clr-accent, #ff6a00);
+}
+
+.ep-card-img {
+    width: 120px;
     aspect-ratio: 16/9;
-    background: #222;
+    background: #111;
     border-radius: 4px;
     overflow: hidden;
     position: relative;
     flex-shrink: 0;
 }
 
-.ep-img-container img {
+.ep-card-img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.ep-watched-overlay {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    background: rgba(0, 0, 0, 0.7);
-    color: var(--clr-accent, #ff6a00);
-    border-radius: 50%;
-    padding: 2px;
-    display: flex;
-}
-
-.ep-watched-overlay .material-icons {
-    font-size: 14px;
-}
-
 .ep-playing-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
 }
 
-.ep-info {
+.ep-card-info {
     flex: 1;
-    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-width: 0;
 }
 
-.ep-number {
-    font-size: 0.75rem;
-    color: #888;
-    margin-bottom: 2px;
-}
-
-.ep-title {
+.ep-card-title {
     font-size: 0.9rem;
     font-weight: 500;
     line-height: 1.3;
+    margin-bottom: 4px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.loading-txt {
-    padding: 20px;
-    text-align: center;
-    color: #666;
+.ep-prefix {
+    color: #aaa;
+    margin-right: 4px;
+    font-size: 0.85rem;
 }
 
+.ep-card-meta {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+
 /* Responsive */
-@media (max-width: 1100px) {
-    .lf-player-container {
-        flex-direction: column;
+@media (max-width: 1024px) {
+    .lf-player-content-container {
+        grid-template-columns: 1fr;
+        /* Stack */
     }
 
-    .lf-player-video-wrapper {
-        min-height: auto;
-        /* maintain aspect ratio or just fill width */
-    }
-
-    .lf-player-sidebar {
-        width: 100%;
-        border-left: none;
-        border-top: 1px solid #222;
-        max-height: 500px;
-        /* Constrain height when stacked */
+    .lf-player-video-container {
+        height: 56.25vw;
+        /* 16:9 Aspect Ratio on mobile/tablets instead of 85vh */
+        max-height: 85vh;
     }
 }
