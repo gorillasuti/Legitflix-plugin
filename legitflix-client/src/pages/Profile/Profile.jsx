@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import Navbar from '../../components/Navbar';
 import BannerPickerModal from '../../components/BannerPickerModal';
+import AvatarPickerModal from '../../components/AvatarPickerModal';
 import LegitFlixSettingsModal from '../../components/LegitFlixSettingsModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import './Profile.css';
@@ -24,6 +25,7 @@ const Profile = () => {
     const [activeTab, setActiveTab] = useState('details');
     const [bannerUrl, setBannerUrl] = useState('');
     const [showBannerPicker, setShowBannerPicker] = useState(false);
+    const [showAvatarPicker, setShowAvatarPicker] = useState(false);
     const [showLegitSettings, setShowLegitSettings] = useState(false);
 
     // Password state
@@ -93,6 +95,24 @@ const Profile = () => {
         }
     };
 
+    const handleAvatarSave = async (file) => {
+        if (!file || !user) return;
+        try {
+            await jellyfinService.uploadUserImage(user.Id, 'Primary', file);
+
+            // Force update avatar
+            setUser(prev => ({ ...prev, PrimaryImageTag: Date.now().toString() })); // Hack to refresh image
+
+            // Ideally reload user to get new Tag
+            const u = await jellyfinService.getCurrentUser();
+            if (u) setUser(u);
+
+            setShowAvatarPicker(false);
+        } catch (e) {
+            console.error("Failed to upload avatar", e);
+        }
+    };
+
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
         setPwMsg(null);
@@ -139,9 +159,8 @@ const Profile = () => {
         );
     };
 
-    const handleLogout = () => {
-        navigate('/');
-        window.location.reload();
+    const handleLogout = async () => {
+        await jellyfinService.logout();
     };
 
     if (!user) {
@@ -597,7 +616,7 @@ const Profile = () => {
                     >
                         {!avatarUrl && <span className="material-icons avatar-placeholder">person</span>}
                     </div>
-                    <div className="avatar-edit-badge" title="Change avatar via Jellyfin Dashboard">
+                    <div className="avatar-edit-badge" title="Change avatar" onClick={() => setShowAvatarPicker(true)}>
                         <span className="material-icons">edit</span>
                     </div>
                 </div>
@@ -618,6 +637,13 @@ const Profile = () => {
             <LegitFlixSettingsModal
                 isOpen={showLegitSettings}
                 onClose={() => setShowLegitSettings(false)}
+                userId={user?.Id}
+            />
+
+            <AvatarPickerModal
+                isOpen={showAvatarPicker}
+                onClose={() => setShowAvatarPicker(false)}
+                onSave={handleAvatarSave}
                 userId={user?.Id}
             />
         </div>

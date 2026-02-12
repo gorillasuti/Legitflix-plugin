@@ -29,7 +29,14 @@ const LegacyRouteHandler = () => {
                 return;
             }
 
-            // 3. Admin Dashboard / Plugins -> Fallback to Classic
+            // 3. Login / Logout / Select Server
+            if (hash.includes('selectserver.html') || hash.includes('login.html')) {
+                console.log('[LegitFlix] Redirecting auth hash to /login/select-user:', hash);
+                navigate('/login/select-user');
+                return;
+            }
+
+            // 4. Admin Dashboard / Plugins -> Fallback to Classic
             const classicPages = ['dashboard', 'plugins', 'wizard', 'scheduledtasks'];
             if (classicPages.some(page => hash.includes(page))) {
                 console.log('[LegitFlix] Redirecting to Classic Mode for:', hash);

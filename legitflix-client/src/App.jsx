@@ -5,6 +5,9 @@ import Home from './pages/Home/Home';
 import SeriesDetail from './pages/SeriesDetail/SeriesDetail';
 import MovieDetail from './pages/MovieDetail/MovieDetail';
 import Profile from './pages/Profile/Profile';
+import SelectServer from './pages/Auth/SelectServer';
+import SelectUser from './pages/Auth/SelectUser';
+import Login from './pages/Auth/Login';
 import LegacyRouteHandler from './components/LegacyRouteHandler';
 import ItemRedirect from './pages/ItemRedirect/ItemRedirect';
 import SkeletonLoader from './components/SkeletonLoader'; // Global loader? Or page level?
@@ -36,6 +39,9 @@ function AppContent() {
         <LegacyRouteHandler />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/login/select-server" element={<SelectServer />} />
+          <Route path="/login/select-user" element={<SelectUser />} />
           <Route path="/series/:id" element={<SeriesDetail />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="/item/:id" element={<ItemRedirect />} />

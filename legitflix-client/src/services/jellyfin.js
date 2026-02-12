@@ -74,6 +74,64 @@ class JellyfinService {
         return null;
     }
 
+    // --- Auth Flow Methods ---
+
+    async validateServer(url) {
+        // Strip trailing slash
+        const baseUrl = url.replace(/\/$/, "");
+        try {
+            const response = await fetch(`${baseUrl}/System/Info/Public`);
+            if (response.ok) {
+                const data = await response.json();
+                return { valid: true, data, baseUrl }; // Return cleaned URL
+            }
+        } catch (e) {
+            console.error("Server validation failed", e);
+        }
+        return { valid: false };
+    }
+
+    async getPublicUsers() {
+        if (!this.api) this.initialize();
+        const response = await this.api.user.getPublicUsers();
+        return response.data;
+    }
+
+    async authenticateUser(username, password) {
+        if (!this.api) this.initialize();
+        try {
+            const response = await this.api.user.authenticateUserByName({
+                authenticateUserByName: {
+                    Username: username,
+                    Pw: password
+                }
+            });
+
+            // Save Session
+            const authResult = response.data;
+            if (authResult.AccessToken && authResult.User) {
+                this.initialize(authResult.AccessToken);
+
+                // Store in LocalStorage (Simple format for now)
+                const storedData = {
+                    Servers: [{
+                        DateLastAccessed: new Date().toISOString(),
+                        AccessToken: authResult.AccessToken,
+                        UserId: authResult.User.Id,
+                        Name: authResult.User.Name,
+                        ManualAddress: this.api.basePath
+                    }]
+                };
+                localStorage.setItem('jellyfin_credentials', JSON.stringify(storedData));
+                return authResult.User;
+            }
+        } catch (e) {
+            console.error("Authentication failed", e);
+            throw e;
+        }
+        return null;
+    }
+
     async getItem(userId, itemId) {
         if (!this.api) this.initialize();
         const response = await this.api.userLibrary.getItem({ userId, itemId });
@@ -361,6 +419,49 @@ class JellyfinService {
             }
         });
         if (!response.ok) throw new Error('Quick Connect failed. Check the code.');
+        return true;
+    }
+
+    async logout() {
+        console.log('[LegitFlix] Logging out...');
+
+        // 1. Try generic ApiClient logout if available (might do server calls)
+        if (window.ApiClient) {
+            try {
+                // Just close session, don't let it redirect yet
+                await window.ApiClient.logout();
+            } catch (e) {
+                console.warn("ApiClient logout failed", e);
+            }
+        }
+
+        // 2. Clear Local Storage
+        localStorage.removeItem('jellyfin_credentials');
+
+        // 3. Clear Instance
+        this.api = null;
+
+        // 4. Redirect to Select User
+        // This satisfies "Add back support to use my original account" (Switch User)
+        window.location.href = '/#/login/select-user';
+    }
+
+    async uploadUserImage(userId, type, file) {
+        if (!this.api) this.initialize();
+
+        // Jellyfin expects the raw binary in body for image upload
+        const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': file.type,
+                'Authorization': `MediaBrowser Token="${this.api.accessToken}"`
+            },
+            body: file,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to upload image');
+        }
         return true;
     }
 }

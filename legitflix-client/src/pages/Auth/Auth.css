@@ -1,0 +1,151 @@
+.auth-page {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+    color: #fff;
+}
+
+.auth-container {
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.auth-logo h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-logo p {
+    color: #888;
+    margin: 8px 0 30px;
+    font-size: 0.9rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #ccc;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.auth-input:focus {
+    border-color: var(--clr-accent, #f47521);
+}
+
+.auth-error {
+    color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.1);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+/* User Grid */
+.user-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.user-card {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+    transition: transform 0.2s;
+}
+
+.user-card:hover {
+    transform: scale(1.05);
+}
+
+.user-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    background: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    font-size: 2rem;
+    color: #888;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.user-card:hover .user-avatar-placeholder {
+    border-color: var(--clr-accent, #f47521);
+    color: #fff;
+}
+
+.user-card-name {
+    font-size: 0.9rem;
+    color: #ccc;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-card:hover .user-card-name {
+    color: #fff;
+}
+
+.text-link {
+    background: none;
+    border: none;
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-top: 10px;
+}
+
+.text-link:hover {
+    color: var(--clr-accent, #f47521);
+}

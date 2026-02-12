@@ -9,11 +9,11 @@
         "imageUrl": "https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-blue.png",
         "versions": [
             {
-                "version": "1.0.0.39",
+                "version": "1.0.0.40",
                 "changelog": "Added Zero-Flash Middleware",
                 "targetAbi": "10.11.5.0",
-                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.39/LegitFlix.Plugin_1.0.0.39.zip",
-                "checksum": "dd8c81d3b2a9cf561748d2dac29c1c0a",
+                "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.40/LegitFlix.Plugin_1.0.0.40.zip",
+                "checksum": "004b33959b5d0b522921be23fbef81cd",
                 "timestamp": "2026-02-12T00:57:58Z"
             }
         ]
