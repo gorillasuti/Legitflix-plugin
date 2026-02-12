@@ -27,7 +27,10 @@ const AvatarPickerModal = ({ isOpen, onClose, onSave, userId }) => {
             const response = await fetch(selectedImage);
             const blob = await response.blob();
             // Create a File object from the blob if needed, or just pass blob
-            const file = new File([blob], "avatar.png", { type: blob.type });
+            // Extract extension from URL to match content type
+            const ext = selectedImage.split('.').pop().split('?')[0] || 'png';
+            const filename = `avatar.${ext}`;
+            const file = new File([blob], filename, { type: blob.type });
             await onSave(file);
         } catch (error) {
             console.error("Failed to fetch avatar blob", error);

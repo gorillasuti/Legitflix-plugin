@@ -512,10 +512,13 @@ class JellyfinService {
         // Fix 401: Use standard X-Emby-Authorization header with Client/Device info
         const authHeader = `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}", Token="${token}"`;
 
+        const contentType = file.type || 'image/png';
+        console.log(`[LegitFlix] Uploading ${type} image. Size: ${file.size}, Type: ${contentType}`);
+
         const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
             method: 'POST',
             headers: {
-                'Content-Type': file.type || 'image/png',
+                'Content-Type': contentType,
                 'X-Emby-Authorization': authHeader
             },
             body: file,

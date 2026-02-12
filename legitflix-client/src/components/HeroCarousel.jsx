@@ -264,8 +264,6 @@ const HeroCarousel = ({ onInfoClick }) => {
                         key={item.Id}
                         className={`hero-slide ${isActive ? 'active' : ''}`}
                         data-index={index}
-                        onClick={() => navigate(`/item/${item.Id}`)}
-                        style={{ cursor: 'pointer' }}
                     >
                         <div
                             className="hero-backdrop"

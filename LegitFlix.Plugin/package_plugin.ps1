@@ -1,11 +1,11 @@
-$version = "1.0.0.46"
+$version = "1.0.0.47"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 # Adjust build dir to be relative to the script location if running from root
 $projectDir = $PSScriptRoot
 $itemDir = "$projectDir\.."
 $clientDir = Join-Path $itemDir "legitflix-client"
-$assetsDir = Join-Path $projectDir "Assets\Client"
+
 $buildDir = Join-Path $projectDir "bin\Release\net9.0"
 $publishDir = Join-Path $projectDir "publish"
 

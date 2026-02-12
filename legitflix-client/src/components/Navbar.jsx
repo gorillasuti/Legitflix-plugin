@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTheme, getDefaultLogo } from '../context/ThemeContext';
 import { jellyfinService } from '../services/jellyfin';
 import SearchModal from './SearchModal/SearchModal';
@@ -111,18 +111,19 @@ const Navbar = () => {
         <>
             <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
                 <div className="nav-content">
+
                     {/* Left Section: Logo & Categories */}
                     <div className="nav-start">
-                        <div className="nav-logo" onClick={() => navigate('/')}>
+                        <Link to="/" className="nav-logo">
                             {config.logoUrl ? (
                                 <img src={config.logoUrl} alt={config.appName} />
                             ) : (
                                 <img src={getDefaultLogo(config.accentColor)} alt={config.appName} />
                             )}
-                        </div>
+                        </Link>
 
                         <div className="nav-links primary-links">
-                            <span className="nav-link" onClick={() => navigate('/')}>Home</span>
+                            <Link to="/" className="nav-link">Home</Link>
                             {/* Real Jellyfin library categories */}
                             {config.showNavbarCategories && libraries.map(lib => (
                                 <span
@@ -257,7 +258,7 @@ const Navbar = () => {
                                             <span className="material-icons">palette</span> Theme Settings
                                         </button>
                                         {hasEnhancedPlugin && (
-                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html?classic#!/configurationpage?name=JellyfinEnhanced'; }}>
+                                            <button onClick={() => { setShowMenu(false); window.location.href = '/web/index.html#!/configurationpage?name=JellyfinEnhanced'; }}>
                                                 <span className="material-icons">auto_awesome</span> Jellyfin Enhanced
                                             </button>
                                         )}

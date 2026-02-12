@@ -2,8 +2,8 @@
 .pm-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     z-index: 20000;
     display: flex;
     align-items: center;
@@ -11,74 +11,123 @@
 }
 
 .pm-modal {
-    background: #1a1a1a;
+    background: #121212;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 16px;
     width: 90%;
-    max-width: 800px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    max-width: 500px;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.8);
     overflow: hidden;
-}
-
-.pm-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.pm-header h2 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #fff;
-    font-weight: 700;
-}
-
-.pm-close {
-    background: transparent;
-    border: none;
-    color: #888;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 4px;
-    line-height: 1;
-    transition: color 0.2s;
-}
-
-.pm-close:hover {
-    color: #fff;
-}
-
-.pm-body {
-    padding: 24px;
-}
-
-.pm-avatar-section {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.pm-avatar-preview {
     position: relative;
-    width: 90px;
-    height: 90px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Close Button (Floating) */
+.pm-close-floating {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s;
+}
+
+.pm-close-floating:hover {
+    background: white;
+    color: black;
+}
+
+/* Cover Section */
+.pm-cover {
+    height: 180px;
+    position: relative;
+    background: #2a2a2a;
+}
+
+.pm-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pm-cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.6));
+    opacity: 0;
+    /* Hidden by default, show on hover */
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pm-cover:hover .pm-cover-overlay {
+    opacity: 1;
+}
+
+.pm-edit-cover-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.pm-edit-cover-btn:hover {
+    background: white;
+    color: black;
+}
+
+/* Avatar Section (Overlapping) */
+.pm-profile-header {
+    margin-top: -50px;
+    /* Negative margin to overlap cover */
+    padding: 0 24px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.pm-avatar-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid #121212;
+    /* Match modal bg to create "cutout" effect */
     background: #222;
 }
 
 .pm-avatar-img {
     width: 100%;
     height: 100%;
+    border-radius: 50%;
     object-fit: cover;
 }
 
-.pm-avatar-overlay {
+.pm-avatar-edit-overlay {
     position: absolute;
     inset: 0;
+    border-radius: 50%;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -88,85 +137,89 @@
     cursor: pointer;
 }
 
-.pm-avatar-overlay .material-icons {
-    font-size: 28px;
-    color: #fff;
-}
-
-.pm-avatar-preview:hover .pm-avatar-overlay {
+.pm-avatar-container:hover .pm-avatar-edit-overlay {
     opacity: 1;
 }
 
-.pm-avatar-info {
-    flex: 1;
+.pm-avatar-edit-overlay .material-icons {
+    color: white;
+    font-size: 28px;
 }
 
-.pm-avatar-info h3 {
-    margin: 0 0 4px;
-    color: #fff;
-    font-size: 1.1rem;
+/* User Info */
+.pm-user-details {
+    margin-top: 12px;
+    margin-bottom: 24px;
+}
+
+.pm-user-details h2 {
+    margin: 0;
+    font-size: 1.5rem;
     font-weight: 700;
+    color: white;
 }
 
-.pm-avatar-info p {
-    margin: 0 0 12px;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.85rem;
-}
-
-.pm-avatar-actions {
+.pm-user-details p {
+    margin: 4px 0 0;
+    color: #aaa;
+    font-size: 0.9rem;
     display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Divider */
+.pm-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 24px 20px;
+}
+
+/* Actions List */
+.pm-actions {
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
-.pm-btn {
-    display: inline-flex;
+.pm-action-row {
+    display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: #ddd;
+    font-size: 0.95rem;
+    font-weight: 500;
     cursor: pointer;
-    border: none;
-    font-family: inherit;
     transition: all 0.2s;
+    border: none;
+    width: 100%;
+    text-align: left;
 }
 
-.pm-btn .material-icons {
-    font-size: 18px;
+.pm-action-row:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
-.pm-btn:disabled {
-    opacity: 0.5;
-    pointer-events: none;
+.pm-action-row.danger {
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.05);
 }
 
-.pm-btn-accent {
-    background: var(--clr-accent, #ff7e00);
-    color: #fff;
-}
-
-.pm-btn-accent:hover {
-    box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px var(--clr-accent, #ff7e00);
-}
-
-.pm-btn-outline {
-    background: transparent;
-    color: #ccc;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.pm-btn-outline:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #fff;
+.pm-action-row.danger:hover {
+    background: rgba(255, 82, 82, 0.15);
 }
 
 .pm-status {
-    margin-top: 16px;
-    padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.05);
+    margin: 0 24px 20px;
+    padding: 10px;
+    background: rgba(255, 126, 0, 0.1);
+    color: #ff7e00;
     border-radius: 6px;
-    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
     font-size: 0.85rem;
 }

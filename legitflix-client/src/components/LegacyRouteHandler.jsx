@@ -9,6 +9,11 @@ const LegacyRouteHandler = () => {
 
         // Handle Legacy Jellyfin Deep Links
         if (hash.startsWith('#!/')) {
+            // Ignore root paths or simple home paths that might be confused
+            if (hash === '#!/' || hash === '#!/home' || hash === '#!/home.html') {
+                return;
+            }
+
             console.log('[LegitFlix] Intercepted legacy hash:', hash);
 
             // 1. Details Page: #!/details?id=ITEM_ID
