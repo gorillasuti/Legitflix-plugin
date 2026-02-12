@@ -564,6 +564,23 @@ input:checked+.slider:before {
     border-color: var(--clr-accent, #ff7e00);
 }
 
+select.legit-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8.825L.35 3.175 1.4 2.1 6 6.7l4.6-4.6 1.05 1.075z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+}
+
+select.legit-input option {
+    background: #2a2a2a;
+    color: white;
+    padding: 8px 12px;
+}
+
 .legit-settings-footer {
     padding: 16px 24px;
     background: rgba(0, 0, 0, 0.2);
@@ -651,4 +668,75 @@ input:checked+.slider:before {
 .content-type-chip.active .material-icons {
     color: var(--clr-accent, #ff7e00);
     opacity: 1;
+}
+
+/* ── Time Stepper ── */
+.time-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 8px;
+    background: #252525;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 42px;
+}
+
+.stepper-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.stepper-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.stepper-btn:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(0.92);
+}
+
+.stepper-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+.stepper-btn .material-icons {
+    font-size: 20px;
+}
+
+.stepper-value {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 3px;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    user-select: none;
+}
+
+.stepper-number {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: white;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepper-unit {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+    text-transform: lowercase;
 }

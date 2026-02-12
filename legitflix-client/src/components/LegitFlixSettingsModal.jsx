@@ -488,30 +488,54 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             keywords: ['player', 'seek', 'skip', 'forward', 'backward', 'time'],
             render: () => (
                 <div className="setting-section" key="playerSeek">
-                    <h3>Seek Durations (Seconds)</h3>
+                    <h3>Seek Durations</h3>
                     <p className="setting-desc">Customize how many seconds to skip forward or backward.</p>
                     <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
                         <div style={{ flex: 1 }}>
                             <label className="setting-label">Seek Forward (Right Arrow)</label>
-                            <input
-                                type="number"
-                                className="legit-input"
-                                value={playerSeekForward}
-                                onChange={(e) => setPlayerSeekForward(Number(e.target.value))}
-                                min="5"
-                                max="300"
-                            />
+                            <div className="time-stepper">
+                                <button
+                                    className="stepper-btn"
+                                    onClick={() => setPlayerSeekForward(prev => Math.max(5, prev - 5))}
+                                    disabled={playerSeekForward <= 5}
+                                >
+                                    <span className="material-icons">remove</span>
+                                </button>
+                                <div className="stepper-value">
+                                    <span className="stepper-number">{playerSeekForward}</span>
+                                    <span className="stepper-unit">sec</span>
+                                </div>
+                                <button
+                                    className="stepper-btn"
+                                    onClick={() => setPlayerSeekForward(prev => Math.min(300, prev + 5))}
+                                    disabled={playerSeekForward >= 300}
+                                >
+                                    <span className="material-icons">add</span>
+                                </button>
+                            </div>
                         </div>
                         <div style={{ flex: 1 }}>
                             <label className="setting-label">Seek Backward (Left Arrow)</label>
-                            <input
-                                type="number"
-                                className="legit-input"
-                                value={playerSeekBackward}
-                                onChange={(e) => setPlayerSeekBackward(Number(e.target.value))}
-                                min="5"
-                                max="300"
-                            />
+                            <div className="time-stepper">
+                                <button
+                                    className="stepper-btn"
+                                    onClick={() => setPlayerSeekBackward(prev => Math.max(5, prev - 5))}
+                                    disabled={playerSeekBackward <= 5}
+                                >
+                                    <span className="material-icons">remove</span>
+                                </button>
+                                <div className="stepper-value">
+                                    <span className="stepper-number">{playerSeekBackward}</span>
+                                    <span className="stepper-unit">sec</span>
+                                </div>
+                                <button
+                                    className="stepper-btn"
+                                    onClick={() => setPlayerSeekBackward(prev => Math.min(300, prev + 5))}
+                                    disabled={playerSeekBackward >= 300}
+                                >
+                                    <span className="material-icons">add</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -522,35 +546,77 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             tab: 'player',
             label: 'Default Languages',
             keywords: ['player', 'audio', 'subtitle', 'language', 'default', 'dub'],
-            render: () => (
-                <div className="setting-section" key="playerLanguages">
-                    <h3>Default Languages</h3>
-                    <p className="setting-desc">Preferred audio and subtitle languages for new playback.</p>
-                    <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
-                        <div style={{ flex: 1 }}>
-                            <label className="setting-label">Default Audio Language</label>
-                            <input
-                                type="text"
-                                className="legit-input"
-                                placeholder="e.g. en, eng, ger (Auto)"
-                                value={defaultAudioLanguage}
-                                onChange={(e) => setDefaultAudioLanguage(e.target.value)}
-                            />
-                            <small style={{ color: '#aaa' }}>Use 3-letter ISO codes (e.g. 'eng', 'jpn') or 'auto'.</small>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <label className="setting-label">Default Subtitle Language</label>
-                            <input
-                                type="text"
-                                className="legit-input"
-                                placeholder="e.g. en, eng (Auto)"
-                                value={defaultSubtitleLanguage}
-                                onChange={(e) => setDefaultSubtitleLanguage(e.target.value)}
-                            />
+            render: () => {
+                const LANGUAGES = [
+                    { code: 'auto', label: 'Auto (Server Default)' },
+                    { code: 'eng', label: 'English' },
+                    { code: 'hun', label: 'Hungarian (Magyar)' },
+                    { code: 'ger', label: 'German (Deutsch)' },
+                    { code: 'jpn', label: 'Japanese (日本語)' },
+                    { code: 'spa', label: 'Spanish (Español)' },
+                    { code: 'fre', label: 'French (Français)' },
+                    { code: 'ita', label: 'Italian (Italiano)' },
+                    { code: 'por', label: 'Portuguese (Português)' },
+                    { code: 'rus', label: 'Russian (Русский)' },
+                    { code: 'chi', label: 'Chinese (中文)' },
+                    { code: 'kor', label: 'Korean (한국어)' },
+                    { code: 'ara', label: 'Arabic (العربية)' },
+                    { code: 'hin', label: 'Hindi (हिन्दी)' },
+                    { code: 'pol', label: 'Polish (Polski)' },
+                    { code: 'dut', label: 'Dutch (Nederlands)' },
+                    { code: 'swe', label: 'Swedish (Svenska)' },
+                    { code: 'nor', label: 'Norwegian (Norsk)' },
+                    { code: 'dan', label: 'Danish (Dansk)' },
+                    { code: 'fin', label: 'Finnish (Suomi)' },
+                    { code: 'tur', label: 'Turkish (Türkçe)' },
+                    { code: 'tha', label: 'Thai (ไทย)' },
+                    { code: 'vie', label: 'Vietnamese (Tiếng Việt)' },
+                    { code: 'ukr', label: 'Ukrainian (Українська)' },
+                    { code: 'cze', label: 'Czech (Čeština)' },
+                    { code: 'rum', label: 'Romanian (Română)' },
+                    { code: 'gre', label: 'Greek (Ελληνικά)' },
+                    { code: 'heb', label: 'Hebrew (עברית)' },
+                ];
+
+                const SUBTITLE_LANGUAGES = [
+                    { code: 'auto', label: 'Auto (Server Default)' },
+                    { code: 'none', label: 'None (Disabled)' },
+                    ...LANGUAGES.filter(l => l.code !== 'auto'),
+                ];
+
+                return (
+                    <div className="setting-section" key="playerLanguages">
+                        <h3>Default Languages</h3>
+                        <p className="setting-desc">Preferred audio and subtitle languages for new playback.</p>
+                        <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
+                            <div style={{ flex: 1 }}>
+                                <label className="setting-label">Default Audio Language</label>
+                                <select
+                                    className="legit-input"
+                                    value={defaultAudioLanguage}
+                                    onChange={(e) => setDefaultAudioLanguage(e.target.value)}
+                                >
+                                    {LANGUAGES.map(lang => (
+                                        <option key={lang.code} value={lang.code}>{lang.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label className="setting-label">Default Subtitle Language</label>
+                                <select
+                                    className="legit-input"
+                                    value={defaultSubtitleLanguage}
+                                    onChange={(e) => setDefaultSubtitleLanguage(e.target.value)}
+                                >
+                                    {SUBTITLE_LANGUAGES.map(lang => (
+                                        <option key={lang.code} value={lang.code}>{lang.label}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )
+                );
+            }
         }
     ];
 

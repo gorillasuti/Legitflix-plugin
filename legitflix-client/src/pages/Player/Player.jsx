@@ -151,11 +151,13 @@ const Player = () => {
     useEffect(() => {
         if (!item) return;
 
-        const url = jellyfinService.getStreamUrl(item.Id, {
-            audioStreamIndex: selectedAudioIndex,
-            subtitleStreamIndex: selectedSubtitleIndex,
-            maxBitrate: maxBitrate
-        });
+        const url = jellyfinService.getStreamUrl(
+            item.Id,
+            selectedAudioIndex,
+            selectedSubtitleIndex,
+            null, // mediaSourceId
+            maxBitrate
+        );
 
         // Only update if it's different to avoid re-mounting logic if not needed,
         // but getStreamUrl generates new PlaySessionId every time.
@@ -789,7 +791,7 @@ const Player = () => {
                                 {item ? (
                                     <>
                                         <span className="series-title">{item.SeriesName}</span>
-                                        {item.SeriesName && item.Name && <span className="divider">â€¢</span>}
+                                        {item.SeriesName && item.Name && <span className="divider">|</span>}
                                         <span className="episode-title">{item.Name}</span>
                                     </>
                                 ) : 'Loading...'}

@@ -68,8 +68,15 @@ const Navbar = ({ alwaysFilled = false }) => {
     useEffect(() => {
         const detectEnhanced = async () => {
             try {
-                const res = await fetch(`${jellyfinService.api.basePath}/Plugins`, {
-                    headers: { 'X-Emby-Authorization': jellyfinService.api.authHeader },
+                if (!jellyfinService.api) return;
+                const token = jellyfinService.api.accessToken;
+                const baseUrl = jellyfinService.api.configuration?.basePath || jellyfinService.api.basePath;
+                if (!token || !baseUrl) return;
+
+                const authHeader = `MediaBrowser Client="${jellyfinService.jellyfin.clientInfo.name}", Device="${jellyfinService.jellyfin.deviceInfo.name}", DeviceId="${jellyfinService.jellyfin.deviceInfo.id}", Version="${jellyfinService.jellyfin.clientInfo.version}", Token="${token}"`;
+
+                const res = await fetch(`${baseUrl}/Plugins`, {
+                    headers: { 'X-Emby-Authorization': authHeader },
                 });
                 if (res.ok) {
                     const plugins = await res.json();
