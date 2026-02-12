@@ -16,9 +16,11 @@ class JellyfinService {
         this.api = null;
     }
 
-    initialize(accessToken = null) {
+    initialize(accessToken = null, basePath = null) {
+        const url = basePath !== null ? basePath : (this.api?.basePath || window.location.origin);
+
         this.api = this.jellyfin.createApi(
-            accessToken ? window.location.origin : '',
+            url,
             accessToken
         );
 
@@ -528,6 +530,26 @@ class JellyfinService {
             const txt = await response.text();
             console.error("Upload failed response:", txt);
             throw new Error(`Failed to upload image: ${response.status} ${response.statusText}`);
+        }
+        return true;
+    }
+
+    async deleteUserImage(userId, type) {
+        if (!this.api) this.initialize();
+        const token = this.api.accessToken;
+        if (!token) throw new Error("No access token available for delete");
+
+        const authHeader = `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}", Token="${token}"`;
+
+        const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Emby-Authorization': authHeader
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to delete image: ${response.status} ${response.statusText}`);
         }
         return true;
     }

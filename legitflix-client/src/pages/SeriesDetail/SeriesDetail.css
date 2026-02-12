@@ -1,5 +1,5 @@
 /* ============================================
-   LEGITFLIX COLOR VARIABLES
+   LEGITFLIX COLOR VARIABLES (Scoped to Series Detail)
    ============================================ */
 .lf-series-container {
     --clr-accent: #ff6a00;
@@ -18,12 +18,14 @@
     --radius-md: 8px;
     --radius-lg: 12px;
     --content-padding: 3%;
+
     width: 100%;
+    background-color: var(--clr-bg-main);
+    color: var(--clr-text-main);
+    min-height: 100vh;
 }
 
 .lf-series-container * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
@@ -57,6 +59,64 @@
     opacity: 0;
     transition: opacity 0.5s ease;
     pointer-events: none;
+    z-index: 1;
+}
+
+.lf-series-hero__trailer.is-playing {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lf-series-hero__trailer iframe,
+.lf-series-hero__trailer video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: none;
+}
+
+/* Trailer Help Button */
+.lf-trailer-help-btn {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--clr-text-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease;
+}
+
+.lf-trailer-help-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Trailer Back Drop Fade */
+.lf-series-hero__backdrop.is-hidden {
+    opacity: 0;
 }
 
 .lf-series-hero__trailer.is-playing {
@@ -105,6 +165,25 @@
     opacity: 0;
     pointer-events: none;
     transform: translateY(20px);
+}
+
+.lf-series-hero__logo {
+    position: absolute;
+    bottom: 50px;
+    left: var(--content-padding);
+    width: 250px;
+    max-width: 40%;
+    height: auto;
+    object-fit: contain;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+.lf-series-hero.is-clean-view .lf-series-hero__logo {
+    opacity: 1;
 }
 
 .lf-series-hero__content {
@@ -797,6 +876,52 @@
     opacity: 0;
 }
 
+/* ============================================
+   BLOCKED CONTENT MODAL
+   ============================================ */
+.lf-blocked-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 11000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+.lf-blocked-modal {
+    background: #1c1c1c;
+    padding: 40px;
+    border-radius: 16px;
+    max-width: 450px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.lf-blocked-icon {
+    font-size: 64px;
+    color: #ff5252;
+    margin-bottom: 24px;
+}
+
+.lf-blocked-modal h3 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+    color: white;
+    font-weight: 700;
+}
+
+.lf-blocked-modal p {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 32px;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+
 /* Success Marked State (Green Tick) */
 .lf-episode-card.is-success-marked .lf-episode-checkbox,
 .lf-episode-card.is-watched .lf-episode-checkbox {
@@ -972,4 +1097,200 @@
         gap: 12px;
         align-items: flex-start;
     }
+}
+
+/* ============================================
+   FILTER & SELECTION CONTROLS
+   ============================================ */
+.lf-filter-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.lf-filter-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--clr-text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lf-filter-btn:hover {
+    background: var(--clr-bg-glass);
+    color: var(--clr-text-main);
+}
+
+.lf-filter-btn.is-active {
+    background: rgba(255, 106, 0, 0.15);
+    border-color: var(--clr-accent);
+    color: var(--clr-accent);
+}
+
+.lf-filter-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.lf-filter-dropdown__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    background: var(--clr-bg-surface);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.lf-filter-dropdown.is-open .lf-filter-dropdown__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.lf-filter-dropdown__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    color: var(--clr-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.85rem;
+}
+
+.lf-filter-dropdown__option:hover {
+    background: var(--clr-bg-glass);
+    color: var(--clr-text-main);
+}
+
+.lf-filter-dropdown__option.is-selected {
+    color: var(--clr-accent);
+    background: rgba(255, 106, 0, 0.1);
+}
+
+/* Language Selector Specifics */
+.lf-lang-menu {
+    min-width: 240px;
+    padding: 10px 0;
+}
+
+.lf-lang-section {
+    padding-bottom: 5px;
+}
+
+.lf-dropdown-section-title {
+    padding: 5px 15px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--clr-text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.lf-lang-separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 5px 0;
+}
+
+.lf-lang-footer {
+    padding: 8px 10px 0 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 5px;
+}
+
+.lf-edit-subs-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--clr-text-main);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.lf-edit-subs-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* BULK EDIT CHECKBOXES */
+.lf-episode-checkbox {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+    z-index: 10;
+    pointer-events: none;
+    /* Let parent handle click */
+}
+
+.lf-episode-checkbox .material-icons {
+    font-size: 18px;
+    color: white;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.2s ease;
+}
+
+.lf-episode-card.is-selecting-mode .lf-episode-checkbox {
+    opacity: 1;
+    transform: scale(1);
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Selected State */
+.lf-episode-card.is-selected .lf-episode-checkbox {
+    background: var(--clr-accent);
+    border-color: var(--clr-accent);
+    opacity: 1;
+    transform: scale(1);
+}
+
+.lf-episode-card.is-selected .lf-episode-checkbox .material-icons {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.lf-episode-card.is-selected {
+    box-shadow: 0 0 0 2px var(--clr-accent);
+}
+
+.lf-episode-card.is-watched .lf-episode-card__thumbnail {
+    opacity: 0.8;
+}
+
+/* Disable hover play icon visually in selection mode */
+.lf-episode-card.is-selecting-mode:hover .lf-episode-card__play-icon {
+    display: none;
 }

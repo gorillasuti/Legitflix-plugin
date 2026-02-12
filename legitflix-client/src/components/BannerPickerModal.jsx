@@ -17,7 +17,8 @@ const BannerPickerModal = ({ isOpen, onClose, onSave, userId }) => {
         const fetchBackdrops = async () => {
             try {
                 const data = await jellyfinService.getAllBackdrops(userId, 50);
-                setItems(data);
+                const validItems = data.filter(item => item.BackdropImageTags && item.BackdropImageTags.length > 0);
+                setItems(validItems);
             } catch (err) {
                 console.error('[BannerPicker] Failed to fetch backdrops', err);
             } finally {
@@ -30,11 +31,13 @@ const BannerPickerModal = ({ isOpen, onClose, onSave, userId }) => {
     if (!isOpen) return null;
 
     const getBackdropUrl = (item) => {
-        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=80&maxWidth=600`;
+        const tag = item.BackdropImageTags?.[0];
+        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=80&maxWidth=600&tag=${tag}`;
     };
 
     const getFullBackdropUrl = (item) => {
-        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=90&maxWidth=1920`;
+        const tag = item.BackdropImageTags?.[0];
+        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=90&maxWidth=1920&tag=${tag}`;
     };
 
     const handleSave = () => {

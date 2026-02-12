@@ -21,38 +21,18 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
     const handleBannerSave = async (url) => {
         if (!user || !url) return;
 
-        // If it's a full URL from our system, we need to fetch it as a blob first
-        // If the user selected a "Backdrop" from the picker, it returns a full URL
-
         setStatus('Updating banner...');
         setUploading(true);
 
         try {
+            // Fetch blob from local/remote URL
             const response = await fetch(url);
             const blob = await response.blob();
 
-            // Fix 401: Construct robust auth header
-            const token = jellyfinService.api.accessToken;
-            const authHeader = `MediaBrowser Client="${jellyfinService.jellyfin.clientInfo.name}", Device="${jellyfinService.jellyfin.deviceInfo.name}", DeviceId="${jellyfinService.jellyfin.deviceInfo.id}", Version="${jellyfinService.jellyfin.clientInfo.version}", Token="${token}"`;
+            // Use service to upload
+            await jellyfinService.uploadUserImage(user.Id, 'Banner', blob);
 
-            const res = await fetch(
-                `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Banner`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': blob.type,
-                        'X-Emby-Authorization': authHeader,
-                    },
-                    body: blob,
-                }
-            );
-
-            if (res.ok) {
-                setStatus('Banner updated! Refresh to see changes.');
-                // Optimistically update local for now if we wanted, but reload is best
-            } else {
-                setStatus('Failed to upload banner.');
-            }
+            setStatus('Banner updated! Refresh to see changes.');
         } catch (err) {
             console.error(err);
             setStatus('Banner upload failed.');
@@ -71,25 +51,11 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         setStatus('');
 
         try {
-            const res = await fetch(
-                `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': file.type,
-                        'X-Emby-Authorization': jellyfinService.api.authHeader,
-                    },
-                    body: file,
-                }
-            );
-
-            if (res.ok) {
-                setStatus('Profile image updated! Refresh to see changes.');
-                setShowAvatarPicker(false);
-            } else {
-                setStatus('Failed to upload image. Please try again.');
-            }
+            await jellyfinService.uploadUserImage(user.Id, 'Primary', file);
+            setStatus('Profile image updated! Refresh to see changes.');
+            setShowAvatarPicker(false);
         } catch (err) {
+            console.error(err);
             setStatus('Upload failed. Check your connection.');
         } finally {
             setUploading(false);
@@ -105,22 +71,11 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         setUploading(true);
         setStatus('');
         try {
-            const res = await fetch(
-                `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Primary`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        'X-Emby-Authorization': jellyfinService.api.authHeader,
-                    },
-                }
-            );
-            if (res.ok) {
-                setStatus('Profile image removed.');
-            } else {
-                setStatus('Failed to remove image.');
-            }
+            await jellyfinService.deleteUserImage(user.Id, 'Primary');
+            setStatus('Profile image removed.');
         } catch (err) {
-            setStatus('Action failed.');
+            console.error(err);
+            setStatus('Failed to remove image.');
         } finally {
             setUploading(false);
         }

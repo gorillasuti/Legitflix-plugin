@@ -22,7 +22,7 @@ const SelectServer = () => {
             const res = await jellyfinService.validateServer(url);
             if (res && res.valid) {
                 // Re-init service with new base URL
-                jellyfinService.jellyfin.configuration.basePath = res.baseUrl;
+                jellyfinService.initialize(null, res.baseUrl);
                 navigate('/login/select-user');
             } else {
                 setError('Could not connect to server. Please check the URL.');
