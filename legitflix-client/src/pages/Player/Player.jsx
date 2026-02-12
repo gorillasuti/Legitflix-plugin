@@ -31,10 +31,10 @@ const Player = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isDescExpanded, setIsDescExpanded] = useState(false);
 
-    // Trickplay (BIF) State
-    const [trickplayImages, setTrickplayImages] = useState(null);
+    // Trickplay State
+    const [trickplayBgPos, setTrickplayBgPos] = useState(null); // { x, y, totalWidth, totalHeight }
     const [hoverTime, setHoverTime] = useState(null);
-    const [hoverPosition, setHoverPosition] = useState(0); // Standardized 0-1 position
+    const [hoverPosition, setHoverPosition] = useState(0);
     const [isHoveringTimeline, setIsHoveringTimeline] = useState(false);
     const [thumbnailUrl, setThumbnailUrl] = useState(null);
 
@@ -81,6 +81,10 @@ const Player = () => {
 
                 const itemData = await jellyfinService.getItemDetails(user.Id, id);
                 setItem(itemData);
+                // Reset auto-skip tracking for new item
+                if (typeof autoSkippedRef !== 'undefined' && autoSkippedRef.current) {
+                    autoSkippedRef.current = { intro: false, outro: false };
+                }
 
                 // --- Stream Processing ---
                 if (itemData.MediaSources && itemData.MediaSources.length > 0) {
@@ -215,16 +219,38 @@ const Player = () => {
     }, [item, episodes]);
 
     // --- 3. Trickplay Logic ---
+    const [trickplayInfo, setTrickplayInfo] = useState(null); // { width, interval, tileWidth, tileHeight, thumbWidth, thumbHeight, thumbnailCount }
+
     const loadTrickplayData = async (itemId) => {
         try {
-            const width = 320; // Preferred width
-            const bifUrl = await jellyfinService.getTrickplayBifUrl(itemId, width);
+            const manifest = await jellyfinService.getTrickplayManifest(itemId);
+            if (!manifest) return;
 
-            if (bifUrl) {
-                // Parse BIF
-                const bifData = await jellyfinService.fetchAndParseBif(bifUrl);
-                setTrickplayImages(bifData);
-            }
+            // Manifest format: { "MediaSourceId": { "ResolutionWidth": { TileWidth, TileHeight, Interval, ... } } }
+            // Get the first media source's data
+            const mediaSourceKeys = Object.keys(manifest);
+            if (mediaSourceKeys.length === 0) return;
+
+            const resolutions = manifest[mediaSourceKeys[0]];
+            const resolutionKeys = Object.keys(resolutions).map(Number).sort((a, b) => a - b);
+            if (resolutionKeys.length === 0) return;
+
+            // Pick smallest resolution for performance (typically 320px wide)
+            const selectedWidth = resolutionKeys[0];
+            const info = resolutions[selectedWidth];
+
+            setTrickplayInfo({
+                itemId,
+                width: selectedWidth,
+                interval: info.Interval, // ms between frames
+                tileWidth: info.TileWidth, // columns per tile image
+                tileHeight: info.TileHeight, // rows per tile image
+                thumbWidth: info.Width, // pixel width of each thumb
+                thumbHeight: info.Height, // pixel height of each thumb
+                thumbnailCount: info.ThumbnailCount
+            });
+
+            console.log('[Trickplay] Loaded:', { width: selectedWidth, interval: info.Interval, cols: info.TileWidth, rows: info.TileHeight, thumbs: info.ThumbnailCount });
         } catch (e) {
             console.warn("Failed to load trickplay data", e);
         }
@@ -239,18 +265,30 @@ const Player = () => {
         const time = percent * duration;
 
         setHoverTime(time);
-        setHoverPosition(percent); // Store exact percent for positioning
+        setHoverPosition(percent);
         setIsHoveringTimeline(true);
 
-        // Find matching frame
-        if (trickplayImages && trickplayImages.length > 0) {
-            // Find the image frame for this timestamp
-            const frame = trickplayImages.find(img => time >= img.startTime && time < img.endTime);
-            if (frame) {
-                setThumbnailUrl(frame.url);
-            } else {
-                setThumbnailUrl(null);
-            }
+        // Calculate trickplay tile + position
+        if (trickplayInfo) {
+            const { itemId, width, interval, tileWidth, tileHeight } = trickplayInfo;
+            const thumbsPerTile = tileWidth * tileHeight;
+            const frameIndex = Math.floor((time * 1000) / interval); // Which frame overall
+            const tileIndex = Math.floor(frameIndex / thumbsPerTile); // Which tile image
+            const frameInTile = frameIndex % thumbsPerTile; // Position within tile
+
+            const col = frameInTile % tileWidth;
+            const row = Math.floor(frameInTile / tileWidth);
+
+            const tileUrl = jellyfinService.getTrickplayTileUrl(itemId, width, tileIndex);
+            setThumbnailUrl(tileUrl);
+
+            // Store the background position for CSS cropping
+            setTrickplayBgPos({
+                x: -(col * trickplayInfo.thumbWidth),
+                y: -(row * trickplayInfo.thumbHeight),
+                totalWidth: tileWidth * trickplayInfo.thumbWidth,
+                totalHeight: tileHeight * trickplayInfo.thumbHeight
+            });
         }
     };
 
@@ -358,7 +396,7 @@ const Player = () => {
 
     // Periodic Reporting
     useEffect(() => {
-        if (!item) return;
+        if (!item || !mediaSourceId) return;
 
         progressInterval.current = setInterval(() => {
             if (videoRef.current && !videoRef.current.paused) {
@@ -366,14 +404,15 @@ const Player = () => {
                 // Report to Jellyfin
                 jellyfinService.reportPlaybackProgress(
                     item.Id,
-                    time * 10000000,
-                    false // IsPaused
+                    Math.floor(time * 10000000),
+                    false, // IsPaused
+                    mediaSourceId
                 ).catch(err => console.warn("Report progress failed", err));
             }
         }, 10000); // Every 10s
 
         return () => clearInterval(progressInterval.current);
-    }, [item]);
+    }, [item, mediaSourceId]);
 
     const reportStop = useCallback(() => {
         if (item && videoRef.current) {
@@ -397,13 +436,11 @@ const Player = () => {
     const togglePlay = useCallback(() => {
         if (videoRef.current) {
             if (videoRef.current.paused) {
-                videoRef.current.play();
+                videoRef.current.play().catch(e => console.log('Play prevented:', e));
                 setIsPlaying(true);
-                flashCenterIcon('play_arrow');
             } else {
                 videoRef.current.pause();
                 setIsPlaying(false);
-                flashCenterIcon('pause');
             }
         }
     }, [videoRef]);
@@ -512,51 +549,65 @@ const Player = () => {
     }, [isPlaying, showSettings]); // Re-bind if dependencies change
 
     // --- Click to Play/Pause ---
-    const handleVideoClick = (e) => {
-        // Prevent triggering when clicking controls
-        if (e.target.closest('.lf-player-controls') || e.target.closest('.lf-player-back-button')) {
+    const handleVideoClick = useCallback((e) => {
+        // Prevent triggering when clicking controls or skip buttons
+        if (e.target.closest('.lf-player-controls') || e.target.closest('.lf-player-back-button') || e.target.closest('.lf-skip-btn') || e.target.closest('.center-play-btn')) {
             return;
         }
-        togglePlay();
+
+        if (videoRef.current) {
+            if (videoRef.current.paused) {
+                videoRef.current.play().catch(e => console.log('Play prevented:', e));
+                setIsPlaying(true);
+                flashCenterIcon('play_arrow');
+            } else {
+                videoRef.current.pause();
+                setIsPlaying(false);
+                flashCenterIcon('pause');
+            }
+        }
 
         // Show controls temporarily
         setShowControls(true);
         if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
         controlsTimeoutRef.current = setTimeout(() => {
-            if (isPlaying) setShowControls(false);
+            setShowControls(false);
         }, 3000);
-    };
+    }, [videoRef]);
 
     // --- Skip Intro/Outro Logic ---
 
     const [showSkipOutro, setShowSkipOutro] = useState(false);
     const [skipTargetTime, setSkipTargetTime] = useState(null);
 
+    const autoSkippedRef = useRef({ intro: false, outro: false });
+
     const checkForChapters = useCallback((time) => {
         if (!item?.Chapters) return;
-
-        const currentChapter = item.Chapters.find(chapter =>
-            time >= (chapter.StartPositionTicks / 10000000) &&
-            time < (chapter.StartPositionTicks / 10000000) + (chapter.ImageTag ? 0 : 0) // Just finding current
-        );
-
-        // Jellyfin chapters often allow identifying Intros/Outros by name
-        // Common names: "Intro", "Opening", "Outro", "Ending", "Credits"
 
         // Logic to find if we are in an intro
         const introChapter = item.Chapters.find(c =>
             (c.Name.toLowerCase().includes('intro') || c.Name.toLowerCase().includes('opening')) &&
             time >= (c.StartPositionTicks / 10000000) &&
-            time < (c.StartPositionTicks / 10000000) + 80 // Reasonable cap or use next chapter start
+            time < (c.StartPositionTicks / 10000000) + 80
         );
 
         if (introChapter) {
-            // Find end of this chapter (start of next)
             const index = item.Chapters.indexOf(introChapter);
             const nextChapter = item.Chapters[index + 1];
             if (nextChapter) {
+                const target = nextChapter.StartPositionTicks / 10000000;
                 setShowSkipIntro(true);
-                setSkipTargetTime(nextChapter.StartPositionTicks / 10000000);
+                setSkipTargetTime(target);
+
+                // Auto-skip intro if enabled
+                if (config.autoSkipIntro && !autoSkippedRef.current.intro && videoRef.current) {
+                    autoSkippedRef.current.intro = true;
+                    videoRef.current.currentTime = target;
+                    setCurrentTime(target);
+                    flashCenterIcon('skip_next');
+                    console.log('[AutoSkip] Skipped intro to', target);
+                }
             } else {
                 setShowSkipIntro(false);
             }
@@ -564,9 +615,7 @@ const Player = () => {
             setShowSkipIntro(false);
 
             // Logic for Outro/Credits
-            // Often implicit: if we are near the end, or if chapter is named "Credits"
-            if (duration > 0 && (duration - time) < 120) { // Near end
-                // Check if specific chapter
+            if (duration > 0 && (duration - time) < 120) {
                 const creditChapter = item.Chapters.find(c =>
                     (c.Name.toLowerCase().includes('outro') || c.Name.toLowerCase().includes('ending') || c.Name.toLowerCase().includes('credits')) &&
                     time >= (c.StartPositionTicks / 10000000)
@@ -574,17 +623,22 @@ const Player = () => {
 
                 if (creditChapter) {
                     setShowSkipOutro(true);
-                    // Target is usually "Next Episode" action, handled by the button click
+
+                    // Auto-skip outro if enabled (go to next episode or end)
+                    if (config.autoSkipOutro && !autoSkippedRef.current.outro && videoRef.current) {
+                        autoSkippedRef.current.outro = true;
+                        if (nextEpisodeId) {
+                            navigate(`/player/${nextEpisodeId}`);
+                        }
+                    }
                 } else {
-                    // Even if no chapter, if very close to end, maybe show "Next Episode" logic which we already have?
-                    // For now, only show Skip Outro if explicit chapter or manually detected
                     setShowSkipOutro(false);
                 }
             } else {
                 setShowSkipOutro(false);
             }
         }
-    }, [item, duration]);
+    }, [item, duration, config.autoSkipIntro, config.autoSkipOutro, nextEpisodeId, navigate]);
 
     // Update check in timeUpdate
     // (This needs to be called in existing handleTimeUpdate or useEffect)
@@ -692,15 +746,17 @@ const Player = () => {
         if (type === 'Subtitle') setSelectedSubtitleIndex(index);
     };
 
-    const handleMouseMove = () => {
+    const handleMouseMove = useCallback(() => {
         setShowControls(true);
         if (controlsTimeoutRef.current) {
             clearTimeout(controlsTimeoutRef.current);
         }
         controlsTimeoutRef.current = setTimeout(() => {
-            if (isPlaying) setShowControls(false);
+            if (videoRef.current && !videoRef.current.paused) {
+                setShowControls(false);
+            }
         }, 3000);
-    };
+    }, []);
 
     const handleSeasonChange = (seasonId) => {
         setCurrentSeasonId(seasonId);
@@ -757,7 +813,6 @@ const Player = () => {
                     <video
                         ref={videoRef}
                         className="lf-player-video"
-                        onClick={(e) => e.stopPropagation()} // Prevent double toggle if needed, usually handled by wrapper
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={handleLoadedMetadata}
                         onEnded={handleEnded}
@@ -920,22 +975,42 @@ const Player = () => {
                         {/* Bottom Controls Bar */}
                         <div className="lf-player-controls-bottom">
                             {/* Timeline / Seek Bar */}
-                            <div className="lf-player-timeline-container" onClick={(e) => {
-                                e.stopPropagation();
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const pct = (e.clientX - rect.left) / rect.width;
-                                const seekTime = pct * (duration || 0);
-                                if (videoRef.current) {
-                                    videoRef.current.currentTime = seekTime;
-                                    setCurrentTime(seekTime);
-                                }
-                            }}>
+                            <div
+                                className="lf-player-timeline-container"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const pct = (e.clientX - rect.left) / rect.width;
+                                    const seekTime = pct * (duration || 0);
+                                    if (videoRef.current) {
+                                        videoRef.current.currentTime = seekTime;
+                                        setCurrentTime(seekTime);
+                                    }
+                                }}
+                                onMouseMove={handleTimelineHover}
+                                onMouseLeave={handleTimelineLeave}
+                            >
                                 <div className="lf-player-timeline-track">
                                     <div className="lf-player-timeline-buffered" style={{ width: `${bufferedPct}%` }} />
                                     <div className="lf-player-timeline-fill" style={{ width: `${progressPercent}%` }}>
                                         <div className="lf-player-timeline-thumb" />
                                     </div>
                                 </div>
+                                {/* Hover Tooltip with Time & Trickplay Thumbnail */}
+                                {isHoveringTimeline && hoverTime !== null && (
+                                    <div className="lf-timeline-tooltip" style={{ left: `${hoverPosition * 100}%` }}>
+                                        {thumbnailUrl && trickplayBgPos && (
+                                            <div className="lf-timeline-thumbnail" style={{
+                                                backgroundImage: `url(${thumbnailUrl})`,
+                                                backgroundPosition: `${trickplayBgPos.x}px ${trickplayBgPos.y}px`,
+                                                backgroundSize: `${trickplayBgPos.totalWidth}px ${trickplayBgPos.totalHeight}px`,
+                                                width: `${trickplayInfo?.thumbWidth || 160}px`,
+                                                height: `${trickplayInfo?.thumbHeight || 90}px`
+                                            }} />
+                                        )}
+                                        <span className="lf-timeline-time">{formatTime(hoverTime)}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Controls Row */}
@@ -972,7 +1047,10 @@ const Player = () => {
                                                 onChange={(e) => {
                                                     const v = parseFloat(e.target.value);
                                                     setVolume(v);
-                                                    if (videoRef.current) videoRef.current.volume = v;
+                                                    if (videoRef.current) {
+                                                        videoRef.current.volume = v;
+                                                        videoRef.current.muted = (v === 0);
+                                                    }
                                                     setIsMuted(v === 0);
                                                 }}
                                                 onClick={(e) => e.stopPropagation()}

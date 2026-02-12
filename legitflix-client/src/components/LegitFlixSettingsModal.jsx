@@ -42,6 +42,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [playerSeekBackward, setPlayerSeekBackward] = useState(config.playerSeekBackward || 10);
     const [defaultAudioLanguage, setDefaultAudioLanguage] = useState(config.defaultAudioLanguage || 'auto');
     const [defaultSubtitleLanguage, setDefaultSubtitleLanguage] = useState(config.defaultSubtitleLanguage || 'auto');
+    const [autoSkipIntro, setAutoSkipIntro] = useState(config.autoSkipIntro || false);
+    const [autoSkipOutro, setAutoSkipOutro] = useState(config.autoSkipOutro || false);
 
     useEffect(() => {
         if (isOpen) {
@@ -59,6 +61,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setPlayerSeekBackward(config.playerSeekBackward || 10);
             setDefaultAudioLanguage(config.defaultAudioLanguage || 'auto');
             setDefaultSubtitleLanguage(config.defaultSubtitleLanguage || 'auto');
+            setAutoSkipIntro(config.autoSkipIntro || false);
+            setAutoSkipOutro(config.autoSkipOutro || false);
             setSearchQuery('');
 
             if (!PRESET_COLORS.some(c => c.value === config.accentColor)) {
@@ -66,6 +70,16 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             }
         }
     }, [isOpen, config]);
+
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isOpen]);
 
     const handleColorChange = (color) => {
         setAccentColor(color);
@@ -103,6 +117,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             playerSeekBackward,
             defaultAudioLanguage,
             defaultSubtitleLanguage,
+            autoSkipIntro,
+            autoSkipOutro,
         });
         onClose();
     };
@@ -488,8 +504,12 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             keywords: ['player', 'seek', 'skip', 'forward', 'backward', 'time'],
             render: () => (
                 <div className="setting-section" key="playerSeek">
-                    <h3>Seek Durations</h3>
-                    <p className="setting-desc">Customize how many seconds to skip forward or backward.</p>
+                    <div className="setting-row">
+                        <div>
+                            <h3 className="setting-title">Seek Durations</h3>
+                            <p className="setting-desc">Customize how many seconds to skip forward or backward.</p>
+                        </div>
+                    </div>
                     <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
                         <div style={{ flex: 1 }}>
                             <label className="setting-label">Seek Forward (Right Arrow)</label>
@@ -586,8 +606,12 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
 
                 return (
                     <div className="setting-section" key="playerLanguages">
-                        <h3>Default Languages</h3>
-                        <p className="setting-desc">Preferred audio and subtitle languages for new playback.</p>
+                        <div className="setting-row">
+                            <div>
+                                <h3 className="setting-title">Default Languages</h3>
+                                <p className="setting-desc">Preferred audio and subtitle languages for new playback.</p>
+                            </div>
+                        </div>
                         <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
                             <div style={{ flex: 1 }}>
                                 <label className="setting-label">Default Audio Language</label>
@@ -617,6 +641,44 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     </div>
                 );
             }
+        },
+        {
+            id: 'playerAutoSkip',
+            tab: 'player',
+            label: 'Auto Skip',
+            keywords: ['player', 'skip', 'intro', 'outro', 'auto', 'chapter'],
+            render: () => (
+                <div className="setting-section" key="playerAutoSkip">
+                    <div className="setting-row">
+                        <div>
+                            <h3 className="setting-title">Auto Skip Intro</h3>
+                            <p className="setting-desc">Automatically skip intro segments when detected by Jellyfin chapters.</p>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={autoSkipIntro}
+                                onChange={(e) => setAutoSkipIntro(e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+                    <div className="setting-row">
+                        <div>
+                            <h3 className="setting-title">Auto Skip Outro</h3>
+                            <p className="setting-desc">Automatically skip outro/credits segments when detected by Jellyfin chapters.</p>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={autoSkipOutro}
+                                onChange={(e) => setAutoSkipOutro(e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            )
         }
     ];
 

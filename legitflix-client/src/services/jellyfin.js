@@ -347,12 +347,13 @@ class JellyfinService {
         return url;
     }
 
-    async reportPlaybackProgress(itemId, ticks, isPaused) {
+    async reportPlaybackProgress(itemId, ticks, isPaused, mediaSourceId) {
         if (!this.api) this.initialize();
         try {
             await this.api.playstate.reportPlaybackProgress({
                 playbackProgressInfo: {
                     ItemId: itemId,
+                    MediaSourceId: mediaSourceId || itemId,
                     PositionTicks: ticks,
                     IsPaused: isPaused,
                     EventName: 'TimeUpdate'
@@ -377,29 +378,30 @@ class JellyfinService {
         }
     }
 
-    // --- Trickplay / BIF ---
-    async getTrickplayBifUrl(itemId, width) {
-        // Jellyfin doesn't have a standard public BIF endpoint for all clients without plugins.
-        return null;
+    // --- Trickplay ---
+    async getTrickplayManifest(itemId) {
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        const token = this.api.accessToken;
+        try {
+            const response = await fetch(`${baseUrl}/Videos/${itemId}/Trickplay`, {
+                headers: {
+                    'Authorization': `MediaBrowser Token="${token}"`
+                }
+            });
+            if (!response.ok) return null;
+            return await response.json();
+        } catch (e) {
+            console.warn("Failed to fetch trickplay manifest", e);
+            return null;
+        }
     }
 
     getTrickplayTileUrl(itemId, width, index) {
         if (!this.api) this.initialize();
         const baseUrl = this.api.configuration.basePath || '';
-        // Jellyfin trickplay tiles are usually at /Videos/{Id}/Trickplay/{Width}/{Index}.jpg
-        // Ensure width is a supported one (usually 320)
-        const supportedWidth = width || 320;
-        return `${baseUrl}/Videos/${itemId}/Trickplay/${supportedWidth}/${index}.jpg`;
-    }
-
-    async fetchAndParseBif(url) {
-        return []; // Return empty for now as we don't have a real BIF source
-    }
-
-    getTrickplayTileUrl(itemId, width, index) {
-        if (!this.api) this.initialize();
-        const baseUrl = this.api.configuration.basePath || '';
-        return `${baseUrl}/Videos/${itemId}/Trickplay/${width}/${index}.jpg`;
+        const token = this.api.accessToken;
+        return `${baseUrl}/Videos/${itemId}/Trickplay/${width}/${index}.jpg?api_key=${token}`;
     }
 
     async deleteSubtitle(itemId, index) {
