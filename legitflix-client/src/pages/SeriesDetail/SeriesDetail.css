@@ -333,10 +333,6 @@
     color: white;
 }
 
-.lf-btn--primary:hover {
-    background: var(--clr-accent-hover);
-}
-
 .lf-btn--glass {
     background: var(--clr-bg-glass);
     color: white;
@@ -655,7 +651,7 @@
 
 .lf-filter-dropdown__option.is-selected {
     color: var(--clr-text-main);
-    background: var(--clr-bg-glass);
+    background: var(--clr-bg-glass) !important;
 }
 
 .lf-filter-dropdown__option .material-icons {
@@ -703,7 +699,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--clr-text-main);
     padding: 8px 12px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s;
@@ -1280,11 +1276,6 @@
     color: var(--clr-text-main);
 }
 
-.lf-filter-dropdown__option.is-selected {
-    color: var(--clr-text-main);
-    background: var(--clr-bg-glass);
-}
-
 /* Language Selector Specifics */
 .lf-lang-menu {
     min-width: 240px;
@@ -1396,4 +1387,15 @@
 /* Disable hover play icon visually in selection mode */
 .lf-episode-card.is-selecting-mode:hover .lf-episode-card__play-icon {
     display: none;
+}
+
+/* Loading spinner keyframe */
+@keyframes lf-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }

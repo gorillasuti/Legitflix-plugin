@@ -1,4 +1,4 @@
-$version = "1.0.0.54"
+$version = "1.0.0.55"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 # Adjust build dir to be relative to the script location if running from root
@@ -73,7 +73,7 @@ $manifest = @{
     versions    = @(
         @{
             version   = $version
-            changelog = "Promo Banner Rework (Legacy Parity), Button Component Integration, UI Cleanup."
+            changelog = "Global UI Polish"
             targetAbi = "10.11.5.0"
             sourceUrl = "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v$version/$zipName"
             checksum  = $checksum

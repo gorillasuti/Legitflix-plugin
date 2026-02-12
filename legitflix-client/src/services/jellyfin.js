@@ -310,6 +310,12 @@ class JellyfinService {
         return `${baseUrl}/Items/${item.Id}/Images/${type}?maxWidth=${maxWidth}&quality=${quality}${tag}`;
     }
 
+    getPlaybackUrl(itemId) {
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        return `${baseUrl}/web/index.html#/details?id=${itemId}`;
+    }
+
     async deleteSubtitle(itemId, index) {
         if (!this.api) this.initialize();
         const response = await this.api.subtitle.deleteSubtitle({ itemId, index });

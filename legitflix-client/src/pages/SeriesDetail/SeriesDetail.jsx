@@ -17,6 +17,8 @@ const SeriesDetail = () => {
     const [similars, setSimilars] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubtitleModalOpen, setIsSubtitleModalOpen] = useState(false);
+    const [markingPlayed, setMarkingPlayed] = useState(false);
+    const [nextUpEpisode, setNextUpEpisode] = useState(null);
 
     // UI States
     const [isDescExpanded, setIsDescExpanded] = useState(false);
@@ -89,8 +91,7 @@ const SeriesDetail = () => {
                     const nextUpData = await jellyfinService.getNextUp(user.Id, id);
                     if (nextUpData && nextUpData.Items && nextUpData.Items.length > 0) {
                         const nextUpEp = nextUpData.Items[0];
-                        // If we have Next Up, try to find its season in our list
-                        // Note: NextUp item usually has SeasonId
+                        setNextUpEpisode(nextUpEp);
                         if (nextUpEp.SeasonId) {
                             const seasonExists = seasonsData.Items.find(s => s.Id === nextUpEp.SeasonId);
                             if (seasonExists) {
@@ -161,6 +162,11 @@ const SeriesDetail = () => {
         setSelectedEpisodes([]); // Clear on toggle
     };
 
+    const playEpisode = (episodeId) => {
+        const url = jellyfinService.getPlaybackUrl(episodeId);
+        window.location.href = url;
+    };
+
     const handleEpisodeClick = (episodeId) => {
         if (isSelectionMode) {
             if (selectedEpisodes.includes(episodeId)) {
@@ -169,24 +175,48 @@ const SeriesDetail = () => {
                 setSelectedEpisodes([...selectedEpisodes, episodeId]);
             }
         } else {
-            console.log('Play Episode', episodeId);
-            // TODO: Navigate to player
+            playEpisode(episodeId);
         }
     };
 
     const markSelectedPlayed = async (isPlayed) => {
-        if (selectedEpisodes.length === 0) return;
-        const user = await jellyfinService.getCurrentUser();
-        if (!user) return;
+        if (selectedEpisodes.length === 0 || markingPlayed) return;
+        setMarkingPlayed(true);
 
-        // Optimistic update could be done here, but let's just await
-        await Promise.all(selectedEpisodes.map(epId => jellyfinService.markPlayed(user.Id, epId, isPlayed)));
+        // Optimistic UI update — immediately update watched state in local episodes list
+        setEpisodes(prev => prev.map(ep => {
+            if (selectedEpisodes.includes(ep.Id)) {
+                return {
+                    ...ep,
+                    UserData: {
+                        ...(ep.UserData || {}),
+                        Played: isPlayed,
+                    }
+                };
+            }
+            return ep;
+        }));
 
-        // Refresh episodes to show new status
-        await loadEpisodes();
+        try {
+            const user = await jellyfinService.getCurrentUser();
+            if (!user) throw new Error('No user');
 
-        // Clear selection
-        setSelectedEpisodes([]);
+            await Promise.all(
+                selectedEpisodes.map(epId =>
+                    jellyfinService.markPlayed(user.Id, epId, isPlayed)
+                )
+            );
+
+            // Refresh episodes from server to get accurate state
+            await loadEpisodes();
+        } catch (err) {
+            console.error('Failed to mark episodes', err);
+            // Revert optimistic update on failure
+            await loadEpisodes();
+        } finally {
+            setMarkingPlayed(false);
+            setSelectedEpisodes([]);
+        }
     };
 
     const handleSelectAll = () => {
@@ -531,9 +561,23 @@ const SeriesDetail = () => {
                         </div>
 
                         <div className="lf-series-hero__actions">
-                            <button className="lf-btn lf-btn--primary lf-btn--ring-hover">
+                            <button
+                                className="lf-btn lf-btn--primary lf-btn--ring-hover"
+                                onClick={() => {
+                                    if (nextUpEpisode) {
+                                        playEpisode(nextUpEpisode.Id);
+                                    } else if (episodes.length > 0) {
+                                        playEpisode(episodes[0].Id);
+                                    }
+                                }}
+                            >
                                 <span className="material-icons">play_arrow</span>
-                                Start Watching S1 E1
+                                {nextUpEpisode
+                                    ? (nextUpEpisode.UserData?.PlaybackPositionTicks > 0
+                                        ? `Resume S${nextUpEpisode.ParentIndexNumber} E${nextUpEpisode.IndexNumber}`
+                                        : `Continue S${nextUpEpisode.ParentIndexNumber} E${nextUpEpisode.IndexNumber}`)
+                                    : 'Start Watching'
+                                }
                             </button>
                             <button
                                 className="lf-btn lf-btn--glass lf-btn--ring-hover-secondary"
@@ -658,11 +702,14 @@ const SeriesDetail = () => {
                             <>
                                 <button
                                     className="lf-edit-subs-btn"
-                                    style={{ width: 'auto', padding: '8px 16px' }}
+                                    style={{ width: 'auto', padding: '8px 16px', opacity: markingPlayed ? 0.6 : 1 }}
                                     onClick={() => markSelectedPlayed(smartBtn.isPlayed)}
+                                    disabled={markingPlayed || selectedEpisodes.length === 0}
                                 >
-                                    <span className="material-icons">{smartBtn.icon}</span>
-                                    <span>{smartBtn.label}</span>
+                                    <span className="material-icons" style={markingPlayed ? { animation: 'lf-spin 1s linear infinite' } : {}}>
+                                        {markingPlayed ? 'sync' : smartBtn.icon}
+                                    </span>
+                                    <span>{markingPlayed ? 'Updating…' : smartBtn.label}</span>
                                 </button>
                                 <button
                                     className="lf-filter-btn"
