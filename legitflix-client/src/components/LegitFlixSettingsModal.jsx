@@ -44,6 +44,10 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [defaultSubtitleLanguage, setDefaultSubtitleLanguage] = useState(config.defaultSubtitleLanguage || 'auto');
     const [autoSkipIntro, setAutoSkipIntro] = useState(config.autoSkipIntro || false);
     const [autoSkipOutro, setAutoSkipOutro] = useState(config.autoSkipOutro || false);
+    // Subtitle Customization
+    const [subSize, setSubSize] = useState(config.subtitleSize || '100%');
+    const [subColor, setSubColor] = useState(config.subtitleColor || '#ffffff');
+    const [subBackground, setSubBackground] = useState(config.subtitleBackground || 'drop-shadow');
 
     useEffect(() => {
         if (isOpen) {
@@ -63,6 +67,10 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setDefaultSubtitleLanguage(config.defaultSubtitleLanguage || 'auto');
             setAutoSkipIntro(config.autoSkipIntro || false);
             setAutoSkipOutro(config.autoSkipOutro || false);
+            setAutoSkipOutro(config.autoSkipOutro || false);
+            setSubSize(config.subtitleSize || '100%');
+            setSubColor(config.subtitleColor || '#ffffff');
+            setSubBackground(config.subtitleBackground || 'drop-shadow');
             setSearchQuery('');
 
             if (!PRESET_COLORS.some(c => c.value === config.accentColor)) {
@@ -119,6 +127,9 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             defaultSubtitleLanguage,
             autoSkipIntro,
             autoSkipOutro,
+            subtitleSize: subSize,
+            subtitleColor: subColor,
+            subtitleBackground: subBackground,
         });
         onClose();
     };
@@ -139,6 +150,9 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         setPlayerSeekBackward(10);
         setDefaultAudioLanguage('auto');
         setDefaultSubtitleLanguage('auto');
+        setSubSize('100%');
+        setSubColor('#ffffff');
+        setSubBackground('drop-shadow');
     };
 
     const handleAvatarFile = async (file) => {
@@ -676,6 +690,73 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                             />
                             <span className="slider"></span>
                         </label>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'subtitleAppearance',
+            tab: 'player',
+            label: 'Subtitle Appearance',
+            keywords: ['subtitle', 'appearance', 'style', 'color', 'size', 'background', 'font'],
+            render: () => (
+                <div className="setting-section" key="subtitleAppearance">
+                    <h3 className="setting-title">Subtitle Appearance</h3>
+                    <p className="setting-desc">Customize how subtitles look in the player.</p>
+
+                    <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label className="setting-label">Size</label>
+                            <select
+                                className="legit-input"
+                                value={subSize}
+                                onChange={(e) => setSubSize(e.target.value)}
+                            >
+                                <option value="75%">Small</option>
+                                <option value="100%">Medium</option>
+                                <option value="125%">Large</option>
+                                <option value="150%">Extra Large</option>
+                                <option value="200%">Huge</option>
+                            </select>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label className="setting-label">Background Style</label>
+                            <select
+                                className="legit-input"
+                                value={subBackground}
+                                onChange={(e) => setSubBackground(e.target.value)}
+                            >
+                                <option value="none">None</option>
+                                <option value="drop-shadow">Drop Shadow</option>
+                                <option value="outline">Outline</option>
+                                <option value="box">Box (Semi-Transparent)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="setting-row" style={{ marginTop: '16px', display: 'block' }}>
+                        <label className="setting-label" style={{ marginBottom: '8px', display: 'block' }}>Text Color</label>
+                        <div className="color-presets" style={{ gap: '10px' }}>
+                            {[
+                                { name: 'White', value: '#ffffff' },
+                                { name: 'Yellow', value: '#ffff00' },
+                                { name: 'Cyan', value: '#00ffff' },
+                                { name: 'Green', value: '#00ff00' },
+                                { name: 'Magenta', value: '#ff00ff' },
+                                { name: 'Red', value: '#ff0000' },
+                                { name: 'Black', value: '#000000' }
+                            ].map(c => (
+                                <div
+                                    key={c.value}
+                                    className={`color-preset ${subColor === c.value ? 'selected' : ''}`}
+                                    style={{ backgroundColor: c.value, width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', border: subColor === c.value ? '2px solid white' : '1px solid #444', position: 'relative' }}
+                                    onClick={() => setSubColor(c.value)}
+                                    title={c.name}
+                                >
+                                    {subColor === c.value && <span className="material-icons" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '18px', color: c.value === '#ffffff' || c.value === '#ffff00' || c.value === '#00ff00' || c.value === '#00ffff' ? 'black' : 'white' }}>check</span>}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )

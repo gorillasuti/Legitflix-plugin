@@ -1,38 +1,41 @@
-﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
+﻿
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
-import { useTheme } from '../../context/ThemeContext'; // Import useTheme
+import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/Navbar';
+import PlayerSettingsModal from '../../components/PlayerSettingsModal';
+import SubtitleModal from '../../components/SubtitleModal';
 import './Player.css';
 
 const Player = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { config } = useTheme(); // Access global config
+    const { config, updateConfig } = useTheme();
     const videoRef = useRef(null);
-    const containerRef = useRef(null); // Ref for fullscreen toggling
+    const containerRef = useRef(null);
 
     // Player State
-    const [isPlaying, setIsPlaying] = useState(true); // Auto-play
+    const [isPlaying, setIsPlaying] = useState(true);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
-    const [showControls, setShowControls] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [buffered, setBuffered] = useState(0);
+    const [showControls, setShowControls] = useState(false);
+    const [playbackRate, setPlaybackRate] = useState(1);
+    const [autoPlay, setAutoPlay] = useState(true);
+    const [showSettings, setShowSettings] = useState(false);
+    const [settingsTab, setSettingsTab] = useState('Quality');
+    const [maxBitrate, setMaxBitrate] = useState(null);
+    const [showSubtitleSearch, setShowSubtitleSearch] = useState(false);
 
-    // Data State
     const [item, setItem] = useState(null);
+    const [mediaSourceId, setMediaSourceId] = useState(null);
     const [playbackUrl, setPlaybackUrl] = useState(null);
-    const [centerIcon, setCenterIcon] = useState(null);
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [isDescExpanded, setIsDescExpanded] = useState(false);
-
-    // Trickplay State
-    const [trickplayBgPos, setTrickplayBgPos] = useState(null); // { x, y, totalWidth, totalHeight }
+    // { x, y, totalWidth, totalHeight }
     const [hoverTime, setHoverTime] = useState(null);
     const [hoverPosition, setHoverPosition] = useState(0);
     const [isHoveringTimeline, setIsHoveringTimeline] = useState(false);
@@ -46,112 +49,143 @@ const Player = () => {
     const [episodesLoading, setEpisodesLoading] = useState(false);
 
     // Advanced Player State
-    const [showSettings, setShowSettings] = useState(false);
-
+    // Removed duplicate state declarations
 
     // Default skip times/preferences (will fall back to defaults if not in config)
     const SEEK_FORWARD_TIME = config?.player?.seekForward || 30;
     const SEEK_BACKWARD_TIME = config?.player?.seekBackward || 10;
+
+    // Additional state not covered above
     const [audioStreams, setAudioStreams] = useState([]);
     const [subtitleStreams, setSubtitleStreams] = useState([]);
     const [selectedAudioIndex, setSelectedAudioIndex] = useState(null);
     const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState(null);
-    const [playbackRate, setPlaybackRate] = useState(1);
-    const [autoPlay, setAutoPlay] = useState(true);
-    const [maxBitrate, setMaxBitrate] = useState(null); // null = Auto
-    const [mediaSourceId, setMediaSourceId] = useState(null);
     const [showSkipIntro, setShowSkipIntro] = useState(false);
+    const [showSkipOutro, setShowSkipOutro] = useState(false); // Added this
+    const [skipTargetTime, setSkipTargetTime] = useState(null);
     const [introStart, setIntroStart] = useState(null);
     const [introEnd, setIntroEnd] = useState(null);
     const [nextEpisodeId, setNextEpisodeId] = useState(null);
-    const [settingsTab, setSettingsTab] = useState('Quality'); // Quality, Audio, Subtitles, Speed
 
     const controlsTimeoutRef = useRef(null);
     const hlsRef = useRef(null);
     const progressInterval = useRef(null);
+    const autoSkippedRef = useRef({ intro: false, outro: false });
+
+    // --- 2. Fetch Seasons & Episodes ---
+    const loadSeasons = useCallback(async (userId, seriesId, initialSeasonId) => {
+        try {
+            const seasonsData = await jellyfinService.getSeasons(userId, seriesId);
+            setSeasons(seasonsData.Items || []);
+
+            // Set current season (either the episode's season or the first one)
+            const seasonToLoad = initialSeasonId || (seasonsData.Items?.[0]?.Id);
+            setCurrentSeasonId(seasonToLoad);
+        } catch (error) {
+            console.error("Failed to load seasons", error);
+        }
+    }, []);
+
+    // --- 3. Trickplay Logic ---
+    const [trickplayInfo, setTrickplayInfo] = useState(null);
+
+    const loadTrickplayData = useCallback(async (itemId) => {
+        try {
+            const manifest = await jellyfinService.getTrickplayManifest(itemId);
+            if (!manifest) return;
+
+            // Manifest format: { "MediaSourceId": { "ResolutionWidth": { TileWidth, TileHeight, Interval, ... } } }
+            // Get the first media source's data
+            const mediaSourceKeys = Object.keys(manifest);
+            if (mediaSourceKeys.length === 0) return;
+
+            const resolutions = manifest[mediaSourceKeys[0]];
+            const resolutionKeys = Object.keys(resolutions).map(Number).sort((a, b) => a - b);
+            if (resolutionKeys.length === 0) return;
+
+            // Pick smallest resolution for performance (typically 320px wide)
+            const selectedWidth = resolutionKeys[0];
+            const info = resolutions[selectedWidth];
+
+            setTrickplayInfo({
+                itemId,
+                width: selectedWidth,
+                interval: info.Interval, // ms between frames
+                tileWidth: info.TileWidth, // columns per tile image
+                tileHeight: info.TileHeight, // rows per tile image
+                thumbWidth: info.Width, // pixel width of each thumb
+                thumbHeight: info.Height, // pixel height of each thumb
+                thumbnailCount: info.ThumbnailCount
+            });
+
+            console.log('[Trickplay] Loaded:', { width: selectedWidth, interval: info.Interval, cols: info.TileWidth, rows: info.TileHeight, thumbs: info.ThumbnailCount });
+        } catch (e) {
+            console.warn("Failed to load trickplay data", e);
+        }
+    }, []);
 
     // --- 1. Fetch Item & Playback Info ---
-    useEffect(() => {
-        const loadItem = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-                const user = await jellyfinService.getCurrentUser();
-                if (!user) { navigate('/login'); return; }
+    const loadItem = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const user = await jellyfinService.getCurrentUser();
+            if (!user) { navigate('/login'); return; }
 
-                const itemData = await jellyfinService.getItemDetails(user.Id, id);
-                setItem(itemData);
-                // Reset auto-skip tracking for new item
-                if (typeof autoSkippedRef !== 'undefined' && autoSkippedRef.current) {
-                    autoSkippedRef.current = { intro: false, outro: false };
-                }
-
-                // --- Stream Processing ---
-                if (itemData.MediaSources && itemData.MediaSources.length > 0) {
-                    const source = itemData.MediaSources[0];
-                    setMediaSourceId(source.Id);
-                    const streams = source.MediaStreams || [];
-
-                    const audio = streams.filter(s => s.Type === 'Audio');
-                    const subs = streams.filter(s => s.Type === 'Subtitle');
-                    setAudioStreams(audio);
-                    setSubtitleStreams(subs);
-
-                    // Set defaults if not already set (or reset on new item)
-                    const defaultAudio = audio.find(s => s.IsDefault) || audio[0];
-                    const defaultSub = subs.find(s => s.IsDefault) || subs.filter(s => s.IsForced)[0]; // don't auto-select subs unless default/forced
-
-                    // Only set if we haven't manually selected for this item (simple approach: reset on load)
-                    setSelectedAudioIndex(defaultAudio ? defaultAudio.Index : null);
-                    setSelectedSubtitleIndex(defaultSub ? defaultSub.Index : null);
-                }
-
-                // --- Chapter/Intro Processing ---
-                if (itemData.Chapters) {
-                    const intro = itemData.Chapters.find(c => c.Name.toLowerCase().includes('intro') || c.Name.toLowerCase().includes('opening'));
-                    if (intro) {
-                        setIntroStart(intro.StartPositionTicks / 10000000);
-                        // If there's a next chapter, use its start as end, else use intro end if available?
-                        // Jellyfin chapters usually just have StartPositionTicks.
-                        // We can look for the NEXT chapter to find the end of this one.
-                        const introIndex = itemData.Chapters.indexOf(intro);
-                        if (introIndex < itemData.Chapters.length - 1) {
-                            setIntroEnd(itemData.Chapters[introIndex + 1].StartPositionTicks / 10000000);
-                        } else {
-                            // Guess 80-90s length if we can't find end? Or use image tag?
-                            // Safe fallback: 90s after start
-                            setIntroEnd((intro.StartPositionTicks / 10000000) + 85);
-                        }
-                    } else {
-                        setIntroStart(null);
-                        setIntroEnd(null);
-                    }
-                }
-
-                // If it's an episode, fetch seasons & series info
-                if (itemData.Type === 'Episode' && itemData.SeriesId) {
-                    loadSeasons(user.Id, itemData.SeriesId, itemData.SeasonId);
-
-                    try {
-                        const sData = await jellyfinService.getItem(user.Id, itemData.SeriesId);
-                        setIsFavorite(sData.UserData?.IsFavorite || false);
-                    } catch (err) {
-                        console.warn("Failed to fetch series data", err);
-                    }
-                }
-
-                // Determine URL is handled in another effect dependent on state
-                // Fetch Trickplay Data
-                loadTrickplayData(itemData.Id);
-
-            } catch (error) {
-                console.error("Failed to load item", error);
-                setError("Failed to load content.");
-                setIsLoading(false);
+            const itemData = await jellyfinService.getItemDetails(user.Id, id);
+            setItem(itemData);
+            // Reset auto-skip tracking for new item
+            if (autoSkippedRef.current) {
+                autoSkippedRef.current = { intro: false, outro: false };
             }
-        };
-        loadItem();
+
+            // --- Stream Processing ---
+            if (itemData.MediaSources && itemData.MediaSources.length > 0) {
+                const source = itemData.MediaSources[0];
+                setMediaSourceId(source.Id);
+                const streams = source.MediaStreams || [];
+
+                const audio = streams.filter(s => s.Type === 'Audio');
+                const subs = streams.filter(s => s.Type === 'Subtitle');
+
+                setAudioStreams(audio);
+                setSubtitleStreams(subs);
+
+                // Set default/selected audio
+                const defaultAudio = audio.find(s => s.Index === source.DefaultAudioStreamIndex);
+                if (defaultAudio) setSelectedAudioIndex(defaultAudio.Index);
+                else if (audio.length > 0) setSelectedAudioIndex(audio[0].Index);
+
+                // Set default/selected sub
+                const defaultSub = subs.find(s => s.Index === source.DefaultSubtitleStreamIndex);
+                if (defaultSub) setSelectedSubtitleIndex(defaultSub.Index);
+                else setSelectedSubtitleIndex(null);
+            }
+            setIsLoading(false);
+        } catch (err) {
+            console.error("Failed to load item", err);
+            setError("Failed to load video.");
+            setIsLoading(false);
+        }
     }, [id, navigate]);
+
+    useEffect(() => {
+        loadItem();
+    }, [loadItem]);
+
+    const handleDeleteSubtitle = async (trackIndex) => {
+        if (!window.confirm("Are you sure you want to delete this subtitle?")) return;
+        try {
+            await jellyfinService.deleteSubtitle(item.Id, trackIndex);
+            // Refresh item data to update streams list
+            loadItem();
+        } catch (error) {
+            console.error("Failed to delete subtitle:", error);
+            alert("Failed to delete subtitle");
+        }
+    };
+
+
 
     // --- 1b. Update Playback URL when streams/quality change ---
     useEffect(() => {
@@ -172,19 +206,7 @@ const Player = () => {
         setPlaybackUrl(url);
     }, [item, selectedAudioIndex, selectedSubtitleIndex, maxBitrate]);
 
-    // --- 2. Fetch Seasons & Episodes ---
-    const loadSeasons = async (userId, seriesId, initialSeasonId) => {
-        try {
-            const seasonsData = await jellyfinService.getSeasons(userId, seriesId);
-            setSeasons(seasonsData.Items || []);
 
-            // Set current season (either the episode's season or the first one)
-            const seasonToLoad = initialSeasonId || (seasonsData.Items?.[0]?.Id);
-            setCurrentSeasonId(seasonToLoad);
-        } catch (error) {
-            console.error("Failed to load seasons", error);
-        }
-    };
 
     // Load episodes when season changes
     useEffect(() => {
@@ -218,43 +240,7 @@ const Player = () => {
         }
     }, [item, episodes]);
 
-    // --- 3. Trickplay Logic ---
-    const [trickplayInfo, setTrickplayInfo] = useState(null); // { width, interval, tileWidth, tileHeight, thumbWidth, thumbHeight, thumbnailCount }
 
-    const loadTrickplayData = async (itemId) => {
-        try {
-            const manifest = await jellyfinService.getTrickplayManifest(itemId);
-            if (!manifest) return;
-
-            // Manifest format: { "MediaSourceId": { "ResolutionWidth": { TileWidth, TileHeight, Interval, ... } } }
-            // Get the first media source's data
-            const mediaSourceKeys = Object.keys(manifest);
-            if (mediaSourceKeys.length === 0) return;
-
-            const resolutions = manifest[mediaSourceKeys[0]];
-            const resolutionKeys = Object.keys(resolutions).map(Number).sort((a, b) => a - b);
-            if (resolutionKeys.length === 0) return;
-
-            // Pick smallest resolution for performance (typically 320px wide)
-            const selectedWidth = resolutionKeys[0];
-            const info = resolutions[selectedWidth];
-
-            setTrickplayInfo({
-                itemId,
-                width: selectedWidth,
-                interval: info.Interval, // ms between frames
-                tileWidth: info.TileWidth, // columns per tile image
-                tileHeight: info.TileHeight, // rows per tile image
-                thumbWidth: info.Width, // pixel width of each thumb
-                thumbHeight: info.Height, // pixel height of each thumb
-                thumbnailCount: info.ThumbnailCount
-            });
-
-            console.log('[Trickplay] Loaded:', { width: selectedWidth, interval: info.Interval, cols: info.TileWidth, rows: info.TileHeight, thumbs: info.ThumbnailCount });
-        } catch (e) {
-            console.warn("Failed to load trickplay data", e);
-        }
-    };
 
     const handleTimelineHover = (e) => {
         if (!duration) return;
@@ -372,6 +358,46 @@ const Player = () => {
         }
     }, [playbackRate]);
 
+    // --- Subtitle Track Management ---
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        // Remove all existing track elements
+        const existingTracks = video.querySelectorAll('track');
+        existingTracks.forEach(t => t.remove());
+
+        // Also disable any existing text tracks (HLS may add some)
+        for (let i = 0; i < video.textTracks.length; i++) {
+            video.textTracks[i].mode = 'disabled';
+        }
+
+        if (selectedSubtitleIndex === null || !item?.Id || !mediaSourceId) {
+            console.log('[Subtitles] Subtitles off');
+            return;
+        }
+
+        // Find the selected subtitle stream info
+        const selectedStream = subtitleStreams.find(s => s.Index === selectedSubtitleIndex);
+        if (!selectedStream) return;
+
+        // Build subtitle URL
+        const subtitleUrl = jellyfinService.getSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex);
+        console.log('[Subtitles] Loading:', subtitleUrl, selectedStream.Language);
+
+        // Create and add track element
+        const track = document.createElement('track');
+        track.kind = 'subtitles';
+        track.label = selectedStream.Language || selectedStream.Title || 'Unknown';
+        track.srclang = selectedStream.Language || 'und';
+        track.src = subtitleUrl;
+        track.default = true;
+        video.appendChild(track);
+
+        // Set track to showing after a brief delay to ensure it's loaded
+        track.track.mode = 'showing';
+
+    }, [selectedSubtitleIndex, item?.Id, mediaSourceId, subtitleStreams]);
 
     // --- 5. Playback Reporting (Resume) ---
     useEffect(() => {
@@ -472,7 +498,7 @@ const Player = () => {
         if (!document.fullscreenElement) {
             if (containerRef.current) {
                 containerRef.current.requestFullscreen().catch(err => {
-                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    console.error(`Error attempting to enable full - screen mode: ${err.message} (${err.name})`);
                 });
             }
         } else {
@@ -548,39 +574,67 @@ const Player = () => {
         };
     }, [isPlaying, showSettings]); // Re-bind if dependencies change
 
-    // --- Click to Play/Pause ---
+    // --- Click to Play/Pause (with double-click support) ---
+    const clickTimerRef = useRef(null);
+
     const handleVideoClick = useCallback((e) => {
-        // Prevent triggering when clicking controls or skip buttons
-        if (e.target.closest('.lf-player-controls') || e.target.closest('.lf-player-back-button') || e.target.closest('.lf-skip-btn') || e.target.closest('.center-play-btn')) {
+        // Only block clicks on actual interactive elements, not empty overlay space
+        const clickedEl = e.target;
+        if (clickedEl.closest('button') || clickedEl.closest('input') || clickedEl.closest('select') ||
+            clickedEl.closest('.lf-skip-btn') || clickedEl.closest('.center-play-btn') ||
+            clickedEl.closest('.lf-settings-modal') || clickedEl.closest('.lf-player-back-button')) {
             return;
         }
 
-        if (videoRef.current) {
-            if (videoRef.current.paused) {
-                videoRef.current.play().catch(e => console.log('Play prevented:', e));
-                setIsPlaying(true);
-                flashCenterIcon('play_arrow');
-            } else {
-                videoRef.current.pause();
-                setIsPlaying(false);
-                flashCenterIcon('pause');
-            }
+        // Delay single-click to distinguish from double-click
+        if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current);
+            clickTimerRef.current = null;
+            return; // Double-click detected, let onDoubleClick handle it
         }
 
-        // Show controls temporarily
-        setShowControls(true);
-        if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-        controlsTimeoutRef.current = setTimeout(() => {
-            setShowControls(false);
-        }, 3000);
+        clickTimerRef.current = setTimeout(() => {
+            clickTimerRef.current = null;
+            if (videoRef.current) {
+                if (videoRef.current.paused) {
+                    videoRef.current.play().catch(e => console.log('Play prevented:', e));
+                    setIsPlaying(true);
+                    flashCenterIcon('play_arrow');
+                } else {
+                    videoRef.current.pause();
+                    setIsPlaying(false);
+                    flashCenterIcon('pause');
+                }
+            }
+
+            // Show controls temporarily
+            setShowControls(true);
+            if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+            controlsTimeoutRef.current = setTimeout(() => {
+                setShowControls(false);
+            }, 3000);
+        }, 250);
     }, [videoRef]);
 
-    // --- Skip Intro/Outro Logic ---
+    const handleDoubleClick = useCallback((e) => {
+        // Only on video area, not on controls
+        const clickedEl = e.target;
+        if (clickedEl.closest('button') || clickedEl.closest('input') || clickedEl.closest('select') ||
+            clickedEl.closest('.lf-settings-modal')) {
+            return;
+        }
 
-    const [showSkipOutro, setShowSkipOutro] = useState(false);
-    const [skipTargetTime, setSkipTargetTime] = useState(null);
+        // Cancel single-click timer
+        if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current);
+            clickTimerRef.current = null;
+        }
 
-    const autoSkippedRef = useRef({ intro: false, outro: false });
+        // Toggle fullscreen
+        toggleFullscreen();
+    }, []);
+
+
 
     const checkForChapters = useCallback((time) => {
         if (!item?.Chapters) return;
@@ -628,7 +682,7 @@ const Player = () => {
                     if (config.autoSkipOutro && !autoSkippedRef.current.outro && videoRef.current) {
                         autoSkippedRef.current.outro = true;
                         if (nextEpisodeId) {
-                            navigate(`/player/${nextEpisodeId}`);
+                            navigate(`/ player / ${nextEpisodeId} `);
                         }
                     }
                 } else {
@@ -651,9 +705,9 @@ const Player = () => {
         } else {
             // Fallback if opened directly
             if (item && item.SeriesId) {
-                navigate(`/series/${item.SeriesId}`);
+                navigate(`/ series / ${item.SeriesId} `);
             } else if (item && item.ParentId) {
-                navigate(`/library`); // Or parent folder
+                navigate(`/ library`); // Or parent folder
             } else {
                 navigate('/');
             }
@@ -726,7 +780,7 @@ const Player = () => {
             setSubtitleStreams([]);
             setIntroStart(null);
             setShowSkipIntro(false);
-            navigate(`/play/${nextEpisodeId}`);
+            navigate(`/ play / ${nextEpisodeId} `);
         }
     };
 
@@ -765,7 +819,7 @@ const Player = () => {
     const handleEpisodeClick = (epId) => {
         if (epId === item.Id) return;
         reportStop();
-        navigate(`/play/${epId}`);
+        navigate(`/ play / ${epId} `);
     };
 
     const toggleFavorite = async () => {
@@ -788,9 +842,9 @@ const Player = () => {
         const m = Math.floor((seconds % 3600) / 60);
         const s = Math.floor(seconds % 60);
         if (h > 0) {
-            return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} `;
         }
-        return `${m}:${s.toString().padStart(2, '0')}`;
+        return `${m}:${s.toString().padStart(2, '0')} `;
     };
 
     // Calculate progress percentage
@@ -804,10 +858,12 @@ const Player = () => {
             {/* --- Main Video Container (Use Ref for Fullscreen) --- */}
             <div
                 ref={containerRef}
-                className={`lf-player-video-container ${document.fullscreenElement ? 'is-fullscreen' : ''}`}
+                className={`lf - player - video - container ${document.fullscreenElement ? 'is-fullscreen' : ''} `}
+                style={{ cursor: showControls ? 'default' : 'none' }}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => isPlaying && setShowControls(false)}
                 onClick={handleVideoClick}
+                onDoubleClick={handleDoubleClick}
             >
                 <div className="lf-player-video-wrapper">
                     <video
@@ -852,12 +908,12 @@ const Player = () => {
                     )}
 
                     {/* Center Flash Icon */}
-                    <div className={`lf-player-center-icon ${centerIcon ? 'visible' : ''}`}>
+                    <div className={`lf - player - center - icon ${centerIcon ? 'visible' : ''} `}>
                         <span className="material-icons">{centerIcon}</span>
                     </div>
 
                     {/* Controls Overlay */}
-                    <div className={`lf-player-controls ${showControls ? 'visible' : ''}`}>
+                    <div className={`lf - player - controls ${showControls ? 'visible' : ''} `}>
 
                         {/* Top Bar (Back Button & Title) */}
                         <div className="lf-player-controls-top">
@@ -884,92 +940,50 @@ const Player = () => {
 
                         {/* Settings Modal */}
                         {showSettings && (
-                            <div className="lf-settings-modal">
-                                <div className="lf-settings-header">
-                                    <h3>Settings</h3>
-                                    <button onClick={() => setShowSettings(false)} className="close-btn">
-                                        <span className="material-icons">close</span>
-                                    </button>
-                                </div>
-                                <div className="lf-settings-tabs">
-                                    {['Quality', 'Audio', 'Subtitles', 'Speed', 'General'].map(tab => (
-                                        <button
-                                            key={tab}
-                                            className={`tab-btn ${settingsTab === tab ? 'active' : ''}`}
-                                            onClick={() => setSettingsTab(tab)}
-                                        >
-                                            {tab}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="lf-settings-content">
-                                    {settingsTab === 'Quality' && (
-                                        <div className="settings-list">
-                                            <button className={!maxBitrate ? 'active' : ''} onClick={() => setMaxBitrate(null)}>Auto</button>
-                                            <button className={maxBitrate === 120000000 ? 'active' : ''} onClick={() => setMaxBitrate(120000000)}>4K (120Mbps)</button>
-                                            <button className={maxBitrate === 60000000 ? 'active' : ''} onClick={() => setMaxBitrate(60000000)}>1080p High (60Mbps)</button>
-                                            <button className={maxBitrate === 20000000 ? 'active' : ''} onClick={() => setMaxBitrate(20000000)}>1080p (20Mbps)</button>
-                                            <button className={maxBitrate === 10000000 ? 'active' : ''} onClick={() => setMaxBitrate(10000000)}>720p (10Mbps)</button>
-                                        </div>
-                                    )}
-                                    {settingsTab === 'Audio' && (
-                                        <div className="settings-list">
-                                            {audioStreams.map(stream => (
-                                                <button
-                                                    key={stream.Index}
-                                                    className={selectedAudioIndex === stream.Index ? 'active' : ''}
-                                                    onClick={() => handleStreamSelect('Audio', stream.Index)}
-                                                >
-                                                    {stream.Language || 'Unknown'} - {stream.Codec} {stream.Title ? `(${stream.Title})` : ''}
-                                                </button>
-                                            ))}
-                                            {audioStreams.length === 0 && <p>No audio streams found.</p>}
-                                        </div>
-                                    )}
-                                    {settingsTab === 'Subtitles' && (
-                                        <div className="settings-list">
-                                            <button
-                                                className={selectedSubtitleIndex === null ? 'active' : ''}
-                                                onClick={() => handleStreamSelect('Subtitle', null)}
-                                            >
-                                                Off
-                                            </button>
-                                            {subtitleStreams.map(stream => (
-                                                <button
-                                                    key={stream.Index}
-                                                    className={selectedSubtitleIndex === stream.Index ? 'active' : ''}
-                                                    onClick={() => handleStreamSelect('Subtitle', stream.Index)}
-                                                >
-                                                    {stream.Language || 'Unknown'} {stream.Title ? `(${stream.Title})` : ''} {stream.IsForced ? '[Forced]' : ''}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {settingsTab === 'Speed' && (
-                                        <div className="settings-list">
-                                            {[0.5, 0.75, 1, 1.25, 1.5, 2].map(rate => (
-                                                <button
-                                                    key={rate}
-                                                    className={playbackRate === rate ? 'active' : ''}
-                                                    onClick={() => setPlaybackRate(rate)}
-                                                >
-                                                    {rate}x
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {settingsTab === 'General' && (
-                                        <div className="settings-list">
-                                            <button
-                                                className={autoPlay ? 'active' : ''}
-                                                onClick={() => setAutoPlay(!autoPlay)}
-                                            >
-                                                Auto Play: {autoPlay ? 'On' : 'Off'}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <PlayerSettingsModal
+                                isOpen={showSettings}
+                                onClose={() => setShowSettings(false)}
+                                settingsTab={settingsTab}
+                                setSettingsTab={setSettingsTab}
+                                maxBitrate={maxBitrate}
+                                setMaxBitrate={setMaxBitrate}
+                                audioStreams={audioStreams}
+                                selectedAudioIndex={selectedAudioIndex}
+                                onSelectAudio={setSelectedAudioIndex}
+                                subtitleStreams={subtitleStreams}
+                                selectedSubtitleIndex={selectedSubtitleIndex}
+                                onSelectSubtitle={setSelectedSubtitleIndex}
+                                onOpenSubtitleSearch={() => {
+                                    setShowSettings(false);
+                                    setShowSubtitleSearch(true);
+                                }}
+                                onDeleteSubtitle={handleDeleteSubtitle}
+                                playbackRate={playbackRate}
+                                setPlaybackRate={setPlaybackRate}
+                                autoPlay={autoPlay}
+                                setAutoPlay={setAutoPlay}
+                                autoSkipIntro={config?.autoSkipIntro}
+                                setAutoSkipIntro={(val) => updateConfig({ autoSkipIntro: val })}
+                                autoSkipOutro={config?.autoSkipOutro}
+                                setAutoSkipOutro={(val) => updateConfig({ autoSkipOutro: val })}
+                                updateConfig={updateConfig}
+                            />
+                        )}
+
+                        {/* Subtitle Search Modal */}
+                        {showSubtitleSearch && (
+                            <SubtitleModal
+                                isOpen={showSubtitleSearch}
+                                onClose={() => setShowSubtitleSearch(false)}
+                                seriesId={item?.SeriesId}
+                                initialSeasonId={currentSeasonId || item?.SeasonId}
+                                initialEpisodeId={item?.Id}
+                                isMovie={item?.Type === 'Movie'}
+                                onSubtitleDownloaded={() => {
+                                    loadItem();
+                                    setShowSubtitleSearch(false);
+                                }}
+                            />
                         )}
 
                         {/* Bottom Controls Bar */}
@@ -991,21 +1005,21 @@ const Player = () => {
                                 onMouseLeave={handleTimelineLeave}
                             >
                                 <div className="lf-player-timeline-track">
-                                    <div className="lf-player-timeline-buffered" style={{ width: `${bufferedPct}%` }} />
-                                    <div className="lf-player-timeline-fill" style={{ width: `${progressPercent}%` }}>
+                                    <div className="lf-player-timeline-buffered" style={{ width: `${bufferedPct}% ` }} />
+                                    <div className="lf-player-timeline-fill" style={{ width: `${progressPercent}% ` }}>
                                         <div className="lf-player-timeline-thumb" />
                                     </div>
                                 </div>
                                 {/* Hover Tooltip with Time & Trickplay Thumbnail */}
                                 {isHoveringTimeline && hoverTime !== null && (
-                                    <div className="lf-timeline-tooltip" style={{ left: `${hoverPosition * 100}%` }}>
+                                    <div className="lf-timeline-tooltip" style={{ left: `${hoverPosition * 100}% ` }}>
                                         {thumbnailUrl && trickplayBgPos && (
                                             <div className="lf-timeline-thumbnail" style={{
                                                 backgroundImage: `url(${thumbnailUrl})`,
-                                                backgroundPosition: `${trickplayBgPos.x}px ${trickplayBgPos.y}px`,
-                                                backgroundSize: `${trickplayBgPos.totalWidth}px ${trickplayBgPos.totalHeight}px`,
-                                                width: `${trickplayInfo?.thumbWidth || 160}px`,
-                                                height: `${trickplayInfo?.thumbHeight || 90}px`
+                                                backgroundPosition: `${trickplayBgPos.x}px ${trickplayBgPos.y} px`,
+                                                backgroundSize: `${trickplayBgPos.totalWidth}px ${trickplayBgPos.totalHeight} px`,
+                                                width: `${trickplayInfo?.thumbWidth || 160} px`,
+                                                height: `${trickplayInfo?.thumbHeight || 90} px`
                                             }} />
                                         )}
                                         <span className="lf-timeline-time">{formatTime(hoverTime)}</span>
@@ -1094,7 +1108,7 @@ const Player = () => {
                                 </div>
                                 <div className="lf-player-actions">
                                     <button
-                                        className={`lf-action-btn ${isFavorite ? 'is-active' : ''}`}
+                                        className={`lf - action - btn ${isFavorite ? 'is-active' : ''} `}
                                         onClick={toggleFavorite}
                                         title={isFavorite ? "Remove from Watchlist" : "Add to Watchlist"}
                                     >
@@ -1149,7 +1163,7 @@ const Player = () => {
                                         episodes.map(ep => (
                                             <div
                                                 key={ep.Id}
-                                                className={`lf-episode-card-small ${ep.Id === item.Id ? 'current' : ''}`}
+                                                className={`lf - episode - card - small ${ep.Id === item.Id ? 'current' : ''} `}
                                                 onClick={() => handleEpisodeClick(ep.Id)}
                                             >
                                                 <div className="ep-card-img">

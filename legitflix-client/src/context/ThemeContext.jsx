@@ -62,11 +62,13 @@ export const ThemeProvider = ({ children }) => {
                 setConfig(prev => ({ ...prev, ...parsed }));
                 if (parsed.accentColor) applyAccentColor(parsed.accentColor);
                 if (parsed.faviconUrl) applyFavicon(parsed.faviconUrl);
+                applySubtitleStyles(parsed.subtitleSize, parsed.subtitleColor, parsed.subtitleBackground);
             } catch (e) {
                 console.error("Failed to parse local config", e);
             }
         } else {
             applyAccentColor(config.accentColor);
+            applySubtitleStyles(config.subtitleSize, config.subtitleColor, config.subtitleBackground);
         }
     }, []);
 
@@ -85,7 +87,31 @@ export const ThemeProvider = ({ children }) => {
             link.rel = 'icon';
             document.head.appendChild(link);
         }
-        link.href = url || '/favicon.jpg';
+        link.href = url || '/favicon.png';
+    };
+
+    const applySubtitleStyles = (size, color, background) => {
+        const root = document.documentElement;
+        root.style.setProperty('--lf-sub-size', size || '100%');
+        root.style.setProperty('--lf-sub-color', color || '#ffffff');
+
+        // Background & Shadow logic
+        let textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
+        let bgColor = 'transparent';
+
+        if (background === 'drop-shadow') {
+            textShadow = '0px 2px 4px rgba(0,0,0,0.9)';
+        } else if (background === 'outline') {
+            textShadow = '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000';
+        } else if (background === 'box') {
+            bgColor = 'rgba(0,0,0,0.7)';
+            textShadow = 'none';
+        } else if (background === 'none') {
+            textShadow = 'none';
+        }
+
+        root.style.setProperty('--lf-sub-shadow', textShadow);
+        root.style.setProperty('--lf-sub-bg', bgColor);
     };
 
     const updateConfig = (newConfig) => {
@@ -94,6 +120,11 @@ export const ThemeProvider = ({ children }) => {
             localStorage.setItem('LegitFlix_Config', JSON.stringify(updated));
             if (newConfig.accentColor) applyAccentColor(newConfig.accentColor);
             if (newConfig.faviconUrl !== undefined) applyFavicon(newConfig.faviconUrl);
+
+            if (newConfig.subtitleSize !== undefined || newConfig.subtitleColor !== undefined || newConfig.subtitleBackground !== undefined) {
+                applySubtitleStyles(updated.subtitleSize, updated.subtitleColor, updated.subtitleBackground);
+            }
+
             return updated;
         });
     };

@@ -45,7 +45,7 @@ const LANGUAGES = {
     ],
 };
 
-const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpisodeId, isMovie = false }) => {
+const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpisodeId, isMovie = false, onSubtitleDownloaded }) => {
     const [seasons, setSeasons] = useState([]);
     const [episodes, setEpisodes] = useState([]);
     const [selectedSeason, setSelectedSeason] = useState(initialSeasonId || '');
@@ -153,9 +153,10 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
 
     const handleDownload = async (subtitleId) => {
         try {
-            await jellyfinService.downloadRemoteSubtitles(selectedEpisode, subtitleId);
+            await jellyfinService.downloadRemoteSubtitles(selectedEpisode || initialEpisodeId, subtitleId);
             alert('Subtitle downloaded!');
             loadCurrentSubtitles();
+            if (onSubtitleDownloaded) onSubtitleDownloaded();
         } catch (err) {
             alert('Download failed');
         }
@@ -301,7 +302,8 @@ SubtitleModal.propTypes = {
     seriesId: PropTypes.string,
     initialSeasonId: PropTypes.string,
     initialEpisodeId: PropTypes.string,
-    isMovie: PropTypes.bool
+    isMovie: PropTypes.bool,
+    onSubtitleDownloaded: PropTypes.func
 };
 
 export default SubtitleModal;

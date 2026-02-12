@@ -383,18 +383,33 @@ class JellyfinService {
         if (!this.api) this.initialize();
         const baseUrl = this.api.configuration.basePath || '';
         const token = this.api.accessToken;
+        const authHeader = `MediaBrowser Client="LegitFlix Client", Device="LegitFlix Web", DeviceId="legitflix-web", Version="1.0.0.18", Token="${token}"`;
         try {
-            const response = await fetch(`${baseUrl}/Videos/${itemId}/Trickplay`, {
+            const url = `${baseUrl}/Videos/${itemId}/Trickplay`;
+            console.log('[Trickplay] Fetching manifest:', url);
+            const response = await fetch(url, {
                 headers: {
-                    'Authorization': `MediaBrowser Token="${token}"`
+                    'Authorization': authHeader
                 }
             });
-            if (!response.ok) return null;
-            return await response.json();
+            if (!response.ok) {
+                console.warn('[Trickplay] Manifest fetch failed:', response.status, response.statusText);
+                return null;
+            }
+            const data = await response.json();
+            console.log('[Trickplay] Manifest data:', JSON.stringify(data).substring(0, 500));
+            return data;
         } catch (e) {
             console.warn("Failed to fetch trickplay manifest", e);
             return null;
         }
+    }
+
+    getSubtitleUrl(itemId, mediaSourceId, streamIndex) {
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        const token = this.api.accessToken;
+        return `${baseUrl}/Videos/${itemId}/${mediaSourceId}/Subtitles/${streamIndex}/0/Stream.vtt?api_key=${token}`;
     }
 
     getTrickplayTileUrl(itemId, width, index) {
