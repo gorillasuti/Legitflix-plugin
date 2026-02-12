@@ -35,7 +35,13 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [showNavbarRequests, setShowNavbarRequests] = useState(config.showNavbarRequests !== false);
     const [customHex, setCustomHex] = useState('');
     const [contentTypes, setContentTypes] = useState(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
+
     const [sortMode, setSortMode] = useState(config.contentSortMode || 'latest');
+    // Player Settings State
+    const [playerSeekForward, setPlayerSeekForward] = useState(config.playerSeekForward || 30);
+    const [playerSeekBackward, setPlayerSeekBackward] = useState(config.playerSeekBackward || 10);
+    const [defaultAudioLanguage, setDefaultAudioLanguage] = useState(config.defaultAudioLanguage || 'auto');
+    const [defaultSubtitleLanguage, setDefaultSubtitleLanguage] = useState(config.defaultSubtitleLanguage || 'auto');
 
     useEffect(() => {
         if (isOpen) {
@@ -49,6 +55,10 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setShowNavbarRequests(config.showNavbarRequests !== false);
             setContentTypes(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
             setSortMode(config.contentSortMode || 'latest');
+            setPlayerSeekForward(config.playerSeekForward || 30);
+            setPlayerSeekBackward(config.playerSeekBackward || 10);
+            setDefaultAudioLanguage(config.defaultAudioLanguage || 'auto');
+            setDefaultSubtitleLanguage(config.defaultSubtitleLanguage || 'auto');
             setSearchQuery('');
 
             if (!PRESET_COLORS.some(c => c.value === config.accentColor)) {
@@ -89,6 +99,10 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             heroMediaTypes: heroStr,
             promoMediaTypes: promoArr,
             contentSortMode: sortMode,
+            playerSeekForward,
+            playerSeekBackward,
+            defaultAudioLanguage,
+            defaultSubtitleLanguage,
         });
         onClose();
     };
@@ -103,7 +117,12 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         setShowLibraryTitles(true);
         setShowNavbarRequests(true);
         setContentTypes({ Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
+        setContentTypes({ Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
         setSortMode('latest');
+        setPlayerSeekForward(30);
+        setPlayerSeekBackward(10);
+        setDefaultAudioLanguage('auto');
+        setDefaultSubtitleLanguage('auto');
     };
 
     const handleAvatarFile = async (file) => {
@@ -461,6 +480,77 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     </div>
                 </div>
             )
+        },
+        {
+            id: 'playerSeek',
+            tab: 'player',
+            label: 'Seek Durations',
+            keywords: ['player', 'seek', 'skip', 'forward', 'backward', 'time'],
+            render: () => (
+                <div className="setting-section" key="playerSeek">
+                    <h3>Seek Durations (Seconds)</h3>
+                    <p className="setting-desc">Customize how many seconds to skip forward or backward.</p>
+                    <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label className="setting-label">Seek Forward (Right Arrow)</label>
+                            <input
+                                type="number"
+                                className="legit-input"
+                                value={playerSeekForward}
+                                onChange={(e) => setPlayerSeekForward(Number(e.target.value))}
+                                min="5"
+                                max="300"
+                            />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label className="setting-label">Seek Backward (Left Arrow)</label>
+                            <input
+                                type="number"
+                                className="legit-input"
+                                value={playerSeekBackward}
+                                onChange={(e) => setPlayerSeekBackward(Number(e.target.value))}
+                                min="5"
+                                max="300"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'playerLanguages',
+            tab: 'player',
+            label: 'Default Languages',
+            keywords: ['player', 'audio', 'subtitle', 'language', 'default', 'dub'],
+            render: () => (
+                <div className="setting-section" key="playerLanguages">
+                    <h3>Default Languages</h3>
+                    <p className="setting-desc">Preferred audio and subtitle languages for new playback.</p>
+                    <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label className="setting-label">Default Audio Language</label>
+                            <input
+                                type="text"
+                                className="legit-input"
+                                placeholder="e.g. en, eng, ger (Auto)"
+                                value={defaultAudioLanguage}
+                                onChange={(e) => setDefaultAudioLanguage(e.target.value)}
+                            />
+                            <small style={{ color: '#aaa' }}>Use 3-letter ISO codes (e.g. 'eng', 'jpn') or 'auto'.</small>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label className="setting-label">Default Subtitle Language</label>
+                            <input
+                                type="text"
+                                className="legit-input"
+                                placeholder="e.g. en, eng (Auto)"
+                                value={defaultSubtitleLanguage}
+                                onChange={(e) => setDefaultSubtitleLanguage(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )
         }
     ];
 
@@ -498,6 +588,12 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                                 onClick={() => { setActiveTab('navigation'); setSearchQuery(''); }}
                             >
                                 <span className="material-icons">menu</span> Navigation
+                            </button>
+                            <button
+                                className={`sidebar-tab ${activeTab === 'player' && !searchQuery ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('player'); setSearchQuery(''); }}
+                            >
+                                <span className="material-icons">play_circle</span> Player
                             </button>
                         </div>
                     </div>

@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
+import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 import Navbar from '../../components/Navbar';
 import './Player.css';
 
 const Player = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { config } = useTheme(); // Access global config
     const videoRef = useRef(null);
     const containerRef = useRef(null); // Ref for fullscreen toggling
 
@@ -45,6 +47,11 @@ const Player = () => {
 
     // Advanced Player State
     const [showSettings, setShowSettings] = useState(false);
+
+
+    // Default skip times/preferences (will fall back to defaults if not in config)
+    const SEEK_FORWARD_TIME = config?.player?.seekForward || 30;
+    const SEEK_BACKWARD_TIME = config?.player?.seekBackward || 10;
     const [audioStreams, setAudioStreams] = useState([]);
     const [subtitleStreams, setSubtitleStreams] = useState([]);
     const [selectedAudioIndex, setSelectedAudioIndex] = useState(null);
@@ -383,7 +390,7 @@ const Player = () => {
 
     // --- 6. Event Handlers ---
 
-    const togglePlay = () => {
+    const togglePlay = useCallback(() => {
         if (videoRef.current) {
             if (videoRef.current.paused) {
                 videoRef.current.play();
@@ -395,34 +402,123 @@ const Player = () => {
                 flashCenterIcon('pause');
             }
         }
-    };
+    }, [videoRef]);
 
     const flashCenterIcon = (icon) => {
         setCenterIcon(icon);
         setTimeout(() => setCenterIcon(null), 600);
     };
 
-    const handleVolumeChange = (e) => {
-        const val = parseFloat(e.target.value);
-        setVolume(val);
+    const skipForward = useCallback(() => {
         if (videoRef.current) {
-            videoRef.current.volume = val;
-            setIsMuted(val === 0);
+            const skip = config.playerSeekForward || 30;
+            videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + skip);
+            setCurrentTime(videoRef.current.currentTime);
+            flashCenterIcon('fast_forward');
         }
-    };
+    }, [config.playerSeekForward]);
 
-    const toggleMute = () => {
+    const skipBackward = useCallback(() => {
         if (videoRef.current) {
-            const newMuted = !isMuted;
-            setIsMuted(newMuted);
-            videoRef.current.muted = newMuted;
-            if (newMuted) setVolume(0);
-            else {
-                setVolume(1);
-                videoRef.current.volume = 1;
+            const skip = config.playerSeekBackward || 10;
+            videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - skip);
+            setCurrentTime(videoRef.current.currentTime);
+            flashCenterIcon('fast_rewind');
+        }
+    }, [config.playerSeekBackward]);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Ignore if typing in an input or if settings modal is open
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || showSettings) return;
+
+            switch (e.code) {
+                case 'Space':
+                case 'KeyK': // 'k' key
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'ArrowRight':
+                case 'KeyL': // 'l' key
+                    e.preventDefault();
+                    skipForward();
+                    break;
+                case 'ArrowLeft':
+                case 'KeyJ': // 'j' key
+                    e.preventDefault();
+                    skipBackward();
+                    break;
+                case 'KeyF': // 'f' key
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case 'KeyM': // 'm' key
+                    e.preventDefault();
+                    toggleMute();
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [showSettings, togglePlay, skipBackward, skipForward, toggleFullscreen, toggleMute]);
+
+
+    // --- Gesture & Keyboard Controls ---
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Ignore if typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch (e.key) {
+                case ' ':
+                case 'k':
+                    e.preventDefault(); // Prevent scrolling
+                    togglePlay();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    skipBackward();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    skipForward();
+                    break;
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case 'm':
+                    toggleMute();
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isPlaying, isMuted, togglePlay, skipBackward, skipForward, toggleFullscreen, toggleMute]); // Dependencies might need tuning based on functions used
+
+
+    const toggleMute = useCallback(() => {
+        const video = videoRef.current;
+        if (video) {
+            video.muted = !isMuted;
+            setIsMuted(!isMuted);
+            if (!isMuted) { // Was not muted, now muting
+                setVolume(0);
+                video.volume = 0;
+            } else { // Was muted, now unmuting
+                // Restore previous volume or default to 1 if it was 0
+                const restoredVolume = video.volume > 0 ? video.volume : 1;
+                setVolume(restoredVolume);
+                video.volume = restoredVolume;
             }
         }
-    };
+    }, [isMuted, videoRef]);
 
     const handleSeek = (e) => {
         const time = parseFloat(e.target.value);
@@ -432,35 +528,143 @@ const Player = () => {
         }
     };
 
+    // Settings logic would go here - integrated into the player controls
+    // For now we will focus on the player logic
+
+    // --- Gesture & Keyboard Controls ---
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (showSettings) return; // Don't trigger if settings modal is open
+
+            // Prevent default scrolling for Space/Arrows
+            if ([' ', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+
+            switch (e.key) {
+                case ' ':
+                case 'k':
+                    togglePlay();
+                    break;
+                case 'ArrowLeft':
+                    skipBackward();
+                    break;
+                case 'ArrowRight':
+                    skipForward();
+                    break;
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case 'm':
+                    toggleMute();
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isPlaying, showSettings]); // Re-bind if dependencies change
+
+    // --- Click to Play/Pause ---
+    const handleVideoClick = (e) => {
+        // Prevent triggering when clicking controls
+        if (e.target.closest('.lf-player-controls') || e.target.closest('.lf-player-back-button')) {
+            return;
+        }
+        togglePlay();
+
+        // Show controls temporarily
+        setShowControls(true);
+        if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+        controlsTimeoutRef.current = setTimeout(() => {
+            if (isPlaying) setShowControls(false);
+        }, 3000);
+    };
+
+    // --- Skip Intro/Outro Logic ---
+
+    const [showSkipOutro, setShowSkipOutro] = useState(false);
+    const [skipTargetTime, setSkipTargetTime] = useState(null);
+
+    const checkForChapters = useCallback((time) => {
+        if (!item?.Chapters) return;
+
+        const currentChapter = item.Chapters.find(chapter =>
+            time >= (chapter.StartPositionTicks / 10000000) &&
+            time < (chapter.StartPositionTicks / 10000000) + (chapter.ImageTag ? 0 : 0) // Just finding current
+        );
+
+        // Jellyfin chapters often allow identifying Intros/Outros by name
+        // Common names: "Intro", "Opening", "Outro", "Ending", "Credits"
+
+        // Logic to find if we are in an intro
+        const introChapter = item.Chapters.find(c =>
+            (c.Name.toLowerCase().includes('intro') || c.Name.toLowerCase().includes('opening')) &&
+            time >= (c.StartPositionTicks / 10000000) &&
+            time < (c.StartPositionTicks / 10000000) + 80 // Reasonable cap or use next chapter start
+        );
+
+        if (introChapter) {
+            // Find end of this chapter (start of next)
+            const index = item.Chapters.indexOf(introChapter);
+            const nextChapter = item.Chapters[index + 1];
+            if (nextChapter) {
+                setShowSkipIntro(true);
+                setSkipTargetTime(nextChapter.StartPositionTicks / 10000000);
+            } else {
+                setShowSkipIntro(false);
+            }
+        } else {
+            setShowSkipIntro(false);
+
+            // Logic for Outro/Credits
+            // Often implicit: if we are near the end, or if chapter is named "Credits"
+            if (duration > 0 && (duration - time) < 120) { // Near end
+                // Check if specific chapter
+                const creditChapter = item.Chapters.find(c =>
+                    (c.Name.toLowerCase().includes('outro') || c.Name.toLowerCase().includes('ending') || c.Name.toLowerCase().includes('credits')) &&
+                    time >= (c.StartPositionTicks / 10000000)
+                );
+
+                if (creditChapter) {
+                    setShowSkipOutro(true);
+                    // Target is usually "Next Episode" action, handled by the button click
+                } else {
+                    // Even if no chapter, if very close to end, maybe show "Next Episode" logic which we already have?
+                    // For now, only show Skip Outro if explicit chapter or manually detected
+                    setShowSkipOutro(false);
+                }
+            } else {
+                setShowSkipOutro(false);
+            }
+        }
+    }, [item, duration]);
+
+    // Update check in timeUpdate
+    // (This needs to be called in existing handleTimeUpdate or useEffect)
+
+    // --- Back Button Logic ---
     const handleBack = () => {
         reportStop();
-        // Check if we can go back within the app history
-        if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
+        if (window.history.length > 2) {
             navigate(-1);
         } else {
-            // Fallback
+            // Fallback if opened directly
             if (item && item.SeriesId) {
                 navigate(`/series/${item.SeriesId}`);
+            } else if (item && item.ParentId) {
+                navigate(`/library`); // Or parent folder
             } else {
                 navigate('/');
             }
         }
     };
 
-    const toggleFullscreen = () => {
-        // Toggle browser fullscreen on the specific container
-        if (!containerRef.current) return;
-
-        if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    };
-
-    const handleTimeUpdate = () => {
+    const handleTimeUpdate = (e) => {
         if (videoRef.current) {
             const t = videoRef.current.currentTime;
             setCurrentTime(t);
@@ -477,6 +681,23 @@ const Player = () => {
                     setShowSkipIntro(false);
                 }
             }
+        }
+    };
+
+    const handleLoadedMetadata = () => {
+        // This is where you might fetch trickplay images or other metadata
+        // For now, it's a placeholder for future trickplay integration
+    };
+
+    const handleEnded = () => {
+        if (autoPlay && nextEpisodeId) {
+            // Maybe show a countdown? or just go.
+            // For now, immediate transition after 2s
+            setTimeout(() => handleNextEpisode(), 1500);
+        } else {
+            setIsPlaying(false);
+            reportStop();
+            setShowControls(true);
         }
     };
 
@@ -575,26 +796,19 @@ const Player = () => {
                 className={`lf-player-video-container ${document.fullscreenElement ? 'is-fullscreen' : ''}`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => isPlaying && setShowControls(false)}
+                onClick={handleVideoClick}
             >
-                <div className="lf-player-video-wrapper">
+                <div className="lf-player-video-wrapper" onClick={togglePlay}>
                     <video
                         ref={videoRef}
                         className="lf-player-video"
-                        onClick={togglePlay}
+                        onClick={(e) => e.stopPropagation()} // Prevent double toggle if needed, usually handled by wrapper
                         onTimeUpdate={handleTimeUpdate}
-                        onEnded={() => {
-                            if (autoPlay && nextEpisodeId) {
-                                // Maybe show a countdown? or just go.
-                                // For now, immediate transition after 2s
-                                setTimeout(() => handleNextEpisode(), 1500);
-                            } else {
-                                setIsPlaying(false);
-                                reportStop();
-                                setShowControls(true);
-                            }
-                        }}
+                        onLoadedMetadata={handleLoadedMetadata}
+                        onEnded={handleEnded}
                         onWaiting={() => setIsLoading(true)}
                         onCanPlay={() => setIsLoading(false)}
+                        crossOrigin="anonymous"
                     />
 
                     {/* Skip Intro Button */}
@@ -637,7 +851,7 @@ const Player = () => {
                                 {item ? (
                                     <>
                                         <span className="series-title">{item.SeriesName}</span>
-                                        {item.SeriesName && item.Name && <span className="divider">•</span>}
+                                        {item.SeriesName && item.Name && <span className="divider">â€¢</span>}
                                         <span className="episode-title">{item.Name}</span>
                                     </>
                                 ) : 'Loading...'}
@@ -733,122 +947,13 @@ const Player = () => {
                                                 className={autoPlay ? 'active' : ''}
                                                 onClick={() => setAutoPlay(!autoPlay)}
                                             >
-                                                Autoplay Next Episode: {autoPlay ? 'ON' : 'OFF'}
+                                                Auto Play: {autoPlay ? 'On' : 'Off'}
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             </div>
                         )}
-
-                        {/* Bottom Bar */}
-                        <div className="lf-player-controls-bottom">
-
-                            {/* Detailed Timeline with Thumbnails */}
-                            <div
-                                className="lf-player-timeline-container"
-                                onMouseMove={handleTimelineHover}
-                                onMouseLeave={handleTimelineLeave}
-                                onClick={(e) => {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    const x = e.clientX - rect.left;
-                                    const percent = x / rect.width;
-                                    const newTime = percent * duration;
-                                    if (videoRef.current) {
-                                        videoRef.current.currentTime = newTime;
-                                        setCurrentTime(newTime);
-                                    }
-                                }}
-                            >
-                                {/* Thumbnail Popup */}
-                                {isHoveringTimeline && (
-                                    <div
-                                        className="lf-timeline-tooltip"
-                                        style={{ left: `${hoverPosition * 100}%` }}
-                                    >
-                                        {thumbnailUrl ? (
-                                            <div
-                                                className="lf-timeline-thumbnail"
-                                                style={{ backgroundImage: `url('${thumbnailUrl}')` }}
-                                            ></div>
-                                        ) : null}
-                                        <span className="lf-timeline-time">{formatTime(hoverTime)}</span>
-                                    </div>
-                                )}
-
-                                <div className="lf-player-timeline-track">
-                                    <div className="lf-player-timeline-bg"></div>
-                                    <div
-                                        className="lf-player-timeline-buffered"
-                                        style={{ width: `${bufferedPct}%` }}
-                                    ></div>
-                                    <div
-                                        className="lf-player-timeline-fill"
-                                        style={{ width: `${progressPercent}%` }}
-                                    >
-                                        <div className="lf-player-timeline-thumb"></div>
-                                    </div>
-                                    {/* Hover Ghost Fill */}
-                                    {isHoveringTimeline && (
-                                        <div
-                                            className="lf-player-timeline-hover-fill"
-                                            style={{ width: `${hoverPosition * 100}%` }}
-                                        ></div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="lf-player-controls-row">
-                                <div className="controls-left">
-                                    <button className="icon-btn" onClick={togglePlay}>
-                                        <span className="material-icons">{isPlaying ? 'pause' : 'play_arrow'}</span>
-                                    </button>
-
-                                    <div className="volume-container">
-                                        <button className="icon-btn" onClick={toggleMute}>
-                                            <span className="material-icons">
-                                                {isMuted || volume === 0 ? 'volume_off' : volume < 0.5 ? 'volume_down' : 'volume_up'}
-                                            </span>
-                                        </button>
-                                        <div className="volume-slider-wrapper">
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="1"
-                                                step="0.05"
-                                                value={isMuted ? 0 : volume}
-                                                onChange={handleVolumeChange}
-                                                className="volume-slider"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="time-display">
-                                        {formatTime(currentTime)} / {formatTime(duration)}
-                                    </div>
-                                </div>
-
-                                <div className="controls-right">
-                                    {/* Next Episode Button */}
-                                    {nextEpisodeId && (
-                                        <button className="icon-btn" onClick={handleNextEpisode} title="Next Episode">
-                                            <span className="material-icons">skip_next</span>
-                                        </button>
-                                    )}
-
-                                    {/* Settings Button */}
-                                    <button className="icon-btn" onClick={() => setShowSettings(!showSettings)} title="Settings">
-                                        <span className="material-icons">settings</span>
-                                    </button>
-
-                                    <button className="icon-btn" onClick={toggleFullscreen} title="Fullscreen">
-                                        <span className="material-icons">
-                                            {document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen'}
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -864,7 +969,7 @@ const Player = () => {
                                 <div className="lf-player-title-block">
                                     <h4
                                         className="lf-series-link"
-                                        onClick={() => navigate(`/series/${item.SeriesId}`)}
+                                        onClick={() => navigate(/series/)}
                                     >
                                         {item.SeriesName}
                                     </h4>
@@ -897,18 +1002,11 @@ const Player = () => {
                                 )}
                             </div>
 
-                            <div className="lf-player-description-block">
-                                <p className={`lf-description-text ${isDescExpanded ? 'is-expanded' : ''}`}>
+                            <div className="lf-player-metadata">
+                                <h1>{item.Name}</h1>
+                                <p className="lf-player-description">
                                     {item.Overview}
                                 </p>
-                                {item.Overview && item.Overview.length > 200 && (
-                                    <button
-                                        className="lf-expand-btn"
-                                        onClick={() => setIsDescExpanded(!isDescExpanded)}
-                                    >
-                                        {isDescExpanded ? 'Show Less' : 'Show More'}
-                                    </button>
-                                )}
                             </div>
                         </div>
 
@@ -967,3 +1065,4 @@ const Player = () => {
 };
 
 export default Player;
+

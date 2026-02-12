@@ -1,0 +1,131 @@
+.lf-player-settings-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.lf-player-settings-modal {
+    background-color: #1a1a1a;
+    width: 400px;
+    max-width: 90%;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+.lf-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+    background-color: #222;
+}
+
+.lf-settings-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.lf-close-btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.lf-close-btn:hover {
+    color: #fff;
+}
+
+.lf-settings-tabs {
+    display: flex;
+    border-bottom: 1px solid #333;
+    background-color: #222;
+}
+
+.lf-settings-tabs button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #aaa;
+    padding: 12px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s, background-color 0.2s;
+    border-bottom: 2px solid transparent;
+}
+
+.lf-settings-tabs button:hover {
+    color: #fff;
+    background-color: #2a2a2a;
+}
+
+.lf-settings-tabs button.active {
+    color: var(--accent-color, #ff7e00);
+    border-bottom-color: var(--accent-color, #ff7e00);
+}
+
+.lf-settings-content {
+    padding: 10px 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.lf-options-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.lf-options-list button {
+    background: none;
+    border: none;
+    color: #ddd;
+    padding: 12px 20px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.lf-options-list button:hover {
+    background-color: #333;
+}
+
+.lf-options-list button.selected {
+    color: var(--accent-color, #ff7e00);
+    font-weight: bold;
+}
+
+.lf-check {
+    font-size: 0.9rem;
+}
+
+.lf-no-options {
+    padding: 20px;
+    text-align: center;
+    color: #888;
+}
+
+.lf-action-btn {
+    margin-top: 10px;
+    border-top: 1px solid #333 !important;
+    color: #fff !important;
+    justify-content: center !important;
+}

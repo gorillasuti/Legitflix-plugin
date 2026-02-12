@@ -314,28 +314,58 @@ class JellyfinService {
         return `${baseUrl}/Items/${item.Id}/Images/${type}?maxWidth=${maxWidth}&quality=${quality}${tag}`;
     }
 
+    async getItemDetails(userId, itemId) {
+        if (!this.api || !this.user) {
+            throw new Error('Jellyfin service not initialized');
+        }
+
+        try {
+            const fields = [
+                'MediaSources',
+                'mo',
+                'Chapters',
+                'MediaStreams',
+                'Trickplay'
+            ];
+
+            const response = await this.api.get(`/Users/${userId}/Items/${itemId}`, {
+                params: {
+                    Fields: fields.join(',')
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching item details:', error);
+            throw error;
+        }
+    }
+
     getPlaybackUrl(itemId) {
         // Returns the internal player route (used with react-router HashRouter)
         return `#/play/${itemId}`;
     }
 
-    getStreamUrl(itemId, options = {}) {
-        if (!this.api) this.initialize();
-        const baseUrl = this.api.configuration.basePath || '';
-        const token = this.api.accessToken;
-        const deviceId = this.jellyfin.deviceInfo.id;
-        const { audioStreamIndex, subtitleStreamIndex, maxBitrate } = options;
+    getStreamUrl(itemId, audioStreamIndex = null, subtitleStreamIndex = null, mediaSourceId = null, maxBitrate = null) {
+        const token = this.user?.AccessToken;
+        const deviceId = this.deviceInfo.id;
+        const baseUrl = this.config.serverUrl;
 
-        let url = `${baseUrl}/Videos/${itemId}/master.m3u8?MediaSourceId=${itemId}&PlaySessionId=LegitFlix-${Date.now()}&api_key=${token}&DeviceId=${deviceId}&VideoCodec=h264,hevc,vp9,av1&AudioCodec=aac,mp3,opus,vorbis&TranscodingContainer=ts&TranscodingProtocol=hls`;
+        let url = `${baseUrl}/Videos/${itemId}/master.m3u8?PlaySessionId=LegitFlix-${Date.now()}&api_key=${token}&DeviceId=${deviceId}&VideoCodec=h264,hevc,vp9,av1&AudioCodec=aac,mp3,opus,vorbis&TranscodingContainer=ts&TranscodingProtocol=hls`;
 
-        if (audioStreamIndex !== undefined && audioStreamIndex !== null) {
+        if (mediaSourceId) {
+            url += `&MediaSourceId=${mediaSourceId}`;
+        }
+
+        if (audioStreamIndex !== null) {
             url += `&AudioStreamIndex=${audioStreamIndex}`;
         }
-        if (subtitleStreamIndex !== undefined && subtitleStreamIndex !== null) {
+
+        if (subtitleStreamIndex !== null) {
             url += `&SubtitleStreamIndex=${subtitleStreamIndex}`;
         }
-        if (maxBitrate) {
-            url += `&MaxStreamingBitrate=${maxBitrate}`;
+
+        if (maxStreamingBitrate) {
+            url += `&VideoBitrate=${maxStreamingBitrate}`;
         }
 
         return url;
@@ -374,10 +404,16 @@ class JellyfinService {
     // --- Trickplay / BIF ---
     async getTrickplayBifUrl(itemId, width) {
         // Jellyfin doesn't have a standard public BIF endpoint for all clients without plugins.
-        // However, we can try to guess or use a placeholder if we want to support it later.
-        // For now, return null to gracefully degrade to no-hover-preview or just tiles.
-        // If your server supports generated BIFs specifically, you'd construct that URL here.
         return null;
+    }
+
+    getTrickplayTileUrl(itemId, width, index) {
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        // Jellyfin trickplay tiles are usually at /Videos/{Id}/Trickplay/{Width}/{Index}.jpg
+        // Ensure width is a supported one (usually 320)
+        const supportedWidth = width || 320;
+        return `${baseUrl}/Videos/${itemId}/Trickplay/${supportedWidth}/${index}.jpg`;
     }
 
     async fetchAndParseBif(url) {
@@ -392,27 +428,43 @@ class JellyfinService {
 
     async deleteSubtitle(itemId, index) {
         if (!this.api) this.initialize();
-        const response = await this.api.subtitle.deleteSubtitle({ itemId, index });
-        return response.data;
+        try {
+            // Note: index is usually the MediaStreamIndex
+            const response = await this.api.subtitle.deleteSubtitle({ itemId, index });
+            return response.data;
+        } catch (e) {
+            console.error("Failed to delete subtitle", e);
+            throw e;
+        }
     }
 
     async searchRemoteSubtitles(itemId, language) {
         if (!this.api) this.initialize();
-        const response = await this.api.subtitle.searchRemoteSubtitles({
-            itemId,
-            language,
-            isPerfectMatch: false
-        });
-        return response.data;
+        try {
+            const response = await this.api.subtitle.searchRemoteSubtitles({
+                itemId,
+                language,
+                isPerfectMatch: false
+            });
+            return response.data;
+        } catch (e) {
+            console.error("Failed to search subtitles", e);
+            return [];
+        }
     }
 
     async downloadRemoteSubtitles(itemId, subtitleId) {
         if (!this.api) this.initialize();
-        const response = await this.api.subtitle.downloadRemoteSubtitles({
-            itemId,
-            subtitleId
-        });
-        return response.data;
+        try {
+            const response = await this.api.subtitle.downloadRemoteSubtitles({
+                itemId,
+                subtitleId
+            });
+            return response.data;
+        } catch (e) {
+            console.error("Failed to download subtitle", e);
+            throw e;
+        }
     }
 
     async getMediaStreams(userId, itemId) {

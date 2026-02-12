@@ -35,12 +35,22 @@ export const ThemeProvider = ({ children }) => {
         logoType: 'text', // 'text' | 'image'
         logoUrl: '',
         appName: 'LegitFlix',
-        enableBackdrops: true,
+        fastForwardTime: 10,
+        rewindTime: 10,
+        hideBackdrop: false,
+        disableThemeSong: false,
+        enableSnow: false,
         accentColor: '#ff7e00',
         showNavbarCategories: true,
         showNavbarRequests: true,
         showLibraryTitles: true,
         appBackground: null,
+        // Player Settings
+        playerSeekForward: 30,
+        playerSeekBackward: 10,
+        defaultAudioLanguage: 'auto',
+        defaultSubtitleLanguage: 'auto',
+        prioritizeAudioLanguage: false,
     });
 
     useEffect(() => {
