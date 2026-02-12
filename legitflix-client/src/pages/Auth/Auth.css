@@ -1,91 +1,201 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 .auth-page {
     width: 100vw;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-    color: #fff;
+    background: var(--clr-bg-main, #0a0a0a);
+    /* Use global bg */
+    color: var(--clr-text-main, #fff);
+    font-family: var(--font-primary, 'Inter', sans-serif);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Dynamic Background Elements */
+.auth-page::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(244, 117, 33, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.auth-page::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(20, 20, 20, 0.8) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
 }
 
 .auth-container {
-    background: rgba(30, 30, 30, 0.8);
-    backdrop-filter: blur(10px);
-    padding: 40px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    padding: 3rem;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     width: 100%;
-    max-width: 400px;
+    max-width: 650px;
+    /* Widened to fit 3 users */
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.auth-logo h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin: 0;
-    letter-spacing: -1px;
-    background: linear-gradient(90deg, #fff, #aaa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Logo */
+.auth-logo {
+    margin-bottom: 2.5rem;
+}
+
+.auth-logo-img {
+    height: 60px;
+    /* Reduced from massive text */
+    width: auto;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
 }
 
 .auth-logo p {
     color: #888;
-    margin: 8px 0 30px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
+/* Form Styles */
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 1.25rem;
 }
 
 .form-group {
     text-align: left;
+    position: relative;
 }
 
 .form-group label {
     display: block;
-    font-size: 0.85rem;
-    color: #ccc;
-    margin-bottom: 8px;
-    font-weight: 500;
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-left: 4px;
 }
 
 .auth-input {
     width: 100%;
-    padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.3);
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: 12px;
     color: #fff;
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease;
     outline: none;
+    font-family: inherit;
 }
 
 .auth-input:focus {
+    background: rgba(255, 255, 255, 0.08);
     border-color: var(--clr-accent, #f47521);
+    box-shadow: 0 0 0 4px rgba(244, 117, 33, 0.15);
+}
+
+.auth-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
 }
 
 .auth-error {
-    color: #ff4d4d;
-    background: rgba(255, 77, 77, 0.1);
-    padding: 10px;
-    border-radius: 6px;
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+    padding: 12px;
+    border-radius: 8px;
     font-size: 0.9rem;
-    text-align: left;
+    text-align: center;
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    animation: shake 0.4s ease-in-out;
 }
 
-/* User Grid */
-.user-grid {
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-4px);
+    }
+
+    75% {
+        transform: translateX(4px);
+    }
+}
+
+/* Buttons */
+.auth-btn-group {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.text-link {
+    background: none;
+    border: none;
+    color: #888;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+    font-weight: 500;
+}
+
+.text-link:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* User Grid (SelectUser) */
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* Force 3 columns */
+    gap: 32px;
+    /* Increased gap */
+    margin-bottom: 2rem;
     justify-content: center;
-    margin-bottom: 24px;
+    justify-items: center;
 }
 
 .user-card {
@@ -95,57 +205,116 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100px;
-    transition: transform 0.2s;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 100%;
+    max-width: 120px;
 }
 
 .user-card:hover {
-    transform: scale(1.05);
+    /* transform: scale(1.1); REMOVED grow effect */
+    transform: translateY(-5px);
+    /* Subtle lift instead */
 }
 
-.user-avatar-placeholder {
-    width: 80px;
-    height: 80px;
-    background: #333;
+.user-avatar-container {
+    width: 110px;
+    /* Slightly larger */
+    height: 110px;
+    margin-bottom: 12px;
+    position: relative;
     border-radius: 50%;
+    /* Gradient Ring Base */
+    padding: 3px;
+    background: transparent;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.user-card:hover .user-avatar-container {
+    /* Ring Effect on Hover */
+    border-color: var(--clr-accent, #f47521);
+    box-shadow: 0 0 15px rgba(244, 117, 33, 0.4);
+    background: transparent;
+}
+
+.user-avatar,
+.user-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #2a2a2a;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
-    font-size: 2rem;
-    color: #888;
-    border: 2px solid transparent;
-    transition: border-color 0.2s;
+    overflow: hidden;
 }
 
-.user-card:hover .user-avatar-placeholder {
-    border-color: var(--clr-accent, #f47521);
+.user-avatar-placeholder span {
+    font-size: 2.5rem;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.user-card:hover .user-avatar-placeholder span {
     color: #fff;
 }
 
 .user-card-name {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #ccc;
-    max-width: 100%;
+    font-weight: 600;
+    max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: color 0.2s;
 }
 
 .user-card:hover .user-card-name {
     color: #fff;
 }
 
-.text-link {
-    background: none;
-    border: none;
-    color: #888;
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 0.85rem;
-    margin-top: 10px;
+/* Quick Connect Styles */
+.qc-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 0;
 }
 
-.text-link:hover {
+.qc-code-display {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
     color: var(--clr-accent, #f47521);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem 2rem;
+    border-radius: 16px;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    font-family: monospace;
+}
+
+.qc-instructions {
+    color: #ccc;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-width: 300px;
+}
+
+.qc-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--clr-accent, #f47521);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

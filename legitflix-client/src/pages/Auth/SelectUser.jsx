@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { Button } from '../../components/ui/button';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import './Auth.css';
 
 const SelectUser = () => {
@@ -39,12 +40,21 @@ const SelectUser = () => {
         <div className="auth-page">
             <div className="auth-container">
                 <div className="auth-logo">
-                    <h1>LegitFlix</h1>
+                    <img src="/default-logo-blue.png" alt="LegitFlix" className="auth-logo-img" />
                     <p>Who's watching?</p>
                 </div>
 
                 {loading ? (
-                    <div>Loading users...</div>
+                    <div className="user-grid">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="user-card" style={{ cursor: 'default' }}>
+                                <div className="user-avatar-container" style={{ border: 'none', padding: 0 }}>
+                                    <SkeletonLoader type="circle" width="100px" height="100px" />
+                                </div>
+                                <SkeletonLoader type="text" width="80px" height="20px" style={{ marginTop: '10px' }} />
+                            </div>
+                        ))}
+                    </div>
                 ) : (
                     <>
                         <div className="user-grid">
@@ -54,28 +64,29 @@ const SelectUser = () => {
                                     className="user-card"
                                     onClick={() => handleUserSelect(user)}
                                 >
-                                    {user.PrimaryImageTag ? (
-                                        <img
-                                            src={jellyfinService.getImageUrl(user, 'Primary', { maxWidth: 200 })}
-                                            alt={user.Name}
-                                            className="user-avatar-placeholder" // Re-using class for shape
-                                            style={{ objectFit: 'cover', padding: 0 }}
-                                        />
-                                    ) : (
-                                        <div className="user-avatar-placeholder">
+                                    <div className="user-avatar-container">
+                                        {user.PrimaryImageTag ? (
+                                            <img
+                                                src={jellyfinService.getImageUrl(user, 'Primary', { maxWidth: 200 })}
+                                                alt={user.Name}
+                                                className="user-avatar"
+                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                            />
+                                        ) : null}
+                                        <div className="user-avatar-placeholder" style={{ display: user.PrimaryImageTag ? 'none' : 'flex' }}>
                                             <span className="material-icons">person</span>
                                         </div>
-                                    )}
+                                    </div>
                                     <span className="user-card-name">{user.Name}</span>
                                 </button>
                             ))}
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <Button variant="outline" onClick={handleManual} className="w-full">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                            <button className="text-link" onClick={handleManual}>
                                 Manual Login
-                            </Button>
-                            <button className="text-link" onClick={handleChangeServer}>
+                            </button>
+                            <button className="text-link" style={{ fontSize: '0.8rem', opacity: 0.7 }} onClick={handleChangeServer}>
                                 Switch Server
                             </button>
                         </div>

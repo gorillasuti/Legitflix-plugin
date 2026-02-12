@@ -42,37 +42,34 @@ class JellyfinService {
             }
         }
 
-        if (!this.api || !this.api.accessToken) {
-            const storedCreds = localStorage.getItem('jellyfin_credentials');
-            if (storedCreds) {
-                try {
-                    const parsed = JSON.parse(storedCreds);
-                    if (parsed.Servers && parsed.Servers.length > 0) {
-                        const activeServer = parsed.Servers.find(s => s.AccessToken && s.UserId);
-                        if (activeServer) {
-                            console.log("[LegitFlix] Found credentials in localStorage", activeServer);
+        // Check localStorage for the active user credentials
+        const storedCreds = localStorage.getItem('jellyfin_credentials');
+        if (storedCreds) {
+            try {
+                const parsed = JSON.parse(storedCreds);
+                if (parsed.Servers && parsed.Servers.length > 0) {
+                    const activeServer = parsed.Servers.find(s => s.AccessToken && s.UserId);
+                    if (activeServer) {
+                        // Ensure API is initialized with the correct token
+                        if (!this.api || this.api.accessToken !== activeServer.AccessToken) {
+                            console.log("[LegitFlix] Initializing API with stored token");
                             this.initialize(activeServer.AccessToken);
-                            try {
-                                const response = await this.api.user.getUserById({ userId: activeServer.UserId });
-                                return response.data;
-                            } catch (apiError) {
-                                console.error("[LegitFlix] Token invalid or user not found. Clearing credentials.", apiError);
-                                this.logout(); // Clear invalid creds
-                                return null;
-                            }
+                        }
+
+                        try {
+                            const response = await this.api.user.getUserById({ userId: activeServer.UserId });
+                            return response.data;
+                        } catch (apiError) {
+                            console.error("[LegitFlix] Token invalid or user not found. Clearing credentials.", apiError);
+                            this.logout(); // Clear invalid creds
+                            return null;
                         }
                     }
-                } catch (e) {
-                    console.error("[LegitFlix] Failed to parse jellyfin_credentials", e);
                 }
+            } catch (e) {
+                console.error("[LegitFlix] Failed to parse jellyfin_credentials", e);
             }
         }
-
-        if (!this.api) this.initialize();
-
-        // REMOVED: Automatic Public User Fallback
-        // We only want to log in if we have valid credentials. 
-        // Public users can be selected manually via SelectUser page.
 
         return null;
     }
@@ -423,6 +420,56 @@ class JellyfinService {
         });
         if (!response.ok) throw new Error('Quick Connect failed. Check the code.');
         return true;
+    }
+
+    // --- Quick Connect Login Flow ---
+
+    async initiateQuickConnect() {
+        if (!this.api) this.initialize();
+        // Public endpoint, no auth needed usually, or uses client auth
+        const headers = {
+            'X-Emby-Authorization': `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}"`
+        };
+
+        const response = await fetch(`${this.api.basePath || ''}/QuickConnect/Initiate`, {
+            method: 'POST',
+            headers: headers
+        });
+
+        if (!response.ok) throw new Error('Failed to initiate Quick Connect');
+        return response.json(); // { Code, Secret, Expiry }
+    }
+
+    async checkQuickConnectStatus(secret) {
+        if (!this.api) this.initialize();
+        const response = await fetch(`${this.api.basePath || ''}/QuickConnect/Connect?Secret=${secret}`, {
+            method: 'GET'
+        });
+
+        if (response.status === 200) {
+            const data = await response.json();
+            // data contains { Authenticated: true, Secret, AccessToken, UserId, ... }
+            if (data.Authenticated) {
+                // Save Session
+                this.initialize(data.AccessToken);
+                const userRes = await this.api.user.getUserById({ userId: data.UserId });
+
+                const storedData = {
+                    Servers: [{
+                        DateLastAccessed: new Date().toISOString(),
+                        AccessToken: data.AccessToken,
+                        UserId: userRes.data.Id,
+                        Name: userRes.data.Name,
+                        ManualAddress: this.api.basePath
+                    }]
+                };
+                localStorage.setItem('jellyfin_credentials', JSON.stringify(storedData));
+
+                return userRes.data;
+            }
+        }
+
+        return null; // Not authorized yet
     }
 
     async logout() {

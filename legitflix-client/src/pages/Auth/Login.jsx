@@ -14,6 +14,56 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // Quick Connect State
+    const [isQuickConnect, setIsQuickConnect] = useState(false);
+    const [qcCode, setQcCode] = useState('');
+    const [qcSecret, setQcSecret] = useState('');
+
+    useEffect(() => {
+        let pollInterval;
+
+        const startQuickConnect = async () => {
+            try {
+                setLoading(true);
+                const result = await jellyfinService.initiateQuickConnect();
+                setQcCode(result.Code);
+                setQcSecret(result.Secret);
+                setLoading(false);
+
+                // Start Polling
+                pollInterval = setInterval(async () => {
+                    if (!result.Secret) return;
+                    try {
+                        const user = await jellyfinService.checkQuickConnectStatus(result.Secret);
+                        if (user) {
+                            clearInterval(pollInterval);
+                            navigate('/');
+                        }
+                    } catch (e) {
+                        console.warn("Polling error", e);
+                    }
+                }, 2000);
+
+            } catch (err) {
+                console.error("Quick Connect Init Failed", err);
+                setError("Failed to initialize Quick Connect.");
+                setLoading(false);
+            }
+        };
+
+        if (isQuickConnect) {
+            startQuickConnect();
+        } else {
+            setQcCode('');
+            setQcSecret('');
+            if (pollInterval) clearInterval(pollInterval);
+        }
+
+        return () => {
+            if (pollInterval) clearInterval(pollInterval);
+        };
+    }, [isQuickConnect, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -40,43 +90,73 @@ const Login = () => {
         <div className="auth-page">
             <div className="auth-container">
                 <div className="auth-logo">
-                    <h1>LegitFlix</h1>
-                    <p>Sign In</p>
+                    <img src="/default-logo-blue.png" alt="LegitFlix" className="auth-logo-img" />
+                    <p>{isQuickConnect ? 'Quick Connect' : 'Sign In'}</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="auth-form">
-                    <div className="form-group">
-                        <label>Username</label>
-                        <input
-                            type="text"
-                            className="auth-input"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter username"
-                        />
+                {isQuickConnect ? (
+                    <div className="qc-container">
+                        {loading ? (
+                            <div className="qc-spinner"></div>
+                        ) : (
+                            <>
+                                <div className="qc-instructions">
+                                    Use your mobile device to scan the code or enter it manually.
+                                </div>
+                                <div className="qc-code-display">
+                                    {qcCode}
+                                </div>
+                                <div className="qc-instructions">
+                                    Waiting for authorization...
+                                </div>
+                                <div className="qc-spinner"></div>
+                            </>
+                        )}
+                        <button type="button" className="text-link" onClick={() => setIsQuickConnect(false)}>
+                            Cancel
+                        </button>
                     </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="auth-form">
+                        <div className="form-group">
+                            <label>Username</label>
+                            <input
+                                type="text"
+                                className="auth-input"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="Enter username"
+                            />
+                        </div>
 
-                    <div className="form-group">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            className="auth-input"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password"
-                        />
-                    </div>
+                        <div className="form-group">
+                            <label>Password</label>
+                            <input
+                                type="password"
+                                className="auth-input"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter password"
+                            />
+                        </div>
 
-                    {error && <div className="auth-error">{error}</div>}
+                        {error && <div className="auth-error">{error}</div>}
 
-                    <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
-                        {loading ? 'Signing in...' : 'Sign In'}
-                    </Button>
+                        <div className="auth-btn-group">
+                            <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
+                                {loading ? 'Signing in...' : 'Sign In'}
+                            </Button>
 
-                    <button type="button" className="text-link" onClick={() => navigate('/login/select-user')}>
-                        Back to Users
-                    </button>
-                </form>
+                            <Button type="button" variant="outline" size="lg" onClick={() => setIsQuickConnect(true)} className="w-full">
+                                Quick Connect
+                            </Button>
+                        </div>
+
+                        <button type="button" className="text-link" onClick={() => navigate('/login/select-user')}>
+                            Back to Users
+                        </button>
+                    </form>
+                )}
             </div>
         </div>
     );
