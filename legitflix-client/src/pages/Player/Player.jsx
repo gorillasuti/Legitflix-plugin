@@ -49,7 +49,10 @@ const Player = () => {
     const [episodesLoading, setEpisodesLoading] = useState(false);
 
     // Advanced Player State
-    // Removed duplicate state declarations
+    const [centerIcon, setCenterIcon] = useState(null);
+    const [buffered, setBuffered] = useState(0);
+    const [trickplayBgPos, setTrickplayBgPos] = useState({ x: 0, y: 0, totalWidth: 0, totalHeight: 0 });
+    const [isFavorite, setIsFavorite] = useState(false);
 
     // Default skip times/preferences (will fall back to defaults if not in config)
     const SEEK_FORWARD_TIME = config?.player?.seekForward || 30;
@@ -134,6 +137,7 @@ const Player = () => {
 
             const itemData = await jellyfinService.getItemDetails(user.Id, id);
             setItem(itemData);
+            setIsFavorite(itemData.UserData?.IsFavorite || false);
             // Reset auto-skip tracking for new item
             if (autoSkippedRef.current) {
                 autoSkippedRef.current = { intro: false, outro: false };
@@ -682,7 +686,7 @@ const Player = () => {
                     if (config.autoSkipOutro && !autoSkippedRef.current.outro && videoRef.current) {
                         autoSkippedRef.current.outro = true;
                         if (nextEpisodeId) {
-                            navigate(`/ player / ${nextEpisodeId} `);
+                            navigate(`/player/${nextEpisodeId}`);
                         }
                     }
                 } else {
@@ -705,7 +709,7 @@ const Player = () => {
         } else {
             // Fallback if opened directly
             if (item && item.SeriesId) {
-                navigate(`/ series / ${item.SeriesId} `);
+                navigate(`/series/${item.SeriesId}`);
             } else if (item && item.ParentId) {
                 navigate(`/ library`); // Or parent folder
             } else {
@@ -780,7 +784,7 @@ const Player = () => {
             setSubtitleStreams([]);
             setIntroStart(null);
             setShowSkipIntro(false);
-            navigate(`/ play / ${nextEpisodeId} `);
+            navigate(`/player/${nextEpisodeId}`);
         }
     };
 
@@ -819,7 +823,7 @@ const Player = () => {
     const handleEpisodeClick = (epId) => {
         if (epId === item.Id) return;
         reportStop();
-        navigate(`/ play / ${epId} `);
+        navigate(`/player/${epId}`);
     };
 
     const toggleFavorite = async () => {
@@ -858,7 +862,7 @@ const Player = () => {
             {/* --- Main Video Container (Use Ref for Fullscreen) --- */}
             <div
                 ref={containerRef}
-                className={`lf - player - video - container ${document.fullscreenElement ? 'is-fullscreen' : ''} `}
+                className={`lf-player-video-container ${document.fullscreenElement ? 'is-fullscreen' : ''}`}
                 style={{ cursor: showControls ? 'default' : 'none' }}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => isPlaying && setShowControls(false)}
@@ -908,12 +912,12 @@ const Player = () => {
                     )}
 
                     {/* Center Flash Icon */}
-                    <div className={`lf - player - center - icon ${centerIcon ? 'visible' : ''} `}>
+                    <div className={`lf-player-center-icon ${centerIcon ? 'visible' : ''}`}>
                         <span className="material-icons">{centerIcon}</span>
                     </div>
 
                     {/* Controls Overlay */}
-                    <div className={`lf - player - controls ${showControls ? 'visible' : ''} `}>
+                    <div className={`lf-player-controls ${showControls ? 'visible' : ''}`}>
 
                         {/* Top Bar (Back Button & Title) */}
                         <div className="lf-player-controls-top">
@@ -1005,14 +1009,14 @@ const Player = () => {
                                 onMouseLeave={handleTimelineLeave}
                             >
                                 <div className="lf-player-timeline-track">
-                                    <div className="lf-player-timeline-buffered" style={{ width: `${bufferedPct}% ` }} />
-                                    <div className="lf-player-timeline-fill" style={{ width: `${progressPercent}% ` }}>
+                                    <div className="lf-player-timeline-buffered" style={{ width: `${bufferedPct}%` }} />
+                                    <div className="lf-player-timeline-fill" style={{ width: `${progressPercent}%` }}>
                                         <div className="lf-player-timeline-thumb" />
                                     </div>
                                 </div>
                                 {/* Hover Tooltip with Time & Trickplay Thumbnail */}
                                 {isHoveringTimeline && hoverTime !== null && (
-                                    <div className="lf-timeline-tooltip" style={{ left: `${hoverPosition * 100}% ` }}>
+                                    <div className="lf-timeline-tooltip" style={{ left: `${hoverPosition * 100}%` }}>
                                         {thumbnailUrl && trickplayBgPos && (
                                             <div className="lf-timeline-thumbnail" style={{
                                                 backgroundImage: `url(${thumbnailUrl})`,
@@ -1098,7 +1102,7 @@ const Player = () => {
                                 <div className="lf-player-title-block">
                                     <h4
                                         className="lf-series-link"
-                                        onClick={() => navigate(/series/)}
+                                        onClick={() => navigate(`/series/${item.SeriesId}`)}
                                     >
                                         {item.SeriesName}
                                     </h4>
@@ -1108,7 +1112,7 @@ const Player = () => {
                                 </div>
                                 <div className="lf-player-actions">
                                     <button
-                                        className={`lf - action - btn ${isFavorite ? 'is-active' : ''} `}
+                                        className={`lf-action-btn ${isFavorite ? 'is-active' : ''}`}
                                         onClick={toggleFavorite}
                                         title={isFavorite ? "Remove from Watchlist" : "Add to Watchlist"}
                                     >
@@ -1163,7 +1167,7 @@ const Player = () => {
                                         episodes.map(ep => (
                                             <div
                                                 key={ep.Id}
-                                                className={`lf - episode - card - small ${ep.Id === item.Id ? 'current' : ''} `}
+                                                className={`lf-episode-card-small ${ep.Id === item.Id ? 'current' : ''}`}
                                                 onClick={() => handleEpisodeClick(ep.Id)}
                                             >
                                                 <div className="ep-card-img">
