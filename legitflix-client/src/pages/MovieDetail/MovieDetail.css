@@ -21,7 +21,8 @@
     width: 100%;
 }
 
-.lf-movie-container * {
+.lf-movie-container [class^="lf-"],
+.lf-movie-container [class*=" lf-"] {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
