@@ -412,6 +412,14 @@ class JellyfinService {
         return `${baseUrl}/Videos/${itemId}/${mediaSourceId}/Subtitles/${streamIndex}/0/Stream.vtt?api_key=${token}`;
     }
 
+    getRawSubtitleUrl(itemId, mediaSourceId, streamIndex, format) {
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        const token = this.api.accessToken;
+        // Format can be 'srt', 'ass', 'ssa' etc.
+        return `${baseUrl}/Videos/${itemId}/${mediaSourceId}/Subtitles/${streamIndex}/0/Stream.${format}?api_key=${token}`;
+    }
+
     getTrickplayTileUrl(itemId, width, index) {
         if (!this.api) this.initialize();
         const baseUrl = this.api.configuration.basePath || '';

@@ -1,7 +1,8 @@
 ﻿
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import Hls from 'hls.js';
 import { useParams, useNavigate } from 'react-router-dom';
+import Hls from 'hls.js';
+
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/Navbar';
@@ -15,12 +16,16 @@ const Player = () => {
     const { config, updateConfig } = useTheme();
     const videoRef = useRef(null);
     const containerRef = useRef(null);
+    const jassubRef = useRef(null);
+    const switchResumeTimeRef = useRef(null); // Stores the time during a switch
+    const currentItemIdRef = useRef(null);    // Tracks if it's the same video item
 
     // Player State
     const [isPlaying, setIsPlaying] = useState(true);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
+    const [lastVolume, setLastVolume] = useState(1); // Track previous volume for unmuting
     const [isMuted, setIsMuted] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -201,6 +206,20 @@ const Player = () => {
     useEffect(() => {
         if (!item) return;
 
+        // "Stream Switch" Detection:
+        // If the Item ID is the same as before, but the URL is changing (e.g. due to audio switch),
+        // save the current time!
+        if (currentItemIdRef.current === item.Id) {
+            if (videoRef.current && videoRef.current.currentTime > 0) {
+                console.log("[Player] Stream switch detected. Saving time:", videoRef.current.currentTime);
+                switchResumeTimeRef.current = videoRef.current.currentTime;
+            }
+        } else {
+            // If it's a new video (e.g. episode change), reset the saved time
+            switchResumeTimeRef.current = null;
+            currentItemIdRef.current = item.Id;
+        }
+
         const url = jellyfinService.getStreamUrl(
             item.Id,
             selectedAudioIndex,
@@ -214,7 +233,7 @@ const Player = () => {
         // We should compare parameters or just let it update.
         // To prevent infinite loops or constant reloads, we trust the user interaction.
         setPlaybackUrl(url);
-    }, [item, selectedAudioIndex, selectedSubtitleIndex, maxBitrate]);
+    }, [item, selectedAudioIndex, selectedSubtitleIndex, maxBitrate, mediaSourceId]);
 
 
 
@@ -299,6 +318,21 @@ const Player = () => {
     useEffect(() => {
         if (!playbackUrl) return;
 
+        // Helper function to restore time
+        const restorePlaybackPosition = () => {
+            // Check if we have a saved time from a switch
+            if (switchResumeTimeRef.current !== null && videoRef.current) {
+                console.log("[Player] Restoring position to:", switchResumeTimeRef.current);
+                videoRef.current.currentTime = switchResumeTimeRef.current;
+                switchResumeTimeRef.current = null; // Reset it so it doesn't interfere later
+            }
+            // Auto-resume playback if it was playing
+            if (isPlaying && videoRef.current.paused) {
+                videoRef.current.play().catch(e => console.log("Autoplay prevented", e));
+            }
+            setIsLoading(false);
+        };
+
         if (Hls.isSupported()) {
             if (hlsRef.current) {
                 hlsRef.current.destroy();
@@ -314,10 +348,7 @@ const Player = () => {
             hlsRef.current = hls;
 
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                if (videoRef.current && isPlaying) {
-                    videoRef.current.play().catch(e => console.log("Autoplay prevented", e));
-                }
-                setIsLoading(false);
+                restorePlaybackPosition();
             });
 
             hls.on(Hls.Events.ERROR, (event, data) => {
@@ -341,17 +372,21 @@ const Player = () => {
         } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
             // Native HLS support (Safari)
             videoRef.current.src = playbackUrl;
-            videoRef.current.addEventListener('loadedmetadata', () => {
-                if (isPlaying) videoRef.current.play();
-                setIsLoading(false);
-            });
+
+            const onLoaded = () => {
+                restorePlaybackPosition();
+                videoRef.current.removeEventListener('loadedmetadata', onLoaded);
+            };
+            videoRef.current.addEventListener('loadedmetadata', onLoaded);
         } else {
             // Fallback to src
             videoRef.current.src = playbackUrl;
-            videoRef.current.addEventListener('loadedmetadata', () => {
-                if (isPlaying) videoRef.current.play();
-                setIsLoading(false);
-            });
+
+            const onLoaded = () => {
+                restorePlaybackPosition();
+                videoRef.current.removeEventListener('loadedmetadata', onLoaded);
+            };
+            videoRef.current.addEventListener('loadedmetadata', onLoaded);
         }
 
         return () => {
@@ -381,6 +416,12 @@ const Player = () => {
         const video = videoRef.current;
         if (!video) return;
 
+        // Cleanup JASSUB instance when changing tracks or unmounting
+        if (jassubRef.current) {
+            jassubRef.current.destroy();
+            jassubRef.current = null;
+        }
+
         // Remove all existing track elements
         const existingTracks = video.querySelectorAll('track');
         existingTracks.forEach(t => t.remove());
@@ -399,11 +440,70 @@ const Player = () => {
         const selectedStream = subtitleStreams.find(s => s.Index === selectedSubtitleIndex);
         if (!selectedStream) return;
 
-        // Build subtitle URL
-        const subtitleUrl = jellyfinService.getSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex);
-        console.log('[Subtitles] Loading:', subtitleUrl, selectedStream.Language);
+        const codec = (selectedStream.Codec || '').toLowerCase();
+        console.log('[Subtitles] Loading:', selectedStream.Language, 'Codec:', codec);
 
-        // Create and add track element
+        // --- Option 1: ASS/SSA (JASSUB) ---
+        if (codec === 'ass' || codec === 'ssa') {
+            const initJassub = () => {
+                const assUrl = jellyfinService.getRawSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex, 'ass');
+                try {
+                    const JASSUB = window.JASSUB;
+                    if (!JASSUB) {
+                        console.error('[Subtitles] JASSUB library not loaded');
+                        return;
+                    }
+
+                    jassubRef.current = new JASSUB({
+                        video: video,
+                        subUrl: assUrl,
+                        workerUrl: '/jassub-worker.js', // Must be in public/
+                        wasmUrl: '/jassub-worker.wasm',   // Must be in public/
+                        onDemand: true
+                    });
+                } catch (e) {
+                    console.error('[Subtitles] JASSUB failed to initialize', e);
+                }
+            };
+            initJassub();
+            return;
+        }
+
+        // --- Option 2: SRT (Client-side Convert to VTT) ---
+        if (codec === 'srt' || codec === 'subrip') {
+            const loadSrt = async () => {
+                try {
+                    const srtUrl = jellyfinService.getRawSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex, 'srt');
+                    const response = await fetch(srtUrl);
+                    if (!response.ok) throw new Error('Failed to fetch SRT');
+                    const srtText = await response.text();
+
+                    // Convert SRT to VTT
+                    const vttText = "WEBVTT\n\n" + srtText.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+
+                    const blob = new Blob([vttText], { type: 'text/vtt' });
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    const track = document.createElement('track');
+                    track.kind = 'subtitles';
+                    track.label = selectedStream.Language || 'Unknown';
+                    track.srclang = selectedStream.Language || 'und';
+                    track.src = blobUrl;
+                    track.default = true;
+                    video.appendChild(track);
+                    track.track.mode = 'showing';
+                } catch (e) {
+                    console.error('[Subtitles] Failed to load/convert SRT', e);
+                }
+            };
+            loadSrt();
+            return;
+        }
+
+        // --- Option 3: Fallback (VTT / WebVTT / Others) ---
+        // Build standard VTT URL (Jellyfin handles conversion for many types)
+        const subtitleUrl = jellyfinService.getSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex);
+
         const track = document.createElement('track');
         track.kind = 'subtitles';
         track.label = selectedStream.Language || selectedStream.Title || 'Unknown';
@@ -416,6 +516,15 @@ const Player = () => {
         track.track.mode = 'showing';
 
     }, [selectedSubtitleIndex, item?.Id, mediaSourceId, subtitleStreams]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (jassubRef.current) {
+                jassubRef.current.destroy();
+            }
+        };
+    }, []);
 
     // --- 5. Playback Reporting (Resume) ---
     useEffect(() => {
@@ -529,19 +638,21 @@ const Player = () => {
     const toggleMute = useCallback(() => {
         const video = videoRef.current;
         if (video) {
-            video.muted = !isMuted;
-            setIsMuted(!isMuted);
-            if (!isMuted) { // Was not muted, now muting
+            const newMutedState = !isMuted;
+            video.muted = newMutedState;
+            setIsMuted(newMutedState);
+
+            if (newMutedState) { // Muting
+                setLastVolume(volume > 0 ? volume : 1);
                 setVolume(0);
                 video.volume = 0;
-            } else { // Was muted, now unmuting
-                // Restore previous volume or default to 1 if it was 0
-                const restoredVolume = video.volume > 0 ? video.volume : 1;
-                setVolume(restoredVolume);
-                video.volume = restoredVolume;
+            } else { // Unmuting
+                const volToRestore = lastVolume > 0 ? lastVolume : 1;
+                setVolume(volToRestore);
+                video.volume = volToRestore;
             }
         }
-    }, [isMuted, videoRef]);
+    }, [isMuted, volume, lastVolume, videoRef]);
 
     const handleSeek = (e) => {
         const time = parseFloat(e.target.value);
@@ -655,63 +766,75 @@ const Player = () => {
 
 
     const checkForChapters = useCallback((time) => {
-        if (!item?.Chapters) return;
+        if (!item?.Chapters || item.Chapters.length === 0) return;
 
-        // Logic to find if we are in an intro
-        const introChapter = item.Chapters.find(c =>
-            (c.Name.toLowerCase().includes('intro') || c.Name.toLowerCase().includes('opening')) &&
-            time >= (c.StartPositionTicks / 10000000) &&
-            time < (c.StartPositionTicks / 10000000) + 80
-        );
+        // 1. Find the CURRENT active chapter based on the time
+        // We look for a chapter where: Start <= CurrentTime < End
+        const currentChapterIndex = item.Chapters.findIndex((c, i) => {
+            const startSeconds = c.StartPositionTicks / 10000000;
 
-        if (introChapter) {
-            const index = item.Chapters.indexOf(introChapter);
-            const nextChapter = item.Chapters[index + 1];
-            if (nextChapter) {
-                const target = nextChapter.StartPositionTicks / 10000000;
-                setShowSkipIntro(true);
-                setSkipTargetTime(target);
+            // The end of this chapter is the start of the next one
+            // If it's the last chapter, use video duration
+            const nextChapter = item.Chapters[i + 1];
+            const endSeconds = nextChapter
+                ? (nextChapter.StartPositionTicks / 10000000)
+                : duration;
 
-                // Auto-skip intro if enabled
-                if (config.autoSkipIntro && !autoSkippedRef.current.intro && videoRef.current) {
-                    autoSkippedRef.current.intro = true;
-                    videoRef.current.currentTime = target;
-                    setCurrentTime(target);
-                    flashCenterIcon('skip_next');
-                    console.log('[AutoSkip] Skipped intro to', target);
+            return time >= startSeconds && time < endSeconds;
+        });
+
+        if (currentChapterIndex !== -1) {
+            const currentChapter = item.Chapters[currentChapterIndex];
+            const name = currentChapter.Name.toLowerCase();
+
+            // 2. Check if the active chapter is an Intro
+            // We check for "intro" or "opening" in the name
+            if (name.includes('intro') || name.includes('opening')) {
+
+                // We found an intro! Now we need the target (Start of NEXT chapter)
+                const nextChapter = item.Chapters[currentChapterIndex + 1];
+
+                if (nextChapter) {
+                    const targetTime = nextChapter.StartPositionTicks / 10000000;
+
+                    // A: Show the button
+                    setShowSkipIntro(true);
+                    setSkipTargetTime(targetTime);
+
+                    // B: Handle Auto-Skip
+                    if (config.autoSkipIntro && !autoSkippedRef.current.intro && videoRef.current) {
+                        autoSkippedRef.current.intro = true;
+                        videoRef.current.currentTime = targetTime;
+                        setCurrentTime(targetTime);
+                        flashCenterIcon('skip_next');
+                        console.log('[AutoSkip] Skipped intro to', targetTime);
+                    }
+                    return; // Exit, we handled the intro
                 }
             } else {
                 setShowSkipIntro(false);
             }
-        } else {
-            setShowSkipIntro(false);
 
-            // Logic for Outro/Credits
-            if (duration > 0 && (duration - time) < 120) {
-                const creditChapter = item.Chapters.find(c =>
-                    (c.Name.toLowerCase().includes('outro') || c.Name.toLowerCase().includes('ending') || c.Name.toLowerCase().includes('credits')) &&
-                    time >= (c.StartPositionTicks / 10000000)
-                );
+            // 3. Outro Logic
+            if (name.includes('outro') || name.includes('ending') || name.includes('credits')) {
+                setShowSkipOutro(true);
 
-                if (creditChapter) {
-                    setShowSkipOutro(true);
-
-                    // Auto-skip outro if enabled (go to next episode or end)
-                    if (config.autoSkipOutro && !autoSkippedRef.current.outro && videoRef.current) {
-                        autoSkippedRef.current.outro = true;
-                        if (nextEpisodeId) {
-                            navigate(`/player/${nextEpisodeId}`);
-                        }
+                // Auto-skip outro
+                if (config.autoSkipOutro && !autoSkippedRef.current.outro && videoRef.current) {
+                    autoSkippedRef.current.outro = true;
+                    if (nextEpisodeId) {
+                        handleNextEpisode();
                     }
-                } else {
-                    setShowSkipOutro(false);
                 }
             } else {
                 setShowSkipOutro(false);
             }
+        } else {
+            setShowSkipIntro(false);
+            setShowSkipOutro(false);
         }
-    }, [item, duration, config.autoSkipIntro, config.autoSkipOutro, nextEpisodeId, navigate]);
 
+    }, [item, duration, config.autoSkipIntro, config.autoSkipOutro, nextEpisodeId]);
     // Update check in timeUpdate
     // (This needs to be called in existing handleTimeUpdate or useEffect)
 
@@ -1092,6 +1215,7 @@ const Player = () => {
                                                         videoRef.current.muted = (v === 0);
                                                     }
                                                     setIsMuted(v === 0);
+                                                    if (v > 0) setLastVolume(v);
                                                 }}
                                                 onClick={(e) => e.stopPropagation()}
                                             />
