@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Hls from 'hls.js';
+import JASSUB from 'jassub';
 
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
@@ -318,19 +319,44 @@ const Player = () => {
     useEffect(() => {
         if (!playbackUrl) return;
 
-        // Helper function to restore time
-        const restorePlaybackPosition = () => {
-            // Check if we have a saved time from a switch
-            if (switchResumeTimeRef.current !== null && videoRef.current) {
+        // Helper function: Smart restore and start
+        const restorePlaybackPosition = async () => {
+            const video = videoRef.current;
+            if (!video) return;
+
+            // 1. Restore Time (Resume)
+            if (switchResumeTimeRef.current !== null) {
                 console.log("[Player] Restoring position to:", switchResumeTimeRef.current);
-                videoRef.current.currentTime = switchResumeTimeRef.current;
-                switchResumeTimeRef.current = null; // Reset it so it doesn't interfere later
+                video.currentTime = switchResumeTimeRef.current;
+                switchResumeTimeRef.current = null;
             }
-            // Auto-resume playback if it was playing
-            if (isPlaying && videoRef.current.paused) {
-                videoRef.current.play().catch(e => console.log("Autoplay prevented", e));
-            }
+
+            // 2. Remove loading indicator
             setIsLoading(false);
+
+            // 3. Safe playback start (Autoplay Policy Fix)
+            if (isPlaying) {
+                try {
+                    // We try to start with sound...
+                    await video.play();
+                } catch (err) {
+                    console.warn("Autoplay with sound blocked. Falling back to muted.", err);
+
+                    // IF BLOCKED:
+                    // A. Mute the video
+                    video.muted = true;
+                    // B. Update React state so the mute button icon is correct
+                    setIsMuted(true);
+                    setVolume(0);
+
+                    // C. Retry muted (this will work)
+                    try {
+                        await video.play();
+                    } catch (retryErr) {
+                        console.error("Autoplay failed completely.", retryErr);
+                    }
+                }
+            }
         };
 
         if (Hls.isSupported()) {
@@ -396,11 +422,20 @@ const Player = () => {
         };
     }, [playbackUrl]); // Re-run when URL changes (e.g. stream switch)
 
-    // --- Audio Synchronization ---
+    // --- Audio Synchronization (Fixed) ---
     useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.volume = isMuted ? 0 : volume;
-            videoRef.current.muted = isMuted;
+        const video = videoRef.current;
+        if (video) {
+            // Always sync video properties to React State
+            const targetVolume = isMuted ? 0 : volume;
+
+            // Only set if different, to avoid stuttering
+            if (Math.abs(video.volume - targetVolume) > 0.01) {
+                video.volume = targetVolume;
+            }
+            if (video.muted !== isMuted) {
+                video.muted = isMuted;
+            }
         }
     }, [volume, isMuted]);
 
@@ -448,12 +483,7 @@ const Player = () => {
             const initJassub = () => {
                 const assUrl = jellyfinService.getRawSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex, 'ass');
                 try {
-                    const JASSUB = window.JASSUB;
-                    if (!JASSUB) {
-                        console.error('[Subtitles] JASSUB library not loaded');
-                        return;
-                    }
-
+                    // Use the imported Class directly
                     jassubRef.current = new JASSUB({
                         video: video,
                         subUrl: assUrl,
@@ -474,7 +504,14 @@ const Player = () => {
             const loadSrt = async () => {
                 try {
                     const srtUrl = jellyfinService.getRawSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex, 'srt');
-                    const response = await fetch(srtUrl);
+
+                    const token = localStorage.getItem('jellyfin_accessToken') || jellyfinService.api?.accessToken;
+                    const response = await fetch(srtUrl, {
+                        headers: {
+                            'Authorization': `MediaBrowser Token="${token}"`
+                        }
+                    });
+
                     if (!response.ok) throw new Error('Failed to fetch SRT');
                     const srtText = await response.text();
 
@@ -766,6 +803,11 @@ const Player = () => {
 
 
     const checkForChapters = useCallback((time) => {
+        // Debug: Log chapters occasionally
+        if (item?.Chapters && Math.floor(time) % 5 === 0) {
+            console.log("Current Chapters:", item.Chapters.map(c => c.Name));
+        }
+
         if (!item?.Chapters || item.Chapters.length === 0) return;
 
         // 1. Find the CURRENT active chapter based on the time
