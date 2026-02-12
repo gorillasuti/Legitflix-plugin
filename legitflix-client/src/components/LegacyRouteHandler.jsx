@@ -40,7 +40,8 @@ const LegacyRouteHandler = () => {
             const classicPages = ['dashboard', 'plugins', 'wizard', 'scheduledtasks'];
             if (classicPages.some(page => hash.includes(page))) {
                 console.log('[LegitFlix] Redirecting to Classic Mode for:', hash);
-                window.location.href = `/?classic=true${hash}`;
+                // Force a hard reload to ensure we break out of the React app
+                window.location.replace(`/?classic=true${hash}`);
                 return;
             }
         }

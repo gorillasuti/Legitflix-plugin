@@ -52,8 +52,14 @@ class JellyfinService {
                         if (activeServer) {
                             console.log("[LegitFlix] Found credentials in localStorage", activeServer);
                             this.initialize(activeServer.AccessToken);
-                            const response = await this.api.user.getUserById({ userId: activeServer.UserId });
-                            return response.data;
+                            try {
+                                const response = await this.api.user.getUserById({ userId: activeServer.UserId });
+                                return response.data;
+                            } catch (apiError) {
+                                console.error("[LegitFlix] Token invalid or user not found. Clearing credentials.", apiError);
+                                this.logout(); // Clear invalid creds
+                                return null;
+                            }
                         }
                     }
                 } catch (e) {
@@ -64,12 +70,9 @@ class JellyfinService {
 
         if (!this.api) this.initialize();
 
-        try {
-            const users = await this.api.user.getPublicUsers();
-            if (users.data && users.data.length > 0) return users.data[0];
-        } catch (e) {
-            console.warn("[LegitFlix] Failed to get public users", e);
-        }
+        // REMOVED: Automatic Public User Fallback
+        // We only want to log in if we have valid credentials. 
+        // Public users can be selected manually via SelectUser page.
 
         return null;
     }
