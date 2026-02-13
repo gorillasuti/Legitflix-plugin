@@ -308,124 +308,105 @@ video::-webkit-media-text-track-display {
     cursor: pointer;
 }
 
-.lf-player-timeline-track {
-    width: 100%;
-    height: 5px;
-    /* Slightly thicker for better visibility */
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
+/* ============================================
+   VIDSTACK TIME SLIDER (Timeline)
+   ============================================ */
+
+.lf-player-timeline-container .vds-time-slider {
+    --track-height: 5px;
+    --track-focus-height: 7px;
     position: relative;
-    transition: height 0.1s ease;
-    display: flex;
-    align-items: center;
-    /* Vertically center thumb/track */
+    width: 100%;
+    height: var(--track-height);
+    cursor: pointer;
+    contain: layout style;
 }
 
-.lf-player-timeline-container:hover .lf-player-timeline-track {
-    height: 7px;
+.lf-player-timeline-container:hover .vds-time-slider {
+    --track-height: var(--track-focus-height);
 }
 
-.lf-player-timeline-track-bg {
+/* Track (background) */
+.lf-player-timeline-container .vds-slider-track {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    /* Let clicks pass to Root if needed, though Track usually handles them */
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    contain: strict;
+    z-index: 0;
 }
 
-.lf-player-timeline-fill,
-.lf-player-timeline-track [data-part='track-fill'] {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
+/* Track Fill (played portion) */
+.lf-player-timeline-container .vds-slider-track-fill {
     background: #ff6a00 !important;
-    border-radius: 2px;
-    height: 100%;
     z-index: 2;
-    will-change: width;
 }
 
-/* Vidstack uses inline width or --slider-fill-percent — make sure it's visible */
-.lf-player-timeline-track :where([data-part='track-fill'], .vds-slider-track-fill) {
-    background: #ff6a00 !important;
-}
-
-.lf-player-timeline-buffered {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
+/* Progress (buffered portion) */
+.lf-player-timeline-container .vds-slider-progress {
+    background: rgba(255, 255, 255, 0.35) !important;
     z-index: 1;
 }
 
-.lf-player-timeline-hover-fill {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 2px;
-}
-
-/* Timeline Thumb */
-.lf-player-timeline-thumb {
+/* Thumb */
+.lf-player-timeline-container .vds-slider-thumb {
     position: absolute;
     top: 50%;
-    /* Vidstack handles 'left' % */
-    transform: translate(-50%, -50%) scale(0);
     width: 14px;
     height: 14px;
-    background: #fff;
     border-radius: 50%;
-    transition: transform 0.1s;
+    background: #fff;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.15s ease;
     z-index: 10;
+    contain: layout style;
 }
 
-.lf-player-timeline-container:hover .lf-player-timeline-thumb {
+.lf-player-timeline-container:hover .vds-slider-thumb {
     transform: translate(-50%, -50%) scale(1);
 }
 
-/* Tooltip & Thumbnail */
-.lf-timeline-tooltip {
-    position: absolute;
-    bottom: 25px;
-    /* Above the track */
-    left: 0;
-    /* Vidstack sets --preview-left or similar, but for TimeSlider.Preview it tracks pointer usually? No, it needs positioning */
-    /* Vidstack's TimeSlider.Preview automatically handles horizontal positioning via CSS var --preview-left usually? 
-       Actually, standard Vidstack CSS requires us to use the var(--preview-left) or rely on the component's internal styles if using default layout.
-       Since we are custom, we need to ensure it moves. 
-       Vidstack sets `left` style on the preview element automatically? Let's check docs behavior.
-       Usually, it sets a CSS variable or left property.
-       For custom layouts, `TimeSlider.Preview` renders an element that we must position?
-       Actually, `TimeSlider.Preview` has `no-clamp` prop, but generally it follows the pointer. 
-    */
+/* Hover Preview (tooltip + thumbnail) */
+.lf-player-timeline-container .vds-slider-preview {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    bottom: 20px;
+    background: rgba(0, 0, 0, 0.85);
     padding: 6px 10px;
     border-radius: 4px;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.15s;
+    z-index: 20;
 }
 
-.lf-player-timeline-container:hover .lf-timeline-tooltip {
+.lf-player-timeline-container:hover .vds-slider-preview {
     opacity: 1;
 }
 
-.lf-timeline-time {
+/* Trickplay Thumbnail */
+.lf-player-timeline-container .vds-slider-thumbnail {
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.lf-player-timeline-container .vds-slider-value {
     font-size: 0.85rem;
     font-weight: 500;
     color: #fff;
     font-variant-numeric: tabular-nums;
 }
+
+
+/* ============================================
+   VIDSTACK VOLUME SLIDER
+   ============================================ */
 
 /* Controls Row */
 .lf-player-controls-row {
@@ -466,8 +447,7 @@ video::-webkit-media-text-track-display {
     background: rgba(0, 0, 0, 0.8);
 }
 
-
-/* Volume Slider */
+/* Volume Container */
 .volume-container {
     display: flex;
     align-items: center;
@@ -486,43 +466,35 @@ video::-webkit-media-text-track-display {
     width: 80px;
 }
 
-.volume-slider {
-    -webkit-appearance: none;
-    appearance: none;
+/* Volume slider root */
+.volume-slider-wrapper .vds-slider {
+    position: relative;
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
     cursor: pointer;
-    position: relative;
+    contain: layout style;
 }
 
-/* Volume Slider Fill - Vidstack uses TrackFill component */
-.volume-slider .vds-slider-track-fill,
-.volume-slider [data-part='track-fill'] {
-    background: #ff6a00 !important;
-    border-radius: 2px;
-    height: 100%;
+/* Volume track background */
+.volume-slider-wrapper .vds-slider-track {
     position: absolute;
-    left: 0;
     top: 0;
-    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    z-index: 0;
+}
+
+/* Volume track fill */
+.volume-slider-wrapper .vds-slider-track-fill {
+    background: #ff6a00 !important;
     z-index: 2;
 }
 
-/* Volume slider track background */
-.volume-slider .vds-slider-track,
-.volume-slider [data-part='track'] {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    height: 4px;
-    width: 100%;
-    position: relative;
-}
-
-/* Volume slider thumb */
-.volume-slider .vds-slider-thumb,
-.volume-slider [data-part='thumb'] {
+/* Volume thumb */
+.volume-slider-wrapper .vds-slider-thumb {
     width: 12px;
     height: 12px;
     background: #fff;
@@ -533,13 +505,23 @@ video::-webkit-media-text-track-display {
     z-index: 3;
 }
 
-.volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    border-radius: 50%;
+/* Volume preview tooltip */
+.volume-slider-wrapper .vds-slider-preview {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    bottom: 16px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.volume-slider-wrapper .vds-slider-value {
+    font-size: 0.75rem;
+    color: #fff;
+    font-weight: 500;
 }
 
 .time-display {

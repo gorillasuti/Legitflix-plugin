@@ -338,6 +338,7 @@ class JellyfinService {
 
         if (subtitleStreamIndex !== null) {
             url += `&SubtitleStreamIndex=${subtitleStreamIndex}`;
+            url += `&SubtitleMethod=Encode`;
         }
 
         if (maxBitrate) {

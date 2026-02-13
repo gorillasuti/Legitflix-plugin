@@ -55,12 +55,25 @@ const VidstackPlayer = () => {
     const [autoPlay, setAutoPlay] = usePersistentState('autoPlay', true);
     const [autoSkipIntro, setAutoSkipIntro] = usePersistentState('autoSkipIntro', false);
     const [autoSkipOutro, setAutoSkipOutro] = usePersistentState('autoSkipOutro', false);
+    const [preferredAudioLang, setPreferredAudioLang] = usePersistentState('preferredAudioLang', null);
 
     // Local/Ephemeral State
     const [audioStreams, setAudioStreams] = useState([]);
     const [selectedAudioIndex, setSelectedAudioIndex] = useState(null);
     const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState(null);
 
+    // Reset ephemeral state when navigating to a new item
+    useEffect(() => {
+        setSelectedAudioIndex(null);
+        setSelectedSubtitleIndex(null);
+        setStreamUrl(null);
+        setItem(null);
+        setNextEpisodeId(null);
+        setSubtitleStreams([]);
+        setAudioStreams([]);
+        setChapters([]);
+        setEpisodes([]);
+    }, [id]);
 
 
     // 1. Fetch Data
@@ -98,7 +111,14 @@ const VidstackPlayer = () => {
 
                     let audioIndex = selectedAudioIndex;
                     if (audioIndex === null) {
-                        const defAudio = audios.find(s => s.IsDefault) || audios[0];
+                        // Try to match saved language preference first
+                        let defAudio = null;
+                        if (preferredAudioLang) {
+                            defAudio = audios.find(s => s.Language === preferredAudioLang);
+                        }
+                        if (!defAudio) {
+                            defAudio = audios.find(s => s.IsDefault) || audios[0];
+                        }
                         if (defAudio) {
                             audioIndex = defAudio.Index;
                             setSelectedAudioIndex(defAudio.Index);
@@ -240,9 +260,16 @@ const VidstackPlayer = () => {
                     onPlaying={() => setIsBuffering(false)}
                     onCanPlay={() => {
                         setIsBuffering(false);
-                        if (playerRef.current) playerRef.current.playbackRate = playbackRate;
                     }}
-                    onLoadedData={() => setIsBuffering(false)}
+                    onLoadedData={() => {
+                        setIsBuffering(false);
+                        if (playerRef.current) {
+                            playerRef.current.playbackRate = playbackRate;
+                            if (autoPlay) {
+                                playerRef.current.play().catch(() => { });
+                            }
+                        }
+                    }}
                     onError={(e) => {
                         console.error("Player Error:", e);
                         setIsBuffering(false);
@@ -276,6 +303,11 @@ const VidstackPlayer = () => {
                             selectedAudioIndex={selectedAudioIndex}
                             onSelectAudio={(idx) => {
                                 setSelectedAudioIndex(idx);
+                                // Save language preference for persistence
+                                const selectedStream = audioStreams.find(s => s.Index === idx);
+                                if (selectedStream && selectedStream.Language) {
+                                    setPreferredAudioLang(selectedStream.Language);
+                                }
                                 if (item && item.MediaSources) {
                                     const mediaSourceId = item.MediaSources[0].Id;
                                     const newUrl = jellyfinService.getStreamUrl(item.Id, idx, selectedSubtitleIndex, mediaSourceId, maxBitrate);

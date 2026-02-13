@@ -84,9 +84,10 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
         try {
             const user = await jellyfinService.getCurrentUser();
             const data = await jellyfinService.getSeasons(user.Id, seriesId);
-            setSeasons(data.Items || []);
-            if (!selectedSeason && data.Items.length > 0) {
-                setSelectedSeason(data.Items[0].Id);
+            const items = data || [];
+            setSeasons(items);
+            if (!selectedSeason && items.length > 0) {
+                setSelectedSeason(items[0].Id);
             }
         } catch (err) {
             console.error('Failed to load seasons', err);
@@ -97,12 +98,13 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
         try {
             const user = await jellyfinService.getCurrentUser();
             const data = await jellyfinService.getEpisodes(user.Id, seriesId, seasonId);
-            setEpisodes(data.Items || []);
-            if (!selectedEpisode && data.Items.length > 0) {
-                setSelectedEpisode(data.Items[0].Id);
+            const items = data || [];
+            setEpisodes(items);
+            if (!selectedEpisode && items.length > 0) {
+                setSelectedEpisode(items[0].Id);
             } else if (selectedEpisode) {
-                if (!data.Items.find(e => e.Id === selectedEpisode)) {
-                    setSelectedEpisode(data.Items[0] ? data.Items[0].Id : '');
+                if (!items.find(e => e.Id === selectedEpisode)) {
+                    setSelectedEpisode(items[0] ? items[0].Id : '');
                 }
             }
         } catch (err) {

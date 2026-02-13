@@ -239,7 +239,7 @@ const PlayerSettingsModal = ({
 
                 {/* Content */}
                 <div className="legit-settings-content">
-                    <div className="content-header">
+                    <div className="content-header-player">
                         <h2>{settingsTab}</h2>
                         <button className="close-btn-icon" onClick={onClose}>
                             <span className="material-icons">close</span>
@@ -254,7 +254,7 @@ const PlayerSettingsModal = ({
                     </div>
                     <div className="content-footer">
                         <button
-                            className="lf-btn lf-btn--secondary"
+                            className="btn-reset"
                             onClick={() => {
                                 // Restore all settings to defaults
                                 setMaxBitrate(null);
@@ -273,11 +273,10 @@ const PlayerSettingsModal = ({
                                 onClose();
                             }}
                         >
-                            <span className="material-icons" style={{ fontSize: '18px', marginRight: '6px' }}>settings_backup_restore</span>
                             Restore Defaults
                         </button>
                         <button
-                            className="lf-btn lf-btn--primary"
+                            className="btn-save lf-btn--ring-hover"
                             onClick={() => {
                                 // Persist all current settings to localStorage
                                 localStorage.setItem('legitflix_maxBitrate', JSON.stringify(maxBitrate));
@@ -292,7 +291,6 @@ const PlayerSettingsModal = ({
                                 onClose();
                             }}
                         >
-                            <span className="material-icons" style={{ fontSize: '18px', marginRight: '6px' }}>save</span>
                             Save Settings
                         </button>
                     </div>

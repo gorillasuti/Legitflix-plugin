@@ -166,20 +166,24 @@ const PlayerLayout = ({
             {/* 4. BOTTOM BAR */}
             <div className="lf-player-controls-bottom">
 
-                {/* Timeline - Using Vidstack TimeSlider for perfect scrubbing */}
+                {/* Timeline - Using Vidstack TimeSlider with trickplay support */}
                 <div className="lf-player-timeline-container">
-                    <TimeSlider.Root className="lf-player-timeline-track">
-                        <TimeSlider.Track className="lf-player-timeline-track-bg">
-                            <TimeSlider.Progress className="lf-player-timeline-buffered" />
-                            <TimeSlider.TrackFill className="lf-player-timeline-fill" />
-                        </TimeSlider.Track>
+                    <TimeSlider.Root className="vds-time-slider vds-slider">
+                        <TimeSlider.Track className="vds-slider-track" />
+                        <TimeSlider.TrackFill className="vds-slider-track-fill vds-slider-track" />
+                        <TimeSlider.Progress className="vds-slider-progress vds-slider-track" />
 
-                        <TimeSlider.Thumb className="lf-player-timeline-thumb" />
-
-                        {/* Hover Preview with Timestamp */}
-                        <TimeSlider.Preview className="lf-timeline-tooltip">
-                            <TimeSlider.Value className="lf-timeline-time" />
+                        <TimeSlider.Preview className="vds-slider-preview" noClamp>
+                            <TimeSlider.Thumbnail.Root
+                                src=""
+                                className="vds-slider-thumbnail vds-thumbnail"
+                            >
+                                <TimeSlider.Thumbnail.Img />
+                            </TimeSlider.Thumbnail.Root>
+                            <TimeSlider.Value className="vds-slider-value" />
                         </TimeSlider.Preview>
+
+                        <TimeSlider.Thumb className="vds-slider-thumb" />
                     </TimeSlider.Root>
                 </div>
 
@@ -222,10 +226,14 @@ const PlayerLayout = ({
                                 <VolumeIcon />
                             </MuteButton>
                             <div className="volume-slider-wrapper">
-                                <VolumeSlider.Root className="volume-slider">
-                                    <VolumeSlider.Track className="vds-slider-track">
-                                        <VolumeSlider.TrackFill className="vds-slider-track-fill lf-player-timeline-fill" />
-                                    </VolumeSlider.Track>
+                                <VolumeSlider.Root className="vds-slider">
+                                    <VolumeSlider.Track className="vds-slider-track" />
+                                    <VolumeSlider.TrackFill className="vds-slider-track-fill vds-slider-track" />
+
+                                    <VolumeSlider.Preview className="vds-slider-preview" noClamp>
+                                        <VolumeSlider.Value className="vds-slider-value" />
+                                    </VolumeSlider.Preview>
+
                                     <VolumeSlider.Thumb className="vds-slider-thumb" />
                                 </VolumeSlider.Root>
                             </div>

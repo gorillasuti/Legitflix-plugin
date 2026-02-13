@@ -156,6 +156,15 @@
     gap: 20px;
 }
 
+.content-header-player {
+    padding: 17px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
 .search-container {
     flex: 1;
     position: relative;
@@ -384,19 +393,6 @@ input:checked+.slider:before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.btn-reset {
-    background: transparent;
-    border: none;
-    color: #888;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.btn-reset:hover {
-    color: #ccc;
-    text-decoration: underline;
 }
 
 .btn-save {
