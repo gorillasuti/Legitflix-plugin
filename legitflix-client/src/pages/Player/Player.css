@@ -333,117 +333,130 @@ video::-webkit-media-text-track-display {
     pointer-events: auto;
 }
 
-/* Timeline Container */
-.lf-player-timeline-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
 /* ============================================
-   VIDSTACK DEFAULT SLIDER (CSS Variables Only)
+   TIMELINE SLIDER (media-slider)
    ============================================ */
 
-.lf-player-timeline-container .vds-slider {
-    --media-slider-width: 100%;
-    --media-slider-height: 48px;
-
-    --media-slider-track-width: 100%;
-    --media-slider-track-height: 5px;
-    --media-slider-track-bg: rgb(255 255 255 / 0.3);
-    --media-slider-track-fill-bg: var(--media-brand, #f5f5f5);
-    --media-slider-track-progress-bg: rgb(255 255 255 / 0.5);
-    --media-slider-track-border-radius: 2px;
-    --media-slider-focused-track-width: var(--media-slider-track-width);
-    --media-slider-focused-track-height: calc(var(--media-slider-track-height) * 1.25);
-
-    --media-slider-thumb-size: 15px;
-    --media-slider-thumb-border: 1px solid #cacaca;
-    --media-slider-thumb-border-radius: 9999px;
-    --media-slider-thumb-bg: #fff;
-    --media-slider-thumb-transition: opacity 0.2s ease-in, box-shadow 0.2s ease;
-    --media-slider-focused-thumb-size: calc(var(--media-slider-thumb-size) * 1.1);
-    --media-slider-focused-thumb-shadow: 0 0 0 4px hsla(0, 0%, 100%, 0.4);
-
-    --media-slider-preview-bg: unset;
-    --media-slider-preview-border-radius: 2px;
-
-    --media-thumbnail-bg: black;
-    --media-thumbnail-border: 1px solid white;
-    --media-thumbnail-aspect-ratio: 16 / 9;
-    --media-thumbnail-min-width: 120px;
-    --media-thumbnail-min-height: calc(var(--media-thumbnail-min-width) / var(--aspect-ratio));
-    --media-thumbnail-max-width: 180px;
-    --media-thumbnail-max-height: calc(var(--media-thumbnail-max-width) / var(--aspect-ratio));
-
-    --media-slider-value-gap: 0px;
-    --media-slider-value-color: white;
-    --media-slider-value-bg: black;
-    --media-slider-value-border: unset;
-    --media-slider-value-border-radius: 2px;
-    --media-slider-value-padding: 1px 10px;
-}
-
-/* --- Volume Slider --- */
-.volume-slider-wrapper .vds-slider {
-    position: relative;
-    display: flex;
+.media-slider {
+    display: inline-flex;
     align-items: center;
     width: 100%;
-    height: 28px;
+    height: 40px;
+    position: relative;
+    contain: layout style;
+    outline: none;
+    pointer-events: auto;
     cursor: pointer;
+    user-select: none;
+    touch-action: none;
+    /** Prevent thumb flowing out of slider (15px = thumb width). */
+    margin: 0 calc(15px / 2);
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.volume-slider-wrapper .vds-slider-track {
+.media-slider[data-focus] .media-slider-track {
+    box-shadow: var(--media-focus-ring, 0 0 0 3px rgb(78 156 246));
+}
+
+.media-slider-track {
+    z-index: 0;
     position: absolute;
-    left: 0;
     width: 100%;
-    height: 3px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-}
-
-.volume-slider-wrapper .vds-slider-track-fill {
-    position: absolute;
+    height: 5px;
+    top: 50%;
     left: 0;
-    top: 0;
-    height: 100%;
-    border-radius: 2px;
-    background: #fff;
-    z-index: 2;
+    border-radius: 1px;
+    transform: translateY(-50%) translateZ(0);
+    background-color: rgb(255 255 255 / 0.3);
+    contain: strict;
 }
 
-.volume-slider-wrapper .vds-slider-thumb {
+.media-slider-track-fill {
+    z-index: 2;
+    /** above progress. */
+    background-color: #f5f5f5;
+    width: var(--slider-fill, 0%);
+    will-change: width;
+}
+
+.media-slider-progress {
+    z-index: 1;
+    /** above track. */
+    width: var(--slider-progress, 0%);
+    will-change: width;
+    background-color: rgb(255 255 255 / 0.5);
+}
+
+.media-slider-thumb {
     position: absolute;
     top: 50%;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #fff;
-    transform: translate(-50%, -50%);
-    z-index: 3;
+    left: var(--slider-fill);
+    opacity: 0;
+    contain: layout size style;
+    width: 15px;
+    height: 15px;
+    border: 1px solid #cacaca;
+    border-radius: 9999px;
+    background-color: #fff;
+    transform: translate(-50%, -50%) translateZ(0);
+    transition: opacity 0.15s ease-in;
     pointer-events: none;
+    will-change: left;
+    z-index: 2;
+    /** above track fill. */
 }
 
-.volume-slider-wrapper .vds-slider-preview {
+.media-slider[data-active] .media-slider-thumb {
+    opacity: 1;
+    transition: opacity 0.2s ease-in;
+}
+
+.media-slider[data-dragging] .media-slider-thumb {
+    box-shadow: 0 0 0 3px hsla(0, 0%, 100%, 0.4);
+}
+
+.media-slider-preview {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    position: absolute;
-    bottom: 22px;
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(8px);
-    padding: 3px 8px;
-    border-radius: 4px;
+    opacity: 0;
+    border-radius: 2px;
     pointer-events: none;
-    z-index: 20;
+    transition: opacity 0.2s ease-out;
+    will-change: left, opacity;
+    contain: layout paint style;
 }
 
-.volume-slider-wrapper .vds-slider-value {
-    font-size: 0.7rem;
-    color: #fff;
-    font-weight: 600;
+.media-slider-preview[data-visible] {
+    opacity: 1;
+    transition: opacity 0.2s ease-in;
+}
+
+.media-slider-thumbnail {
+    display: block;
+    width: var(--thumbnail-width);
+    height: var(--thumbnail-height);
+    background-color: black;
+    border: 1px solid white;
+    contain: strict;
+    overflow: hidden;
+    min-width: 120px;
+    min-height: 80px;
+    max-width: 180px;
+    max-height: 160px;
+}
+
+.media-slider-value {
+    padding: 1px 10px;
+    color: white;
+    background-color: black;
+    border-radius: 2px;
+}
+
+/* --- Volume Slider: scope max-width so it doesn't affect the timeline --- */
+.volume-slider-wrapper .media-slider {
+    max-width: 72px;
 }
 
 
