@@ -29,6 +29,24 @@
     /* Fix clipping */
 }
 
+/* Gestures Overlay */
+.vds-gesture {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    /* Above video (1), below loader (15) and controls (20) */
+    /* Actually, gestures need to be high enough to catch clicks, but below controls */
+    /* Vidstack handles this usually, but we need to ensure our layout doesn't block it */
+}
+
+/* Controls should be on top of gestures */
+.lf-player-controls {
+    z-index: 20;
+}
+
 .lf-player-video-container.is-fullscreen {
     position: fixed;
     top: 0;
@@ -55,7 +73,7 @@
     left: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    z-index: 99 !important;
+    z-index: 99999 !important;
     /* Above video */
     pointer-events: none;
 }
@@ -317,47 +335,59 @@
     border-radius: 2px;
 }
 
+/* Timeline Thumb */
 .lf-player-timeline-thumb {
     position: absolute;
-    right: -6px;
     top: 50%;
-    transform: translateY(-50%) scale(0);
-    width: 12px;
-    height: 12px;
+    /* Vidstack handles 'left' % */
+    transform: translate(-50%, -50%) scale(0);
+    width: 14px;
+    height: 14px;
     background: #fff;
     border-radius: 50%;
     transition: transform 0.1s;
+    z-index: 10;
 }
 
 .lf-player-timeline-container:hover .lf-player-timeline-thumb {
-    transform: translateY(-50%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
 }
 
 /* Tooltip & Thumbnail */
 .lf-timeline-tooltip {
     position: absolute;
-    bottom: 30px;
-    transform: translateX(-50%);
+    bottom: 25px;
+    /* Above the track */
+    left: 0;
+    /* Vidstack sets --preview-left or similar, but for TimeSlider.Preview it tracks pointer usually? No, it needs positioning */
+    /* Vidstack's TimeSlider.Preview automatically handles horizontal positioning via CSS var --preview-left usually? 
+       Actually, standard Vidstack CSS requires us to use the var(--preview-left) or rely on the component's internal styles if using default layout.
+       Since we are custom, we need to ensure it moves. 
+       Vidstack sets `left` style on the preview element automatically? Let's check docs behavior.
+       Usually, it sets a CSS variable or left property.
+       For custom layouts, `TimeSlider.Preview` renders an element that we must position?
+       Actually, `TimeSlider.Preview` has `no-clamp` prop, but generally it follows the pointer. 
+    */
     display: flex;
     flex-direction: column;
     align-items: center;
-    pointer-events: none;
     background: rgba(0, 0, 0, 0.8);
-    padding: 4px;
+    padding: 6px 10px;
     border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
-.lf-timeline-thumbnail {
-    background-color: #000;
-    background-repeat: no-repeat;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    margin-bottom: 4px;
+.lf-player-timeline-container:hover .lf-timeline-tooltip {
+    opacity: 1;
 }
 
 .lf-timeline-time {
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Controls Row */
@@ -945,5 +975,40 @@ video {
         height: 56.25vw;
         /* 16:9 Aspect Ratio on mobile/tablets instead of 85vh */
         max-height: 85vh;
+    }
+
+    /* --- VIDSTACK FIXES --- */
+
+    /* 1. Force Video to Bottom */
+    /* Vidstack puts video in a shadow DOM or specific wrapper. We need to target it broadly. */
+    .vds-media-provider video,
+    .lf-vidstack-root video {
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1 !important;
+        /* Base Layer */
+        object-fit: contain;
+    }
+
+    /* 2. Force Subtitle Canvas to Top */
+    .vds-media-provider canvas,
+    .lf-vidstack-root canvas {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 50 !important;
+        /* Above Video */
+        pointer-events: none !important;
+        /* Click-through */
+    }
+
+    /* 3. Ensure Controls are Highest */
+    .lf-player-controls {
+        z-index: 100 !important;
     }
 }

@@ -28,14 +28,34 @@ const VidstackPlayer = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
 
-    // Settings State
+    // Helper for persistent state
+    const usePersistentState = (key, defaultValue) => {
+        const [state, setState] = useState(() => {
+            try {
+                const stored = localStorage.getItem(`legitflix_${key}`);
+                return stored !== null ? JSON.parse(stored) : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        });
+        useEffect(() => {
+            localStorage.setItem(`legitflix_${key}`, JSON.stringify(state));
+        }, [key, state]);
+        return [state, setState];
+    };
+
+    // Settings State (Persistent)
     const [settingsTab, setSettingsTab] = useState('General');
-    const [maxBitrate, setMaxBitrate] = useState(null);
+    const [maxBitrate, setMaxBitrate] = usePersistentState('maxBitrate', null); // Default Auto
+    const [playbackRate, setPlaybackRate] = usePersistentState('playbackRate', 1);
+    const [autoPlay, setAutoPlay] = usePersistentState('autoPlay', true);
+    const [autoSkipIntro, setAutoSkipIntro] = usePersistentState('autoSkipIntro', false);
+    const [autoSkipOutro, setAutoSkipOutro] = usePersistentState('autoSkipOutro', false);
+
+    // Local/Ephemeral State
     const [audioStreams, setAudioStreams] = useState([]);
     const [selectedAudioIndex, setSelectedAudioIndex] = useState(null);
-    const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState(null); // Local tracking
-    const [playbackRate, setPlaybackRate] = useState(1);
-    const [autoPlay, setAutoPlay] = useState(true);
+    const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState(null);
 
     // 1. Fetch Data
     useEffect(() => {
@@ -50,10 +70,6 @@ const VidstackPlayer = () => {
                 // Setup Stream URL
                 if (data.MediaSources && data.MediaSources.length > 0) {
                     const mediaSource = data.MediaSources[0];
-                    // Fix: getStreamUrl(itemId, audioIndex, subIndex, mediaSourceId)
-                    const url = jellyfinService.getStreamUrl(data.Id, null, null, mediaSource.Id);
-                    setStreamUrl(url);
-
                     // Filter Subtitles & Audio
                     const subs = mediaSource.MediaStreams.filter(s => s.Type === 'Subtitle');
                     const audios = mediaSource.MediaStreams.filter(s => s.Type === 'Audio');
@@ -65,7 +81,13 @@ const VidstackPlayer = () => {
                     if (defSub) setSelectedSubtitleIndex(defSub.Index);
 
                     const defAudio = audios.find(s => s.IsDefault) || audios[0];
+                    const audioIndex = defAudio ? defAudio.Index : null;
                     if (defAudio) setSelectedAudioIndex(defAudio.Index);
+
+                    // Fix: getStreamUrl(itemId, audioIndex, subIndex, mediaSourceId)
+                    // Explicitly pass audioIndex to ensure correct track is transcoded/served
+                    const url = jellyfinService.getStreamUrl(data.Id, audioIndex, null, mediaSource.Id, maxBitrate);
+                    setStreamUrl(url);
                 }
 
                 // Load Seasons/Episodes if it's an episode
@@ -91,19 +113,21 @@ const VidstackPlayer = () => {
             }
         };
         loadData();
-    }, [id]);
+    }, [id, maxBitrate]); // Reload stream if bitrate changes
 
     // 2. Playback Reporting
     useEffect(() => {
         const interval = setInterval(() => {
-            if (playerRef.current && !playerRef.current.state.paused) {
-                const currentTime = playerRef.current.state.currentTime;
-                const user = { Id: jellyfinService.currentUserId }; // Mock or fetch real user ID if needed
-                if (item) {
+            if (playerRef.current && !playerRef.current.paused) {
+                const currentTime = playerRef.current.currentTime;
+                // mock or fetch real user ID if needed - actually user ID is not used within the reporting function itself in service
+                if (item && !isNaN(currentTime)) {
+                    const mediaSourceId = item.MediaSources?.[0]?.Id;
                     jellyfinService.reportPlaybackProgress(
                         item.Id,
-                        currentTime * 10000000,
-                        false // isPaused
+                        Math.floor(currentTime * 10000000),
+                        false, // isPaused
+                        mediaSourceId
                     );
                 }
             }
@@ -196,10 +220,14 @@ const VidstackPlayer = () => {
                         type: 'application/x-mpegurl'
                     }}
                     title={item?.Name}
-                    autoPlay={true}
+                    autoPlay={autoPlay}
                     crossOrigin
                     onTrackChange={onTrackChange}
                     className="lf-vidstack-player"
+                    // Apply playback rate on mount/update
+                    onCanPlay={() => {
+                        if (playerRef.current) playerRef.current.playbackRate = playbackRate;
+                    }}
                 >
                     <MediaProvider>
                         {subtitleStreams.map(sub => (
@@ -222,6 +250,8 @@ const VidstackPlayer = () => {
                         nextEpisodeId={nextEpisodeId}
                         handleNextEpisode={handleNextEpisode}
                         onSettingsClick={() => setShowSettings(true)}
+                        autoSkipIntro={autoSkipIntro}
+                        autoSkipOutro={autoSkipOutro}
                     />
 
                     {showSettings && (
@@ -238,7 +268,7 @@ const VidstackPlayer = () => {
                                 setSelectedAudioIndex(idx);
                                 if (item && item.MediaSources) {
                                     const mediaSourceId = item.MediaSources[0].Id;
-                                    const newUrl = jellyfinService.getStreamUrl(item.Id, idx, null, mediaSourceId);
+                                    const newUrl = jellyfinService.getStreamUrl(item.Id, idx, null, mediaSourceId, maxBitrate);
                                     setStreamUrl(newUrl);
                                 }
                             }}
@@ -270,6 +300,10 @@ const VidstackPlayer = () => {
                             }}
                             autoPlay={autoPlay}
                             setAutoPlay={setAutoPlay}
+                            autoSkipIntro={autoSkipIntro}
+                            setAutoSkipIntro={setAutoSkipIntro}
+                            autoSkipOutro={autoSkipOutro}
+                            setAutoSkipOutro={setAutoSkipOutro}
                         />
                     )}
                 </MediaPlayer>

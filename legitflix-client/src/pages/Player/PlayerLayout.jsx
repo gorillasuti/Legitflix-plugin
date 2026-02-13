@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
     TimeSlider,
     PlayButton,
@@ -6,12 +6,23 @@ import {
     VolumeSlider,
     FullscreenButton,
     SeekButton,
+    Gesture,
     useMediaState,
     useMediaRemote
 } from '@vidstack/react';
 import './Player.css'; // Keep your existing CSS!
 
-const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleNextEpisode, onSettingsClick }) => {
+const PlayerLayout = ({
+    item,
+    chapters,
+    navigate,
+    config,
+    nextEpisodeId,
+    handleNextEpisode,
+    onSettingsClick,
+    autoSkipIntro,
+    autoSkipOutro
+}) => {
     // Hooks to access player state WITHOUT useRefs
     const currentTime = useMediaState('currentTime');
     const duration = useMediaState('duration');
@@ -85,6 +96,21 @@ const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleN
         }
     };
 
+    // --- Auto Skip Effects ---
+    useEffect(() => {
+        if (autoSkipIntro && showSkipIntro) {
+            console.log("[AutoSkip] Intro detected, seeking to:", showSkipIntro.target);
+            remote.seek(showSkipIntro.target);
+        }
+    }, [autoSkipIntro, showSkipIntro, remote]);
+
+    useEffect(() => {
+        if (autoSkipOutro && showSkipOutro) {
+            console.log("[AutoSkip] Outro detected, skipping...");
+            handleSkipCredits();
+        }
+    }, [autoSkipOutro, showSkipOutro]); // handleSkipCredits is stable/depends on nextEpisodeId
+
     // --- Format Time Helper ---
     const formatTime = (seconds) => {
         if (!seconds || isNaN(seconds)) return "0:00";
@@ -145,20 +171,25 @@ const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleN
                     <TimeSlider.Root className="lf-player-timeline-track">
                         <TimeSlider.Track className="lf-player-timeline-track-bg">
                             <TimeSlider.TrackFill className="lf-player-timeline-fill" />
+                            <TimeSlider.Progress className="lf-player-timeline-buffered" />
                         </TimeSlider.Track>
 
                         <TimeSlider.Thumb className="lf-player-timeline-thumb" />
-                        {/* Thumbnails can be added here using <TimeSlider.Preview> */}
+
+                        {/* Hover Preview with Timestamp */}
+                        <TimeSlider.Preview className="lf-timeline-tooltip">
+                            <TimeSlider.Value className="lf-timeline-time" />
+                        </TimeSlider.Preview>
                     </TimeSlider.Root>
                 </div>
 
+                <Gesture className="vds-gesture" event="pointerup" action="toggle:paused" />
+                <Gesture className="vds-gesture" event="dblpointerup" action="toggle:fullscreen" />
+                <Gesture className="vds-gesture" event="dblpointerup" action="seek:-10" />
+                <Gesture className="vds-gesture" event="dblpointerup" action="seek:10" />
+
                 <div className="lf-player-controls-row">
                     <div className="controls-left">
-                        {/* Seek Backward */}
-                        <SeekButton className="icon-btn" seconds={-10}>
-                            <span className="material-icons">replay_10</span>
-                        </SeekButton>
-
                         {/* Play Toggle */}
                         <PlayButton className="icon-btn">
                             <span className="material-icons">
@@ -166,10 +197,24 @@ const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleN
                             </span>
                         </PlayButton>
 
-                        {/* Seek Forward */}
-                        <SeekButton className="icon-btn" seconds={10}>
-                            <span className="material-icons">forward_10</span>
-                        </SeekButton>
+                        <div className="seek-controls" style={{ display: 'flex', gap: '5px', margin: '0 10px' }}>
+                            {/* Seek Backward */}
+                            <SeekButton className="icon-btn" seconds={-10}>
+                                <span className="material-icons">replay_10</span>
+                            </SeekButton>
+
+                            {/* Seek Forward */}
+                            <SeekButton className="icon-btn" seconds={10}>
+                                <span className="material-icons">forward_10</span>
+                            </SeekButton>
+                        </div>
+
+                        {/* Next Episode */}
+                        {nextEpisodeId && (
+                            <button className="icon-btn" onClick={handleNextEpisode} title="Next Episode">
+                                <span className="material-icons">skip_next</span>
+                            </button>
+                        )}
 
                         {/* Volume Control */}
                         <div className="volume-container">
