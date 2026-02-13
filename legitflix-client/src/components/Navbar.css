@@ -32,7 +32,7 @@
     display: flex;
     align-items: center;
     gap: 36px;
-    height: -webkit-fill-available;
+    height: 100%;
 }
 
 .nav-logo {
@@ -63,7 +63,7 @@
 .nav-links {
     display: flex;
     gap: 24px;
-    height: -webkit-fill-available;
+    height: 100%;
     align-items: center;
 }
 

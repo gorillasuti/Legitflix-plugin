@@ -292,7 +292,7 @@
     flex: 0 0 15vw;
     min-width: 140px;
     max-width: 240px;
-    height: -webkit-fill-available;
+    height: 100%;
     width: 100%;
     background: #333;
     border-radius: 4px;

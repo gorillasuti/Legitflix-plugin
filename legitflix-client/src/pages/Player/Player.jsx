@@ -5,7 +5,7 @@ import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/Navbar';
 import PlayerLayout from './PlayerLayout';
-import JASSUB from 'jassub';
+import JASSUB from '../../lib/jassub';
 import './Player.css'; // Shared CSS
 
 const VidstackPlayer = () => {
@@ -39,7 +39,8 @@ const VidstackPlayer = () => {
                 // Setup Stream URL
                 if (data.MediaSources && data.MediaSources.length > 0) {
                     const mediaSource = data.MediaSources[0];
-                    const url = jellyfinService.getStreamUrl(data.Id, mediaSource.Id);
+                    // Fix: getStreamUrl(itemId, audioIndex, subIndex, mediaSourceId)
+                    const url = jellyfinService.getStreamUrl(data.Id, null, null, mediaSource.Id);
                     setStreamUrl(url);
 
                     // Filter Subtitles
@@ -49,11 +50,13 @@ const VidstackPlayer = () => {
 
                 // Load Seasons/Episodes if it's an episode
                 if (data.Type === 'Episode' && data.SeriesId) {
-                    const seasonsData = await jellyfinService.getSeasons(data.SeriesId, user.Id);
+                    // Fix: getSeasons(userId, seriesId)
+                    const seasonsData = await jellyfinService.getSeasons(user.Id, data.SeriesId);
                     setSeasons(seasonsData);
                     setCurrentSeasonId(data.SeasonId);
 
-                    const episodesData = await jellyfinService.getEpisodes(data.SeriesId, data.SeasonId, user.Id);
+                    // Fix: getEpisodes(userId, seriesId, seasonId)
+                    const episodesData = await jellyfinService.getEpisodes(user.Id, data.SeriesId, data.SeasonId);
                     setEpisodes(episodesData);
 
                     // Find next episode
@@ -156,7 +159,7 @@ const VidstackPlayer = () => {
                         {subtitleStreams.map(sub => (
                             <Track
                                 key={sub.Index}
-                                src={jellyfinService.getSubtitleUrl(item.Id, sub.Index)}
+                                src={jellyfinService.getSubtitleUrl(item.Id, item.MediaSources[0]?.Id, sub.Index)}
                                 kind="subtitles"
                                 label={sub.Title || sub.Language || `Track ${sub.Index}`}
                                 lang={sub.Language}

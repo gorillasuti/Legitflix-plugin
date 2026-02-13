@@ -12,6 +12,8 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(process.cwd(), "./src"),
+        "rvfc-polyfill": path.resolve(process.cwd(), "./node_modules/rvfc-polyfill/index.js"), // Force CJS resolution
+        "abslink": path.resolve(process.cwd(), "./node_modules/abslink/src/abslink.js"), // Force ESM resolution
       },
     },
     base: '/LegitFlix/Client/',
@@ -27,7 +29,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      include: ['maverick.js', 'maverick.js/react', '@vidstack/react'],
+      include: ['@vidstack/react', 'jassub', 'abslink', 'rvfc-polyfill'],
     },
     worker: {
       format: 'es'
