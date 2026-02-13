@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from 'react';
+﻿import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { MediaPlayer, MediaProvider, useMediaRemote } from '@vidstack/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
@@ -31,6 +31,11 @@ const VidstackPlayer = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showSubtitleSearch, setShowSubtitleSearch] = useState(false);
+
+    // Auto-hide controls & cursor
+    const [controlsVisible, setControlsVisible] = useState(true);
+    const hideTimerRef = useRef(null);
+    const isPausedRef = useRef(false);
 
     // Helper for persistent state
     const usePersistentState = (key, defaultValue) => {
@@ -74,6 +79,20 @@ const VidstackPlayer = () => {
         setChapters([]);
         setEpisodes([]);
     }, [id]);
+
+    // Auto-hide controls - resetHideTimer
+    const resetHideTimer = useCallback(() => {
+        setControlsVisible(true);
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = setTimeout(() => {
+            if (!isPausedRef.current) setControlsVisible(false);
+        }, 3000);
+    }, []);
+
+    // Clean up timer on unmount
+    useEffect(() => {
+        return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
+    }, []);
 
 
     // 1. Fetch Data
@@ -236,7 +255,10 @@ const VidstackPlayer = () => {
         <div className="lf-player-page">
             <Navbar alwaysFilled={true} />
 
-            <div className="lf-player-video-container">
+            <div
+                className={`lf-player-video-container ${!controlsVisible ? 'hide-cursor' : ''}`}
+                onMouseMove={resetHideTimer}
+            >
                 {/* Buffering Spinner Overlay */}
                 {isBuffering && (
                     <div className="lf-player-loader">
@@ -257,7 +279,11 @@ const VidstackPlayer = () => {
                     className="lf-vidstack-player"
                     // Buffering / Loading State Handlers
                     onWaiting={() => setIsBuffering(true)}
-                    onPlaying={() => setIsBuffering(false)}
+                    onPlaying={() => {
+                        setIsBuffering(false);
+                        isPausedRef.current = false;
+                        resetHideTimer();
+                    }}
                     onCanPlay={() => {
                         setIsBuffering(false);
                     }}
@@ -289,6 +315,16 @@ const VidstackPlayer = () => {
                         onSettingsClick={() => setShowSettings(true)}
                         autoSkipIntro={autoSkipIntro}
                         autoSkipOutro={autoSkipOutro}
+                        controlsVisible={controlsVisible}
+                        onPausedChange={(paused) => {
+                            isPausedRef.current = paused;
+                            if (paused) {
+                                setControlsVisible(true);
+                                if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+                            } else {
+                                resetHideTimer();
+                            }
+                        }}
                     />
 
                     {showSettings && (

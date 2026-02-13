@@ -239,7 +239,7 @@ const PlayerSettingsModal = ({
 
                 {/* Content */}
                 <div className="legit-settings-content">
-                    <div className="content-header-player">
+                    <div className="content-header">
                         <h2>{settingsTab}</h2>
                         <button className="close-btn-icon" onClick={onClose}>
                             <span className="material-icons">close</span>

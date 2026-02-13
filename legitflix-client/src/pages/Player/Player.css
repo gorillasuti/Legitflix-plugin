@@ -26,7 +26,15 @@
     position: relative;
     z-index: 10;
     overflow: hidden;
-    /* Fix clipping */
+}
+
+/* Hide cursor when controls are not visible */
+.lf-player-video-container:has(.lf-player-controls:not(.visible)) {
+    cursor: none;
+}
+
+.lf-player-video-container.hide-cursor {
+    cursor: none !important;
 }
 
 /* Gestures Overlay */
@@ -101,7 +109,6 @@
     padding: 4px 8px;
     border-radius: 4px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    /* Ensure visibility */
     opacity: 1;
     visibility: visible;
     z-index: 100 !important;
@@ -111,8 +118,22 @@ video::-webkit-media-text-track-display {
     z-index: 100 !important;
 }
 
+/* Vidstack captions layer: position above controls */
 .vds-captions {
-    z-index: 100 !important;
+    z-index: 25 !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    /* When controls are visible, sit above the bottom bar (~100px) + 1.25rem gap */
+    bottom: calc(100px + 1.25rem) !important;
+    transition: bottom 0.3s ease !important;
+    pointer-events: none;
+}
+
+/* When controls are hidden, subtitles sit 1.25rem from the bottom edge */
+.lf-player-controls:not(.visible)~.vds-captions,
+:has(.lf-player-controls:not(.visible)) .vds-captions {
+    bottom: 1.25rem !important;
 }
 
 
@@ -309,103 +330,66 @@ video::-webkit-media-text-track-display {
 }
 
 /* ============================================
-   VIDSTACK TIME SLIDER (Timeline)
+   VIDSTACK SLIDER THEME (Timeline & Volume)
    ============================================ */
 
+/* 
+   We use :where() to match Vidstack's specificity for variables, 
+   but ensure our overrides take precedence for specific colors.
+*/
+
+.lf-player-timeline-container .vds-time-slider,
+.volume-slider-wrapper .vds-slider {
+    /* Height & Width */
+    --media-slider-height: 48px;
+    --media-slider-track-height: 5px;
+
+    /* Colors */
+    --media-brand: #ff6a00;
+    /* Accent Color */
+    --media-slider-track-bg: rgba(255, 255, 255, 0.3);
+    --media-slider-track-fill-bg: var(--media-brand);
+    --media-slider-track-progress-bg: rgba(255, 255, 255, 0.5);
+
+    /* Thumb */
+    --media-slider-thumb-size: 14px;
+    --media-slider-thumb-bg: #fff;
+    --media-slider-thumb-border: none;
+    --media-slider-focused-thumb-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+
+    /* Preview / Value */
+    --media-slider-value-bg: rgba(0, 0, 0, 0.85);
+    --media-slider-value-color: white;
+    --media-slider-value-padding: 2px 6px;
+    --media-slider-value-border-radius: 4px;
+}
+
+/* Timeline specific overrides */
 .lf-player-timeline-container .vds-time-slider {
-    --track-height: 5px;
-    --track-focus-height: 7px;
-    position: relative;
+    --media-slider-track-height: 5px;
+    --media-slider-focused-track-height: 7px;
+    /* Grow on focus/hover */
     width: 100%;
-    height: var(--track-height);
+}
+
+/* Volume specific overrides */
+.volume-slider-wrapper .vds-slider {
+    --media-slider-height: 30px;
+    /* Smaller touch area for volume */
+    --media-slider-track-height: 4px;
+    width: 100%;
+}
+
+/* Ensure focus rings and interactions work nicely */
+.vds-slider {
     cursor: pointer;
-    contain: layout style;
 }
 
-.lf-player-timeline-container:hover .vds-time-slider {
-    --track-height: var(--track-focus-height);
-}
-
-/* Track (background) */
-.lf-player-timeline-container .vds-slider-track {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.2);
-    contain: strict;
-    z-index: 0;
-}
-
-/* Track Fill (played portion) */
-.lf-player-timeline-container .vds-slider-track-fill {
-    background: #ff6a00 !important;
-    z-index: 2;
-}
-
-/* Progress (buffered portion) */
-.lf-player-timeline-container .vds-slider-progress {
-    background: rgba(255, 255, 255, 0.35) !important;
-    z-index: 1;
-}
-
-/* Thumb */
-.lf-player-timeline-container .vds-slider-thumb {
-    position: absolute;
-    top: 50%;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #fff;
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.15s ease;
-    z-index: 10;
-    contain: layout style;
-}
-
-.lf-player-timeline-container:hover .vds-slider-thumb {
-    transform: translate(-50%, -50%) scale(1);
-}
-
-/* Hover Preview (tooltip + thumbnail) */
-.lf-player-timeline-container .vds-slider-preview {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: absolute;
-    bottom: 20px;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 6px 10px;
-    border-radius: 4px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s;
-    z-index: 20;
-}
-
-.lf-player-timeline-container:hover .vds-slider-preview {
-    opacity: 1;
-}
-
-/* Trickplay Thumbnail */
-.lf-player-timeline-container .vds-slider-thumbnail {
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 4px;
-}
-
-.lf-player-timeline-container .vds-slider-value {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #fff;
-    font-variant-numeric: tabular-nums;
-}
+/* Hide the default dotted focus ring if preferred, Vidstack handles focus via opacity/shadow mostly */
 
 
 /* ============================================
-   VIDSTACK VOLUME SLIDER
+   CONTROLS LAYOUT (Left/Right Groups)
    ============================================ */
 
 /* Controls Row */
@@ -447,6 +431,7 @@ video::-webkit-media-text-track-display {
     background: rgba(0, 0, 0, 0.8);
 }
 
+
 /* Volume Container */
 .volume-container {
     display: flex;
@@ -464,64 +449,6 @@ video::-webkit-media-text-track-display {
 
 .volume-container:hover .volume-slider-wrapper {
     width: 80px;
-}
-
-/* Volume slider root */
-.volume-slider-wrapper .vds-slider {
-    position: relative;
-    width: 100%;
-    height: 4px;
-    cursor: pointer;
-    contain: layout style;
-}
-
-/* Volume track background */
-.volume-slider-wrapper .vds-slider-track {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.3);
-    z-index: 0;
-}
-
-/* Volume track fill */
-.volume-slider-wrapper .vds-slider-track-fill {
-    background: #ff6a00 !important;
-    z-index: 2;
-}
-
-/* Volume thumb */
-.volume-slider-wrapper .vds-slider-thumb {
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 3;
-}
-
-/* Volume preview tooltip */
-.volume-slider-wrapper .vds-slider-preview {
-    display: flex;
-    align-items: center;
-    position: absolute;
-    bottom: 16px;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 4px 8px;
-    border-radius: 4px;
-    pointer-events: none;
-    z-index: 20;
-}
-
-.volume-slider-wrapper .vds-slider-value {
-    font-size: 0.75rem;
-    color: #fff;
-    font-weight: 500;
 }
 
 .time-display {

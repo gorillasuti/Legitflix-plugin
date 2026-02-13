@@ -21,7 +21,9 @@ const PlayerLayout = ({
     handleNextEpisode,
     onSettingsClick,
     autoSkipIntro,
-    autoSkipOutro
+    autoSkipOutro,
+    controlsVisible,
+    onPausedChange
 }) => {
     // Hooks to access player state WITHOUT useRefs
     const currentTime = useMediaState('currentTime');
@@ -30,6 +32,11 @@ const PlayerLayout = ({
     const remote = useMediaRemote();
     const volume = useMediaState('volume');
     const isMuted = useMediaState('muted');
+
+    // Notify parent of paused state changes for auto-hide logic
+    useEffect(() => {
+        if (onPausedChange) onPausedChange(isPaused);
+    }, [isPaused, onPausedChange]);
 
     // --- Skip Intro Logic (Recreated using Vidstack State) ---
     const showSkipIntro = useMemo(() => {
@@ -124,7 +131,9 @@ const PlayerLayout = ({
     };
 
     return (
-        <div className="lf-player-controls visible"> {/* Always visible or handle hover state */}
+        <div
+            className={`lf-player-controls ${controlsVisible ? 'visible' : ''}`}
+        >
 
             {/* 1. TOP BAR (Title & Back) */}
             <div className="lf-player-controls-top">

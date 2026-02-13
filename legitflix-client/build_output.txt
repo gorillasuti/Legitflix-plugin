@@ -1,0 +1,49 @@
+
+> legitflix-client@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 61 modules transformed.
+[31m✗[39m Build failed in 766ms
+[31merror during build:
+[31m[vite:esbuild] Transform failed with 3 errors:
+C:/Users/DaniPC/Desktop/Git repos/Legitflix-plugin/legitflix-client/src/pages/Player/PlayerLayout.jsx:260:14: ERROR: Unexpected closing "Controls.Group" tag does not match opening "div" tag
+C:/Users/DaniPC/Desktop/Git repos/Legitflix-plugin/legitflix-client/src/pages/Player/PlayerLayout.jsx:261:10: ERROR: Unexpected closing "Controls.Root" tag does not match opening "Controls.Group" tag
+C:/Users/DaniPC/Desktop/Git repos/Legitflix-plugin/legitflix-client/src/pages/Player/PlayerLayout.jsx:268:4: ERROR: Unexpected "const"[31m
+file: [36mC:/Users/DaniPC/Desktop/Git repos/Legitflix-plugin/legitflix-client/src/pages/Player/PlayerLayout.jsx:260:14[31m
+[33m
+[33mUnexpected closing "Controls.Group" tag does not match opening "div" tag[33m
+258 |                          </div>
+259 |                      </div>
+260 |              </Controls.Group>
+    |                ^
+261 |          </Controls.Root>
+262 |  
+
+[33mUnexpected closing "Controls.Root" tag does not match opening "Controls.Group" tag[33m
+259 |                      </div>
+260 |              </Controls.Group>
+261 |          </Controls.Root>
+    |            ^
+262 |  
+263 |      );
+
+[33mUnexpected "const"[33m
+266 |  // Helper Component for Volume Icon
+267 |  function VolumeIcon() {
+268 |      const volume = useMediaState('volume');
+    |      ^
+269 |      const isMuted = useMediaState('muted');
+270 |  
+[31m
+    at failureErrorWithLog (C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\legitflix-client\node_modules\esbuild\lib\main.js:1467:15)
+    at C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\legitflix-client\node_modules\esbuild\lib\main.js:736:50
+    at responseCallbacks.<computed> (C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\legitflix-client\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\legitflix-client\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (C:\Users\DaniPC\Desktop\Git repos\Legitflix-plugin\legitflix-client\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m
