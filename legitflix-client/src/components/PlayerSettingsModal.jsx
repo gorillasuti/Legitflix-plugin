@@ -34,6 +34,28 @@ const PlayerSettingsModal = ({
     // Theme Config Update (for persisting settings)
     updateConfig
 }) => {
+    // Local State for Confirmation Logic
+    const [localMaxBitrate, setLocalMaxBitrate] = useState(maxBitrate);
+    const [localSelectedAudioIndex, setLocalSelectedAudioIndex] = useState(selectedAudioIndex);
+    const [localSelectedSubtitleIndex, setLocalSelectedSubtitleIndex] = useState(selectedSubtitleIndex);
+    const [localPlaybackRate, setLocalPlaybackRate] = useState(playbackRate);
+    const [localAutoPlay, setLocalAutoPlay] = useState(autoPlay);
+    const [localAutoSkipIntro, setLocalAutoSkipIntro] = useState(autoSkipIntro);
+    const [localAutoSkipOutro, setLocalAutoSkipOutro] = useState(autoSkipOutro);
+
+    // Sync local state with props when modal opens
+    React.useEffect(() => {
+        if (isOpen) {
+            setLocalMaxBitrate(maxBitrate);
+            setLocalSelectedAudioIndex(selectedAudioIndex);
+            setLocalSelectedSubtitleIndex(selectedSubtitleIndex);
+            setLocalPlaybackRate(playbackRate);
+            setLocalAutoPlay(autoPlay);
+            setLocalAutoSkipIntro(autoSkipIntro);
+            setLocalAutoSkipOutro(autoSkipOutro);
+        }
+    }, [isOpen, maxBitrate, selectedAudioIndex, selectedSubtitleIndex, playbackRate, autoPlay, autoSkipIntro, autoSkipOutro]);
+
     if (!isOpen) return null;
 
     const renderQualityTab = () => (
@@ -41,25 +63,25 @@ const PlayerSettingsModal = ({
             <h3 className="setting-title">Quality</h3>
             <p className="setting-desc">Select maximum playback bitrate.</p>
             <div className="settings-list">
-                <button className={`lf-btn ${!maxBitrate ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(null)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                <button className={`lf-btn ${!localMaxBitrate ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setLocalMaxBitrate(null)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
                     Auto
-                    {!maxBitrate && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                    {!localMaxBitrate && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                 </button>
-                <button className={`lf-btn ${maxBitrate === 120000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(120000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                <button className={`lf-btn ${localMaxBitrate === 120000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setLocalMaxBitrate(120000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
                     4K (120Mbps)
-                    {maxBitrate === 120000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                    {localMaxBitrate === 120000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                 </button>
-                <button className={`lf-btn ${maxBitrate === 60000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(60000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                <button className={`lf-btn ${localMaxBitrate === 60000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setLocalMaxBitrate(60000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
                     1080p High (60Mbps)
-                    {maxBitrate === 60000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                    {localMaxBitrate === 60000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                 </button>
-                <button className={`lf-btn ${maxBitrate === 20000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(20000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                <button className={`lf-btn ${localMaxBitrate === 20000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setLocalMaxBitrate(20000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
                     1080p (20Mbps)
-                    {maxBitrate === 20000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                    {localMaxBitrate === 20000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                 </button>
-                <button className={`lf-btn ${maxBitrate === 10000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setMaxBitrate(10000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
+                <button className={`lf-btn ${localMaxBitrate === 10000000 ? 'lf-btn--primary' : 'lf-btn--secondary'}`} onClick={() => setLocalMaxBitrate(10000000)} style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}>
                     720p (10Mbps)
-                    {maxBitrate === 10000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                    {localMaxBitrate === 10000000 && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                 </button>
             </div>
         </div>
@@ -73,12 +95,12 @@ const PlayerSettingsModal = ({
                 {audioStreams.map(stream => (
                     <button
                         key={stream.Index}
-                        className={`lf-btn ${selectedAudioIndex === stream.Index ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
-                        onClick={() => onSelectAudio(stream.Index)}
+                        className={`lf-btn ${localSelectedAudioIndex === stream.Index ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
+                        onClick={() => setLocalSelectedAudioIndex(stream.Index)}
                         style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}
                     >
                         {stream.Language || 'Unknown'} - {stream.Codec} {stream.Title ? `(${stream.Title})` : ''}
-                        {selectedAudioIndex === stream.Index && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                        {localSelectedAudioIndex === stream.Index && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                     </button>
                 ))}
             </div>
@@ -97,8 +119,8 @@ const PlayerSettingsModal = ({
 
             <div className="settings-list">
                 <button
-                    className={`lf-btn ${selectedSubtitleIndex === null ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
-                    onClick={() => onSelectSubtitle(null)}
+                    className={`lf-btn ${localSelectedSubtitleIndex === null ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
+                    onClick={() => setLocalSelectedSubtitleIndex(null)}
                     style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}
                 >
                     Off
@@ -107,12 +129,12 @@ const PlayerSettingsModal = ({
                 {subtitleStreams.map(stream => (
                     <div key={stream.Index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                         <button
-                            className={`lf-btn ${selectedSubtitleIndex === stream.Index ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
-                            onClick={() => onSelectSubtitle(stream.Index)}
+                            className={`lf-btn ${localSelectedSubtitleIndex === stream.Index ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
+                            onClick={() => setLocalSelectedSubtitleIndex(stream.Index)}
                             style={{ flex: 1, justifyContent: 'flex-start' }}
                         >
                             {stream.Language || 'Unknown'} {stream.Title ? `(${stream.Title})` : ''} {stream.IsForced ? '[Forced]' : ''} {stream.IsExternal ? '(Ext)' : ''}
-                            {selectedSubtitleIndex === stream.Index && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                            {localSelectedSubtitleIndex === stream.Index && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                         </button>
 
                         {stream.IsExternal && (
@@ -138,12 +160,12 @@ const PlayerSettingsModal = ({
                 {[0.5, 0.75, 1, 1.25, 1.5, 2].map(rate => (
                     <button
                         key={rate}
-                        className={`lf-btn ${playbackRate === rate ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
-                        onClick={() => setPlaybackRate(rate)}
+                        className={`lf-btn ${localPlaybackRate === rate ? 'lf-btn--primary' : 'lf-btn--secondary'}`}
+                        onClick={() => setLocalPlaybackRate(rate)}
                         style={{ width: '100%', marginBottom: '8px', justifyContent: 'flex-start' }}
                     >
                         {rate}x
-                        {playbackRate === rate && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
+                        {localPlaybackRate === rate && <span className="material-icons" style={{ marginLeft: 'auto', fontSize: '18px' }}>check</span>}
                     </button>
                 ))}
             </div>
@@ -162,8 +184,8 @@ const PlayerSettingsModal = ({
                 <label className="toggle-switch">
                     <input
                         type="checkbox"
-                        checked={autoPlay}
-                        onChange={(e) => setAutoPlay(e.target.checked)}
+                        checked={localAutoPlay}
+                        onChange={(e) => setLocalAutoPlay(e.target.checked)}
                     />
                     <span className="slider"></span>
                 </label>
@@ -177,12 +199,8 @@ const PlayerSettingsModal = ({
                 <label className="toggle-switch">
                     <input
                         type="checkbox"
-                        checked={autoSkipIntro}
-                        onChange={(e) => {
-                            const val = e.target.checked;
-                            setAutoSkipIntro(val);
-                            if (updateConfig) updateConfig({ autoSkipIntro: val });
-                        }}
+                        checked={localAutoSkipIntro}
+                        onChange={(e) => setLocalAutoSkipIntro(e.target.checked)}
                     />
                     <span className="slider"></span>
                 </label>
@@ -196,12 +214,8 @@ const PlayerSettingsModal = ({
                 <label className="toggle-switch">
                     <input
                         type="checkbox"
-                        checked={autoSkipOutro}
-                        onChange={(e) => {
-                            const val = e.target.checked;
-                            setAutoSkipOutro(val);
-                            if (updateConfig) updateConfig({ autoSkipOutro: val });
-                        }}
+                        checked={localAutoSkipOutro}
+                        onChange={(e) => setLocalAutoSkipOutro(e.target.checked)}
                     />
                     <span className="slider"></span>
                 </label>
@@ -256,21 +270,13 @@ const PlayerSettingsModal = ({
                         <button
                             className="btn-reset"
                             onClick={() => {
-                                // Restore all settings to defaults
-                                setMaxBitrate(null);
-                                setPlaybackRate(1);
-                                setAutoPlay(true);
-                                if (setAutoSkipIntro) setAutoSkipIntro(true);
-                                if (setAutoSkipOutro) setAutoSkipOutro(true);
-
-                                // Clear persisted values
-                                const keys = ['maxBitrate', 'playbackRate', 'autoPlay', 'autoSkipIntro', 'autoSkipOutro'];
-                                keys.forEach(k => localStorage.removeItem(`legitflix_${k}`));
-
-                                // Also update theme config if available
-                                if (updateConfig) updateConfig({ autoSkipIntro: true, autoSkipOutro: true });
-
-                                onClose();
+                                // Reset Local State to Defaults
+                                setLocalMaxBitrate(null);
+                                setLocalPlaybackRate(1);
+                                setLocalAutoPlay(true);
+                                setLocalAutoSkipIntro(true);
+                                setLocalAutoSkipOutro(true);
+                                // Note: We do NOT close or save yet. The user must click Save.
                             }}
                         >
                             Restore Defaults
@@ -278,15 +284,26 @@ const PlayerSettingsModal = ({
                         <button
                             className="btn-save lf-btn--ring-hover"
                             onClick={() => {
-                                // Persist all current settings to localStorage
-                                localStorage.setItem('legitflix_maxBitrate', JSON.stringify(maxBitrate));
-                                localStorage.setItem('legitflix_playbackRate', JSON.stringify(playbackRate));
-                                localStorage.setItem('legitflix_autoPlay', JSON.stringify(autoPlay));
-                                localStorage.setItem('legitflix_autoSkipIntro', JSON.stringify(autoSkipIntro));
-                                localStorage.setItem('legitflix_autoSkipOutro', JSON.stringify(autoSkipOutro));
+                                // 1. Apply Settings via Parent Setters
+                                if (localMaxBitrate !== maxBitrate) setMaxBitrate(localMaxBitrate);
+                                if (localPlaybackRate !== playbackRate) setPlaybackRate(localPlaybackRate);
+                                if (localAutoPlay !== autoPlay) setAutoPlay(localAutoPlay);
+                                if (localAutoSkipIntro !== autoSkipIntro) setAutoSkipIntro(localAutoSkipIntro);
+                                if (localAutoSkipOutro !== autoSkipOutro) setAutoSkipOutro(localAutoSkipOutro);
 
-                                // Also update theme config if available
-                                if (updateConfig) updateConfig({ autoSkipIntro, autoSkipOutro });
+                                // 2. Handle Stream Switching (Audio/Sub/Quality)
+                                // Only call these if changed, to avoid unnecessary reloads
+                                if (localSelectedAudioIndex !== selectedAudioIndex) onSelectAudio(localSelectedAudioIndex);
+                                if (localSelectedSubtitleIndex !== selectedSubtitleIndex) onSelectSubtitle(localSelectedSubtitleIndex);
+
+                                // 3. Persist to Server/LocalStorage
+                                const configUpdates = {
+                                    audioIndex: localSelectedAudioIndex,
+                                    subtitleIndex: localSelectedSubtitleIndex
+                                };
+                                if (localAutoSkipIntro !== autoSkipIntro) configUpdates.autoSkipIntro = localAutoSkipIntro;
+                                if (localAutoSkipOutro !== autoSkipOutro) configUpdates.autoSkipOutro = localAutoSkipOutro;
+                                if (updateConfig) updateConfig(configUpdates);
 
                                 onClose();
                             }}

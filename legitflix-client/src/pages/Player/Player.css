@@ -16,18 +16,6 @@
     overflow-x: hidden;
 }
 
-/* ============================================
-   VIDEO SECTION (Full Width, 85vh)
-   ============================================ */
-.lf-player-video-container {
-    width: 100%;
-    height: 85vh;
-    background: #000;
-    position: relative;
-    z-index: 10;
-    overflow: hidden;
-}
-
 /* Hide cursor when controls are not visible */
 .lf-player-video-container:has(.lf-player-controls:not(.visible)) {
     cursor: none;
@@ -78,13 +66,31 @@
 }
 
 /* Explicit reset for non-fullscreen state to prevent overflow bugs */
+/* Explicit reset for non-fullscreen state to prevent overflow bugs */
 .lf-player-video-container:not(.is-fullscreen) {
     position: relative !important;
     width: 100%;
-    height: 85vh;
+    /* Default to full width */
+    max-width: 100%;
+    height: auto !important;
+    /* Let aspect ratio decide */
+    aspect-ratio: 16 / 9;
+    /* Enforce 16:9 */
+    max-height: 80vh;
+    /* Prevent it from being too tall on wide screens */
+    margin: 0 auto;
+    /* Center it */
     top: auto;
     left: auto;
     z-index: 10;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Ensure video content maintains aspect ratio */
+video,
+.vds-video {
+    object-fit: contain !important;
 }
 
 .lf-player-video-wrapper {

@@ -417,14 +417,18 @@ const VidstackPlayer = () => {
                             setAutoSkipIntro={setAutoSkipIntro}
                             autoSkipOutro={autoSkipOutro}
                             setAutoSkipOutro={setAutoSkipOutro}
-                            updateConfig={async () => {
+                            updateConfig={async (overrides = {}) => {
                                 // Save Server-Side Preferences (Language)
                                 try {
                                     const user = await jellyfinService.getCurrentUser();
 
+                                    // Use overrides if provided (for pending state in modal) or current state
+                                    const audioIdx = overrides.audioIndex !== undefined ? overrides.audioIndex : selectedAudioIndex;
+                                    const subIdx = overrides.subtitleIndex !== undefined ? overrides.subtitleIndex : selectedSubtitleIndex;
+
                                     // Find selected streams to get languages
-                                    const audio = audioStreams.find(s => s.Index === selectedAudioIndex);
-                                    const sub = subtitleStreams.find(s => s.Index === selectedSubtitleIndex);
+                                    const audio = audioStreams.find(s => s.Index === audioIdx);
+                                    const sub = subtitleStreams.find(s => s.Index === subIdx);
 
                                     const config = {};
                                     if (audio && audio.Language) config.AudioLanguagePreference = audio.Language;
