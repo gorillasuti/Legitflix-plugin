@@ -443,7 +443,81 @@ const MovieDetail = () => {
 
             <hr className="lf-section-divider" />
 
-            {/* Embedded Player Section */}
+            {/* Movie Header & Player Section */}
+            <div className="lf-content-section" style={{ paddingBottom: 0 }}>
+                <div className="lf-movies-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <div className="lf-section-title" style={{ fontSize: '1.5rem' }}>{movie.Name}</div>
+
+                    <div className="lf-filter-controls">
+                        {/* Audio & Subs Dropdown */}
+                        <div className={`lf-filter-dropdown ${isLangDropdownOpen ? 'is-open' : ''}`} ref={langDropdownRef}>
+                            <button
+                                className="lf-filter-btn"
+                                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                                title="Audio & Subtitles"
+                            >
+                                <span className="material-icons">subtitles</span>
+                                <span>Audio & Subs</span>
+                                <span className="material-icons">expand_more</span>
+                            </button>
+                            <div className="lf-filter-dropdown__menu lf-lang-menu">
+                                <div className="lf-lang-section">
+                                    <div className="lf-dropdown-section-title">Audio</div>
+                                    {audioOptions.map(opt => (
+                                        <div
+                                            key={opt.code}
+                                            className={`lf-filter-dropdown__option ${audioPref === opt.code ? 'is-selected' : ''}`}
+                                            onClick={() => handlePrefChange('audio', opt.code)}
+                                        >
+                                            <span>{opt.name}</span>
+                                            {audioPref === opt.code && <span className="material-icons">check</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="lf-lang-separator"></div>
+                                <div className="lf-lang-section">
+                                    <div className="lf-dropdown-section-title">Subtitles</div>
+                                    {subOptions.map(opt => (
+                                        <div
+                                            key={opt.code}
+                                            className={`lf-filter-dropdown__option ${subPref === opt.code ? 'is-selected' : ''}`}
+                                            onClick={() => handlePrefChange('sub', opt.code)}
+                                        >
+                                            <span>{opt.name}</span>
+                                            {subPref === opt.code && <span className="material-icons">check</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="lf-lang-footer">
+                                    <button
+                                        className="lf-edit-subs-btn"
+                                        onClick={() => {
+                                            setIsLangDropdownOpen(false);
+                                            setIsSubtitleModalOpen(true);
+                                        }}
+                                    >
+                                        <span className="material-icons">edit</span>
+                                        <span>Edit Subtitles</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mark Watched Button */}
+                        <button
+                            className={`lf-filter-btn ${isPlayed ? 'is-active' : ''}`}
+                            onClick={togglePlayed}
+                            title={isPlayed ? "Mark Unwatched" : "Mark Watched"}
+                            style={isPlayed ? { color: 'var(--clr-success)', borderColor: 'var(--clr-success)', background: 'rgba(76, 175, 80, 0.1)' } : {}}
+                        >
+                            <span className="material-icons">{isPlayed ? 'check_circle' : 'check_circle_outline'}</span>
+                            <span>{isPlayed ? 'Watched' : 'Mark Watched'}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Embedded Player */}
             <div className="lf-movie-player-container">
                 <MoviePlayer itemId={movie.Id} forceAutoPlay={location.state?.autoplay} />
             </div>

@@ -152,7 +152,7 @@ const Navbar = ({ alwaysFilled = false }) => {
                                         rel="noopener noreferrer"
                                         className="nav-link"
                                     >
-                                        Requests
+                                        {config.jellyseerrText || 'Requests'}
                                     </a>
                                 </>
                             )}

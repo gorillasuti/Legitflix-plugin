@@ -26,6 +26,7 @@ const PlayerLayout = ({
     onPausedChange,
 
     trickplayUrl,
+    backdropUrl,
     isMovie = false,
     isPlayed = false,
     onTogglePlayed
@@ -34,6 +35,7 @@ const PlayerLayout = ({
     const currentTime = useMediaState('currentTime');
     const duration = useMediaState('duration');
     const isPaused = useMediaState('paused');
+    const hasStarted = useMediaState('started');
     const remote = useMediaRemote();
     const volume = useMediaState('volume');
     const isMuted = useMediaState('muted');
@@ -123,6 +125,34 @@ const PlayerLayout = ({
         }
     }, [autoSkipOutro, showSkipOutro]); // handleSkipCredits is stable/depends on nextEpisodeId
 
+    const seekForward = config?.playerSeekForward || 30;
+    const seekBackward = config?.playerSeekBackward || 10;
+
+    // --- Keyboard Shortcuts (Custom Seek) ---
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Ignore if typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                // remote.seek(currentTime + seekForward); // Use relative seek if possible or absolute
+                // Vidstack remote.seek takes absolute time.
+                // We use Math.min/max to stay within bounds
+                remote.seek(Math.min(duration, currentTime + seekForward));
+
+                // Also show controls if hidden?
+                // if (!controlsVisible) ...
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                remote.seek(Math.max(0, currentTime - seekBackward));
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentTime, duration, seekForward, seekBackward, remote]);
+
     // --- Format Time Helper ---
     const formatTime = (seconds) => {
         if (!seconds || isNaN(seconds)) return "0:00";
@@ -139,6 +169,19 @@ const PlayerLayout = ({
         <div
             className={`lf-player-controls ${controlsVisible ? 'visible' : ''}`}
         >
+            {/* Backdrop for pre-playback */}
+            {backdropUrl && !hasStarted && (
+                <div className="lf-player-backdrop" style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: `url(${backdropUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    zIndex: -1
+                }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }}></div>
+                </div>
+            )}
 
             {/* 1. TOP BAR (Title & Back) - Hidden for Movies */}
             {!isMovie && (
@@ -230,8 +273,8 @@ const PlayerLayout = ({
 
                 <Gesture className="vds-gesture" event="pointerup" action="toggle:paused" />
                 <Gesture className="vds-gesture" event="dblpointerup" action="toggle:fullscreen" />
-                <Gesture className="vds-gesture" event="dblpointerup" action="seek:-10" />
-                <Gesture className="vds-gesture" event="dblpointerup" action="seek:10" />
+                <Gesture className="vds-gesture" event="dblpointerup" action={`seek:-${seekBackward}`} />
+                <Gesture className="vds-gesture" event="dblpointerup" action={`seek:${seekForward}`} />
 
                 <div className="lf-player-controls-row">
                     <div className="controls-left">
@@ -244,13 +287,13 @@ const PlayerLayout = ({
 
                         <div className="seek-controls" style={{ display: 'flex', gap: '5px', margin: '0 10px' }}>
                             {/* Seek Backward */}
-                            <SeekButton className="icon-btn" seconds={-10}>
-                                <span className="material-icons">replay_10</span>
+                            <SeekButton className="icon-btn" seconds={-seekBackward}>
+                                <span className="material-icons">replay_{seekBackward === 10 ? '10' : seekBackward === 30 ? '30' : '10'}</span>
                             </SeekButton>
 
                             {/* Seek Forward */}
-                            <SeekButton className="icon-btn" seconds={10}>
-                                <span className="material-icons">forward_10</span>
+                            <SeekButton className="icon-btn" seconds={seekForward}>
+                                <span className="material-icons">forward_{seekForward === 10 ? '10' : seekForward === 30 ? '30' : '30'}</span>
                             </SeekButton>
                         </div>
 

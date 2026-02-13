@@ -20,8 +20,7 @@
 .media-card {
     position: relative;
     border-radius: 8px;
-    overflow: visible;
-    /* To allow HoverCard to overflow */
+    overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s;
     background-color: #202020;

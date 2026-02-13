@@ -47,6 +47,7 @@ const MoviePlayer = ({ itemId, forceAutoPlay = false }) => {
     const [showSettings, setShowSettings] = useState(false);
     const [showSubtitleSearch, setShowSubtitleSearch] = useState(false);
     const [trickplayUrl, setTrickplayUrl] = useState(null);
+    const [backdropUrl, setBackdropUrl] = useState(null);
 
     // Auto-hide controls & cursor
     const [controlsVisible, setControlsVisible] = useState(true);
@@ -70,9 +71,17 @@ const MoviePlayer = ({ itemId, forceAutoPlay = false }) => {
             setTrickplayUrl(null);
 
             try {
-                const manifest = await jellyfinService.getTrickplayManifest(item.Id);
-                if (manifest && Object.keys(manifest).length > 0) {
+                // Start by checking if item.Trickplay is already the manifest
+                let manifest = item.Trickplay;
+
+                // If it's just a boolean or empty, try fetching (but handle 404 gracefully)
+                if (!manifest || (typeof manifest === 'boolean')) {
+                    manifest = await jellyfinService.getTrickplayManifest(item.Id);
+                }
+
+                if (manifest && typeof manifest === 'object' && Object.keys(manifest).length > 0) {
                     let options = Object.values(manifest);
+                    // ... rest of logic ...
                     if (!options.length && Array.isArray(manifest)) options = manifest;
 
                     options = options.sort((a, b) => a.Width - b.Width);
@@ -183,9 +192,14 @@ const MoviePlayer = ({ itemId, forceAutoPlay = false }) => {
                 const user = await jellyfinService.getCurrentUser();
                 const data = await jellyfinService.getItemDetails(user.Id, id);
                 setItem(data);
+                setItem(data);
                 setChapters(data.Chapters || []);
                 setIsFavorite(data.UserData?.IsFavorite || false);
                 setIsPlayed(data.UserData?.Played || false);
+
+                if (data.BackdropImageTags && data.BackdropImageTags.length > 0) {
+                    setBackdropUrl(jellyfinService.getImageUrl(data.Id, 'Backdrop', { maxWidth: 1920, quality: 80 }));
+                }
 
                 // Initialize Resume Time
                 if (data.UserData?.PlaybackPositionTicks) {
@@ -409,6 +423,7 @@ const MoviePlayer = ({ itemId, forceAutoPlay = false }) => {
                             }
                         }}
                         trickplayUrl={trickplayUrl}
+                        backdropUrl={backdropUrl}
                         isMovie={true}
                         isPlayed={isPlayed}
                         onTogglePlayed={togglePlayed}

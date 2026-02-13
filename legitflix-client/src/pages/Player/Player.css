@@ -352,6 +352,7 @@ video::-webkit-media-text-track-display {
     flex-direction: column;
     padding: 0 24px 8px;
     pointer-events: auto;
+    margin-top: auto;
 }
 
 /* ============================================

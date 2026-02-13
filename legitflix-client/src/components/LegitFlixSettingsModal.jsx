@@ -294,7 +294,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                         <div className="setting-row">
                             <div>
                                 <h3 className="setting-title">Request Feature</h3>
-                                <p className="setting-desc">Enable "Request" card on Home screen</p>
+                                <p className="setting-desc">Enable "{config.jellyseerrText || 'Request'}" card on Home screen</p>
                             </div>
                             <label className="toggle-switch">
                                 <input
@@ -495,7 +495,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     <div className="setting-row">
                         <div>
                             <h3 className="setting-title">Show Requests in Navbar</h3>
-                            <p className="setting-desc">Display the "Requests" link next to categories in the navbar</p>
+
+                            <p className="setting-desc">Display the "{config.jellyseerrText || 'Requests'}" link next to categories in the navbar</p>
                         </div>
                         <label className="toggle-switch">
                             <input

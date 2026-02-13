@@ -2219,19 +2219,14 @@ body.legitflix-selection-mode .actionSheetMenuItem:hover .actionSheetItemText {
 .hero-overlay {
     position: absolute;
     inset: 0;
-    background:
-        /* Bottom-to-Top Fade (Side-to-Side) */
-        linear-gradient(90deg,
-            rgba(16, 16, 16, 1) 0%,
-            rgba(16, 16, 16, 0.9) 25%,
-            rgba(16, 16, 16, 0.5) 50%,
-            rgba(16, 16, 16, 0) 100%),
-        /* Bottom-to-Top Fade (Vertical) */
-        linear-gradient(0deg,
-            rgba(16, 16, 16, 1) 0%,
-            rgba(16, 16, 16, 0.8) 20%,
-            rgba(16, 16, 16, 0) 60%);
     z-index: 2;
+    background: linear-gradient(90deg, #101010, #101010e6, #10101080 35%, #10101000), linear-gradient(0deg, #101010, #101010cc 20%, #10101000 60%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    mask-image: linear-gradient(90deg, black, black, rgba(0, 0, 0, 0.5) 50%, transparent), linear-gradient(0deg, black, rgba(0, 0, 0, 0.8) 20%, transparent 60%);
+    -webkit-mask-image: linear-gradient(90deg, black, black, rgba(0, 0, 0, 0.5) 35%, transparent), linear-gradient(0deg, black, rgba(0, 0, 0, 0.8) 20%, transparent 60%);
+    mask-composite: add;
+    -webkit-mask-composite: source-over;
 }
 
 .hero-title {

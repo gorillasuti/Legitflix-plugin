@@ -263,7 +263,7 @@ class JellyfinService {
             recursive: true,
             filters: ['IsPlayed'],
             includeItemTypes: ['Movie', 'Episode'],
-            fields: ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks']
+            fields: ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks', 'CommunityRating', 'OfficialRating', 'UserData']
         });
         return response;
     }
@@ -313,7 +313,7 @@ class JellyfinService {
                 sortOrder: ['Descending'],
                 includeItemTypes: ['Movie', 'Series'],
                 recursive: true,
-                fields: ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks']
+                fields: ['PrimaryImageAspectRatio', 'Overview', 'ImageTags', 'ProductionYear', 'RunTimeTicks', 'CommunityRating', 'OfficialRating', 'ChildCount', 'UserData']
             });
             return response.data;
         } catch (error) {

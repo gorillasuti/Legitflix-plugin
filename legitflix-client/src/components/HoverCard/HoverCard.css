@@ -3,48 +3,33 @@
 /* --- HOVER CARD OVERLAY (Glass + 5 Rows) --- */
 .legitflix-hover-overlay {
     position: absolute;
-    /* Center over the card with slight scale */
-    top: -5%;
-    left: -2.5%;
-    width: 105%;
-    min-height: 105%;
-    z-index: 9999 !important;
-    /* Above everything */
+    inset: 0;
+    /* Fill parent */
+    width: 100%;
+    height: 100%;
+    z-index: 5;
 
     /* Glass Effect */
-    background: rgba(25, 25, 25, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.7);
+    /* Darker for legibility */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 
     color: white;
     opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.15s ease;
     padding: 0;
-    transform: scale(0.96) translateY(4px);
-    /* Start slightly smaller */
 
-    /* Rounding from card - Enforce overflow to clip content */
-    border-radius: var(--rounding, 10px) !important;
-    overflow: hidden !important;
-
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    pointer-events: auto;
-    /* Always interactive */
-    transform-origin: center center;
-
-    /* Border stroke for definition */
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+    /* Let clicks pass through if hidden, but we toggle this on hover */
 }
 
-/* Open State */
-.legitflix-hover-overlay.is-loaded {
+/* Parent Interaction */
+.media-card:hover .legitflix-hover-overlay {
     opacity: 1;
-    visibility: visible;
-    transform: scale(1);
-    /* Reset to normal size */
+    pointer-events: auto;
 }
 
 /* Content Layout (5 Rows) */

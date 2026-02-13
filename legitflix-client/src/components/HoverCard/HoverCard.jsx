@@ -2,37 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { jellyfinService } from '../../services/jellyfin';
 import './HoverCard.css';
 
-const HoverCard = ({ item, isVisible, onPlay, onDetails }) => {
-    const [details, setDetails] = useState(item);
-
-    useEffect(() => {
-        if (isVisible && !item.Overview) {
-            const fetchDetails = async () => {
-                try {
-                    const fullerItem = await jellyfinService.getItem(item.Id);
-                    setDetails(fullerItem);
-                } catch (e) {
-                    console.error("Failed to fetch details for hover card", e);
-                }
-            };
-            fetchDetails();
-        } else if (isVisible && item.Id !== details.Id) {
-            setDetails(item);
-        }
-    }, [isVisible, item, details.Id]);
-
-    if (!isVisible) return null;
-
-    const isSeries = details.Type === 'Series';
-    const rating = details.CommunityRating ? parseFloat(details.CommunityRating).toFixed(1) : null;
-    const year = details.ProductionYear || (details.PremiereDate ? new Date(details.PremiereDate).getFullYear() : '');
-
-    // Series specific
-    const seasons = details.ChildCount ? `${details.ChildCount} Seasons` : ''; // simplified logic
-    const unplayed = details.UserData?.UnplayedItemCount ? `${details.UserData.UnplayedItemCount} Unplayed` : '';
+const HoverCard = ({ item, onPlay, onDetails }) => {
+    // Stateless: Use item directly. Data is assumed pre-fetched.
+    const details = item;
 
     return (
-        <div className={`legitflix-hover-overlay ${isVisible ? 'is-loaded' : ''}`} onClick={(e) => {
+        <div className="legitflix-hover-overlay" onClick={(e) => {
             e.stopPropagation(); // Prevent card click
             onDetails();
         }}>

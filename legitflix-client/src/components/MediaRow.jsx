@@ -4,6 +4,7 @@ import MediaCard from './MediaCard';
 import SkeletonLoader from './SkeletonLoader';
 import './MediaRow.css';
 import { useNavigate } from 'react-router-dom';
+import { useDraggableScroll } from '../hooks/useDraggableScroll';
 
 const MediaRow = ({ title, libraryId, onCardClick }) => {
     const [items, setItems] = useState([]);
@@ -12,6 +13,7 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
     const [canScrollRight, setCanScrollRight] = useState(false);
 
     const rowRef = useRef(null);
+    const { events } = useDraggableScroll(rowRef);
     const navigate = useNavigate();
 
     const updateScrollState = () => {
@@ -100,7 +102,12 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
                     </button>
                 )}
 
-                <div className="media-row-scroll" ref={rowRef} onScroll={updateScrollState}>
+                <div
+                    className="media-row-scroll cursor-grab active:cursor-grabbing"
+                    ref={rowRef}
+                    onScroll={updateScrollState}
+                    {...events}
+                >
                     {items.map(item => (
                         <MediaCard
                             key={item.Id}

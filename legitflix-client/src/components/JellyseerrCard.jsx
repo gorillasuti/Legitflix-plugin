@@ -5,7 +5,8 @@ import './JellyseerrCard.css';
 const JellyseerrCard = () => {
     const { config } = useTheme();
 
-    if (!config.enableJellyseerr) return null;
+    // Default to true if undefined, consistent with Settings Modal logic
+    if (config.enableJellyseerr === false) return null;
 
     return (
         <div className="library-card jellyseerr-card-wrapper">

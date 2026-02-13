@@ -125,7 +125,33 @@ const HeroCarousel = ({ onInfoClick }) => {
 
 
     const toggleFav = async (e, item) => {
-        // ... (existing code)
+        e.stopPropagation();
+        if (!item || !item.UserData) return;
+
+        const originalState = item.UserData.IsFavorite;
+        const newState = !originalState;
+
+        // Optimistic UI Update
+        setItems(prevItems => prevItems.map(i =>
+            i.Id === item.Id
+                ? { ...i, UserData: { ...i.UserData, IsFavorite: newState } }
+                : i
+        ));
+
+        try {
+            const user = await jellyfinService.getCurrentUser();
+            if (user) {
+                await jellyfinService.markFavorite(user.Id, item.Id, newState);
+            }
+        } catch (err) {
+            console.error("Failed to toggle favorite", err);
+            // Revert on failure
+            setItems(prevItems => prevItems.map(i =>
+                i.Id === item.Id
+                    ? { ...i, UserData: { ...i.UserData, IsFavorite: originalState } }
+                    : i
+            ));
+        }
     };
 
     const handlePlay = (e, item) => {
@@ -312,7 +338,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                                     className={`rounded-full w-12 h-12 border-2 border-white/20 bg-black/40 hover:bg-white/10 hover:border-white ${isFav ? 'text-primary' : 'text-white'}`}
                                     onClick={(e) => toggleFav(e, item)}
                                 >
-                                    <span className={isFav ? "material-icons" : "material-icons-outlined"}>
+                                    <span className={isFav ? "material-icons" : "material-icons-outlined"} style={{ color: isFav ? 'var(--primary-color, #e50914)' : 'inherit' }}>
                                         {isFav ? 'bookmark' : 'bookmark_border'}
                                     </span>
                                 </Button>

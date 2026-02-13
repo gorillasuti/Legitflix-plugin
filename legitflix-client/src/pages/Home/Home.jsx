@@ -9,8 +9,23 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import './Home.css';
+import { useDraggableScroll } from '../../hooks/useDraggableScroll';
 import { Button } from '../../components/ui/button';
 import Footer from '../../components/Footer';
+
+const DraggableRow = ({ children, className }) => {
+    const ref = React.useRef(null);
+    const { events } = useDraggableScroll(ref);
+    return (
+        <div
+            ref={ref}
+            className={`${className} cursor-grab active:cursor-grabbing`}
+            {...events}
+        >
+            {children}
+        </div>
+    );
+};
 
 const Home = () => {
     const [libraries, setLibraries] = useState([]);
@@ -40,14 +55,74 @@ const Home = () => {
                     );
                     setResumeItems(resumeList);
 
-                    // History (recently played, completed items)
-                    const history = await jellyfinService.getHistoryItems(user.Id, 12);
-                    // Filter: Must be played or have a last played date, and NOT be in resume list
-                    const historyList = (history.Items || []).filter(i =>
-                        (i.UserData?.Played || i.UserData?.LastPlayedDate) &&
+                    setResumeItems(resumeList);
+
+                    // --- History Logic Refactored ---
+                    const history = await jellyfinService.getHistoryItems(user.Id, 100); // Fetch more to allow filtering
+                    let rawHistory = history.Items || [];
+
+                    // 1. Filter out duplicates (multiple episodes of same series) -> Keep latest
+                    const seriesMap = new Map();
+                    const standaloneItems = [];
+
+                    rawHistory.forEach(item => {
+                        if (item.Type === 'Episode' && item.SeriesId) {
+                            if (!seriesMap.has(item.SeriesId)) {
+                                seriesMap.set(item.SeriesId, item);
+                            }
+                            // Since history is sorted by date descending, the first one we see is the latest
+                        } else {
+                            standaloneItems.push(item);
+                        }
+                    });
+
+                    // 2. Combine back
+                    let filteredHistory = [...standaloneItems, ...Array.from(seriesMap.values())];
+
+                    // 3. Sort again by LastPlayedDate to be sure
+                    filteredHistory.sort((a, b) => new Date(b.UserData.LastPlayedDate) - new Date(a.UserData.LastPlayedDate));
+
+                    // 4. Checking if series is fully played (Optional advanced check)
+                    // For now, let's at least filter out items that are strictly just episodes of already displayed series
+                    // The user asked: "If I watched every episode of that series don't show"
+                    // To do this strictly, we'd need to fetch Series status for each SeriesId.
+                    // Doing this efficiently:
+                    const seriesIdsToCheck = Array.from(seriesMap.keys());
+                    if (seriesIdsToCheck.length > 0) {
+                        const visibleHistory = [];
+                        for (const item of filteredHistory) {
+                            if (item.Type === 'Episode' && item.SeriesId) {
+                                // We need to check if the SERIES is played. 
+                                // The Episode item itself doesn't tell us if the whole Series is played.
+                                // We can fetch the series info. parallelizing for performance.
+                                // Or simpler: check if the user has a "Next Up" for this series? 
+                                // actually, let's just fetch the Series Item. helper: jellyfinService.getItem(user.Id, item.SeriesId)
+                                try {
+                                    // We can optimize this by fetching only UserData for these series
+                                    // But for < 20 items it's okay-ish.
+                                    // Let's postpone this check slightly or do it in effect?
+                                    // No, let's do it right.
+                                    const seriesItem = await jellyfinService.getItem(user.Id, item.SeriesId);
+                                    if (seriesItem && !seriesItem.UserData?.Played) {
+                                        visibleHistory.push(item);
+                                    }
+                                } catch (e) {
+                                    // removing if check failed? or keeping? let's keep.
+                                    visibleHistory.push(item);
+                                }
+                            } else {
+                                visibleHistory.push(item);
+                            }
+                        }
+                        filteredHistory = visibleHistory;
+                    }
+
+                    // 5. Final filter: remove if in resume list (already done previously but good to keep)
+                    const finalHistory = filteredHistory.filter(i =>
                         !resumeList.some(r => r.Id === i.Id)
-                    );
-                    setHistoryItems(historyList);
+                    ).slice(0, 15); // Limit to reasonable amount
+
+                    setHistoryItems(finalHistory);
 
                     // --- Promo Logic (Ported from legacy theme) ---
                     // 1. Get Candidates (Latest Movies/Series)
@@ -112,6 +187,7 @@ const Home = () => {
                         {/* Browse Libraries Row */}
                         <SkeletonLoader width="180px" height="24px" style={{ marginBottom: '20px' }} />
                         <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '50px' }}>
+                            {/* ... Skeletons ... */}
                             {[1, 2, 3, 4, 5, 6].map(i => (
                                 <div key={i} style={{ flex: '0 0 160px' }}>
                                     <SkeletonLoader width="100%" height="240px" style={{ borderRadius: '8px' }} />
@@ -155,12 +231,15 @@ const Home = () => {
                         {/* 1. Jellyseerr & Library Navigation */}
                         <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
                             <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>Browse Libraries</h2>
-                            <div className="libraries-grid">
+                            <DraggableRow className="libraries-grid">
                                 {libraries.map(lib => (
                                     <div
                                         key={lib.Id}
                                         className="library-card"
-                                        onClick={() => navigate(`/library/${lib.Id}`)} // Assuming consistent with Navbar
+                                        onClick={(e) => {
+                                            // Handled by onClickCapture in DraggableRow but we can also check here if we wanted
+                                            navigate(`/library/${lib.Id}`)
+                                        }}
                                     >
                                         <img
                                             src={`${jellyfinService.api.basePath}/Items/${lib.Id}/Images/Primary?fillHeight=480&fillWidth=320&quality=90`}
@@ -170,6 +249,7 @@ const Home = () => {
                                                 e.target.style.display = 'none';
                                                 e.target.nextSibling.style.display = 'flex'; // Show fallback if image fails
                                             }}
+                                            draggable={false}
                                         />
                                         <div className="library-card-content fallback" style={{ display: 'none' }}>
                                             <span className="material-icons library-icon">
@@ -185,14 +265,14 @@ const Home = () => {
                                     </div>
                                 ))}
                                 <JellyseerrCard />
-                            </div>
+                            </DraggableRow>
                         </section>
 
                         {/* 2. Continue Watching */}
                         {resumeItems.length > 0 && (
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
                                 <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>Continue Watching</h2>
-                                <div className="backdrop-scroll-container">
+                                <DraggableRow className="backdrop-scroll-container">
                                     {resumeItems.map(item => {
                                         const played = item.UserData?.PlayedPercentage >= 100 || item.UserData?.Played;
                                         const ticksLeft = item.RunTimeTicks && item.UserData?.PlaybackPositionTicks
@@ -219,6 +299,7 @@ const Home = () => {
                                                     <img
                                                         src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
                                                         alt={item.Name}
+                                                        draggable={false}
                                                         onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
                                                     />
                                                     {/* Play Overlay */}
@@ -251,7 +332,7 @@ const Home = () => {
                                             </div>
                                         );
                                     })}
-                                </div>
+                                </DraggableRow>
                             </section>
                         )}
 
@@ -259,7 +340,7 @@ const Home = () => {
                         {historyItems.length > 0 && (
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '40px' }}>
                                 <h2 className="section-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '15px', color: '#cacaca' }}>History</h2>
-                                <div className="backdrop-scroll-container">
+                                <DraggableRow className="backdrop-scroll-container">
                                     {historyItems.map(item => (
                                         <div
                                             key={item.Id}
@@ -271,6 +352,7 @@ const Home = () => {
                                                 <img
                                                     src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
                                                     alt={item.Name}
+                                                    draggable={false}
                                                     onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
                                                 />
                                                 <div className="backdrop-play-overlay is-history">
@@ -289,7 +371,7 @@ const Home = () => {
                                             </div>
                                         </div>
                                     ))}
-                                </div>
+                                </DraggableRow>
                             </section>
                         )}
 
@@ -400,6 +482,7 @@ const Home = () => {
                                                             src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
                                                             alt={item.Name}
                                                             onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`; }}
+                                                            draggable={false}
                                                         />
                                                     </div>
                                                 </div>

@@ -225,12 +225,11 @@
 
 .lf-hero-title-logo {
     width: auto;
-    max-width: 500px;
+    max-width: 150px;
     max-height: 200px;
     object-fit: contain;
     margin-bottom: 0.5rem;
     display: block;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 @media (max-width: 768px) {
@@ -325,20 +324,6 @@
     margin-bottom: 16px;
     position: relative;
     z-index: 10;
-}
-
-.lf-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: var(--radius-md);
-    font-family: var(--font-primary);
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
 }
 
 .lf-btn--sm {

@@ -41,6 +41,16 @@
     overflow-y: auto;
     color: white;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+
+    /* Animation Initial State */
+    opacity: 0;
+    transform: scale(0.96) translateY(20px);
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.legitflix-info-modal.visible .info-modal-content {
+    opacity: 1;
+    transform: scale(1) translateY(0);
 }
 
 .btn-close-modal {
@@ -188,38 +198,46 @@
     background: white;
     color: black;
     border: none;
-    padding: 8px 25px;
-    border-radius: 4px;
-    font-weight: bold;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-weight: 700;
     font-size: 1.1rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .btn-play-hero:hover {
-    background: #e6e6e6;
+    background: #f0f0f0;
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
 }
 
 .btn-my-list {
-    background: rgba(42, 42, 42, 0.6);
+    background: rgba(100, 100, 100, 0.3);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 15px;
-    border-radius: 4px;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-my-list:hover {
-    background: rgba(42, 42, 42, 0.9);
-    border-color: white;
+    background: rgba(150, 150, 150, 0.4);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.04);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 /* Details Section */

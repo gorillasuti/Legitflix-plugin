@@ -225,12 +225,11 @@
 
 .lf-hero-title-logo {
     width: auto;
-    max-width: 500px;
+    max-width: 150px;
     max-height: 200px;
     object-fit: contain;
     margin-bottom: 0.5rem;
     display: block;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 @media (max-width: 768px) {
@@ -440,18 +439,175 @@
 }
 
 /* ============================================
+   HEADER CONTROLS (Audio/Subs, Watched)
+   Copied from SeriesDetail for consistency
+   ============================================ */
+.lf-filter-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.lf-filter-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--clr-text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lf-filter-btn:hover {
+    background: var(--clr-bg-glass);
+    color: var(--clr-text-main);
+}
+
+.lf-filter-btn.is-active {
+    background: var(--clr-bg-glass);
+    color: var(--clr-text-main);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.lf-filter-btn .material-icons {
+    font-size: 18px;
+}
+
+.lf-filter-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.lf-filter-dropdown__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 150px;
+    background: var(--clr-bg-surface);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.lf-filter-dropdown.is-open .lf-filter-dropdown__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.lf-filter-dropdown__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    color: var(--clr-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.85rem;
+}
+
+.lf-filter-dropdown__option:first-child {
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.lf-filter-dropdown__option:last-child {
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.lf-filter-dropdown__option:hover {
+    background: var(--clr-bg-glass);
+    color: var(--clr-text-main);
+}
+
+.lf-filter-dropdown__option.is-selected {
+    color: var(--clr-text-main);
+    background: var(--clr-bg-glass) !important;
+}
+
+.lf-filter-dropdown__option .material-icons {
+    font-size: 16px;
+}
+
+/* Language Selector Split */
+.lf-lang-menu {
+    min-width: 220px;
+    padding: 10px 0;
+}
+
+.lf-lang-section {
+    padding-bottom: 5px;
+}
+
+.lf-dropdown-section-title {
+    padding: 5px 15px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--clr-text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.lf-lang-separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 5px 0;
+}
+
+.lf-lang-footer {
+    padding: 8px 10px 0 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 5px;
+}
+
+.lf-edit-subs-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--clr-text-main);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.lf-edit-subs-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.lf-edit-subs-btn .material-icons {
+    font-size: 18px;
+}
+
+/* ============================================
    MOVIE PLAYER GRID (Embedded Player)
    ============================================ */
 .lf-movie-player-container {
-    width: 90%;
-    max-width: 1600px;
-    margin: 2.25rem auto;
+    width: auto;
+    max-width: none;
+    margin: 2.25rem var(--content-padding);
     aspect-ratio: 16 / 9;
     background: #000;
     display: flex;
     flex-direction: column;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }

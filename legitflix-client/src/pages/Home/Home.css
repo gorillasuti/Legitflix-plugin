@@ -4,6 +4,16 @@
     padding-bottom: 50px;
 }
 
+/* Cursor Utilities for Draggable Areas */
+.cursor-grab {
+    cursor: grab;
+}
+
+.cursor-grab:active,
+.active\:cursor-grabbing {
+    cursor: grabbing;
+}
+
 .home-content-container {
     margin-top: 75px;
 }
