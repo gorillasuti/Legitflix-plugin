@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState, useRef } from 'react';
-import { MediaPlayer, MediaProvider, Track, useMediaRemote, useMediaState } from '@vidstack/react';
+import { MediaPlayer, MediaProvider, Track, useMediaRemote } from '@vidstack/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,7 +15,7 @@ const VidstackPlayer = () => {
     const playerRef = useRef(null);
 
     // Media State for UI
-    const isBuffering = useMediaState('buffering', playerRef);
+    const [isBuffering, setIsBuffering] = useState(false);
 
     // Data State
     const [item, setItem] = useState(null);
