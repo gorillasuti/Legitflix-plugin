@@ -335,17 +335,22 @@ video::-webkit-media-text-track-display {
     /* Let clicks pass to Root if needed, though Track usually handles them */
 }
 
-.lf-player-timeline-fill {
+.lf-player-timeline-fill,
+.lf-player-timeline-track [data-part='track-fill'] {
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
     background: #ff6a00 !important;
-    /* Force orange accent */
     border-radius: 2px;
     height: 100%;
     z-index: 2;
-    /* Up z-index to be sure */
+    will-change: width;
+}
+
+/* Vidstack uses inline width or --slider-fill-percent — make sure it's visible */
+.lf-player-timeline-track :where([data-part='track-fill'], .vds-slider-track-fill) {
+    background: #ff6a00 !important;
 }
 
 .lf-player-timeline-buffered {
@@ -489,6 +494,43 @@ video::-webkit-media-text-track-display {
     background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
     cursor: pointer;
+    position: relative;
+}
+
+/* Volume Slider Fill - Vidstack uses TrackFill component */
+.volume-slider .vds-slider-track-fill,
+.volume-slider [data-part='track-fill'] {
+    background: #ff6a00 !important;
+    border-radius: 2px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+}
+
+/* Volume slider track background */
+.volume-slider .vds-slider-track,
+.volume-slider [data-part='track'] {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    height: 4px;
+    width: 100%;
+    position: relative;
+}
+
+/* Volume slider thumb */
+.volume-slider .vds-slider-thumb,
+.volume-slider [data-part='thumb'] {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
 }
 
 .volume-slider::-webkit-slider-thumb {

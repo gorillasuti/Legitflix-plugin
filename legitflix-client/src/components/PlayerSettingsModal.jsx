@@ -252,6 +252,50 @@ const PlayerSettingsModal = ({
                         {settingsTab === 'Speed' && renderSpeedTab()}
                         {settingsTab === 'General' && renderGeneralTab()}
                     </div>
+                    <div className="content-footer">
+                        <button
+                            className="lf-btn lf-btn--secondary"
+                            onClick={() => {
+                                // Restore all settings to defaults
+                                setMaxBitrate(null);
+                                setPlaybackRate(1);
+                                setAutoPlay(true);
+                                if (setAutoSkipIntro) setAutoSkipIntro(true);
+                                if (setAutoSkipOutro) setAutoSkipOutro(true);
+
+                                // Clear persisted values
+                                const keys = ['maxBitrate', 'playbackRate', 'autoPlay', 'autoSkipIntro', 'autoSkipOutro'];
+                                keys.forEach(k => localStorage.removeItem(`legitflix_${k}`));
+
+                                // Also update theme config if available
+                                if (updateConfig) updateConfig({ autoSkipIntro: true, autoSkipOutro: true });
+
+                                onClose();
+                            }}
+                        >
+                            <span className="material-icons" style={{ fontSize: '18px', marginRight: '6px' }}>settings_backup_restore</span>
+                            Restore Defaults
+                        </button>
+                        <button
+                            className="lf-btn lf-btn--primary"
+                            onClick={() => {
+                                // Persist all current settings to localStorage
+                                localStorage.setItem('legitflix_maxBitrate', JSON.stringify(maxBitrate));
+                                localStorage.setItem('legitflix_playbackRate', JSON.stringify(playbackRate));
+                                localStorage.setItem('legitflix_autoPlay', JSON.stringify(autoPlay));
+                                localStorage.setItem('legitflix_autoSkipIntro', JSON.stringify(autoSkipIntro));
+                                localStorage.setItem('legitflix_autoSkipOutro', JSON.stringify(autoSkipOutro));
+
+                                // Also update theme config if available
+                                if (updateConfig) updateConfig({ autoSkipIntro, autoSkipOutro });
+
+                                onClose();
+                            }}
+                        >
+                            <span className="material-icons" style={{ fontSize: '18px', marginRight: '6px' }}>save</span>
+                            Save Settings
+                        </button>
+                    </div>
                 </div>
 
             </div>

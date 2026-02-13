@@ -1,11 +1,12 @@
 ﻿import React, { useEffect, useState, useRef } from 'react';
-import { MediaPlayer, MediaProvider, Track, useMediaRemote } from '@vidstack/react';
+import { MediaPlayer, MediaProvider, useMediaRemote } from '@vidstack/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/Navbar';
 import PlayerLayout from './PlayerLayout';
 import PlayerSettingsModal from '../../components/PlayerSettingsModal';
+import SubtitleModal from '../../components/SubtitleModal';
 import './Player.css'; // Shared CSS
 
 const VidstackPlayer = () => {
@@ -29,6 +30,7 @@ const VidstackPlayer = () => {
     const [nextEpisodeId, setNextEpisodeId] = useState(null);
     const [isFavorite, setIsFavorite] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showSubtitleSearch, setShowSubtitleSearch] = useState(false);
 
     // Helper for persistent state
     const usePersistentState = (key, defaultValue) => {
@@ -59,12 +61,7 @@ const VidstackPlayer = () => {
     const [selectedAudioIndex, setSelectedAudioIndex] = useState(null);
     const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState(null);
 
-    // Helper to determine if a subtitle is text-based (natively supported via VTT)
-    const isTextSubtitle = (codec) => {
-        if (!codec) return false;
-        const c = codec.toLowerCase();
-        return ['srt', 'vtt', 'sub', 'smi', 'subrip', 'webvtt'].includes(c);
-    };
+
 
     // 1. Fetch Data
     useEffect(() => {
@@ -86,14 +83,16 @@ const VidstackPlayer = () => {
                     setAudioStreams(audios);
 
                     // Set Defaults
-                    // Only set defaults if not already selected (to avoid overriding user choice on soft reload if we had that)
-                    // But here we load once.
                     let subIndex = selectedSubtitleIndex;
                     if (subIndex === null) {
                         const defSub = subs.find(s => s.IsDefault);
                         if (defSub) {
                             subIndex = defSub.Index;
                             setSelectedSubtitleIndex(defSub.Index);
+                        } else if (subs.length > 0) {
+                            // No default, pick the first subtitle
+                            subIndex = subs[0].Index;
+                            setSelectedSubtitleIndex(subs[0].Index);
                         }
                     }
 
@@ -106,16 +105,11 @@ const VidstackPlayer = () => {
                         }
                     }
 
-                    // Hybrid Strategy:
-                    // - If Text (SRT/VTT): Do NOT pass index to URL (no burn-in). Use <Track>.
-                    // - If Complex (ASS/PGS): Pass index to URL (burn-in).
-                    const selectedSubStream = subs.find(s => s.Index === subIndex);
-                    const shouldBurnIn = selectedSubStream && !isTextSubtitle(selectedSubStream.Codec);
-
-                    const urlSubIndex = shouldBurnIn ? subIndex : null;
-
-                    const url = jellyfinService.getStreamUrl(data.Id, audioIndex, urlSubIndex, mediaSource.Id, maxBitrate);
-                    console.log(`[Player] Init Stream URL (BurnIn: ${shouldBurnIn}):`, url);
+                    // Native Jellyfin Way: Always pass SubtitleStreamIndex to the URL.
+                    // Jellyfin server decides how to deliver (burn-in or HLS segments).
+                    console.log(`[Player] Subs found: ${subs.length}, Selected sub index: ${subIndex}, Audio index: ${audioIndex}`);
+                    const url = jellyfinService.getStreamUrl(data.Id, audioIndex, subIndex, mediaSource.Id, maxBitrate);
+                    console.log(`[Player] Stream URL:`, url);
                     setStreamUrl(url);
                 }
 
@@ -183,29 +177,6 @@ const VidstackPlayer = () => {
 
         return () => clearInterval(interval);
     }, [item]);
-
-    // Effect to handle track visibility when selectedSubtitleIndex changes
-    useEffect(() => {
-        if (!playerRef.current || !item) return;
-
-        const selectedSubStream = subtitleStreams.find(s => s.Index === selectedSubtitleIndex);
-        const isText = selectedSubStream && isTextSubtitle(selectedSubStream.Codec);
-
-        // If it's a Text sub, we want to show the corresponding track.
-        // If it's Complex (Burn-in) or Off, we want to hide all tracks.
-
-        const tracks = playerRef.current.textTracks;
-        // Vidstack/HTML5 tracks might not be ready immediately, but usually are if mapped
-        for (const track of tracks) {
-            if (isText && track.language === selectedSubStream?.Language) {
-                // Approximate match by language (Vidstack doesn't always expose custom IDs easily on track objects)
-                // Ideally we match by label or index if available
-                track.mode = 'showing';
-            } else {
-                track.mode = 'disabled';
-            }
-        }
-    }, [selectedSubtitleIndex, subtitleStreams, item]);
 
 
     const onTrackChange = (track) => {
@@ -278,22 +249,7 @@ const VidstackPlayer = () => {
                     }}
                 >
                     <MediaProvider>
-                        {subtitleStreams.map(sub => {
-                            // Only mount tracks for Text subtitles.
-                            // Complex subs are handled via burn-in (stream URL).
-                            if (!isTextSubtitle(sub.Codec)) return null;
-
-                            return (
-                                <Track
-                                    key={sub.Index}
-                                    src={jellyfinService.getSubtitleUrl(item.Id, item.MediaSources[0]?.Id, sub.Index)}
-                                    kind="subtitles"
-                                    label={sub.Title || sub.Language || `Track ${sub.Index}`}
-                                    lang={sub.Language}
-                                    default={sub.Index === selectedSubtitleIndex}
-                                />
-                            );
-                        })}
+                        {/* Subtitles are handled server-side via SubtitleStreamIndex in the stream URL */}
                     </MediaProvider>
 
                     <PlayerLayout
@@ -322,15 +278,7 @@ const VidstackPlayer = () => {
                                 setSelectedAudioIndex(idx);
                                 if (item && item.MediaSources) {
                                     const mediaSourceId = item.MediaSources[0].Id;
-                                    // Audio change always requires reload? Usually yes for HLS selection unless using HLS manifests with alternates.
-                                    // For simplicity and robustness, we reload.
-
-                                    // Calculate existing subtitle state
-                                    const subStream = subtitleStreams.find(s => s.Index === selectedSubtitleIndex);
-                                    const isText = subStream && isTextSubtitle(subStream.Codec);
-                                    const subBurnIndex = (subStream && !isText) ? selectedSubtitleIndex : null;
-
-                                    const newUrl = jellyfinService.getStreamUrl(item.Id, idx, subBurnIndex, mediaSourceId, maxBitrate);
+                                    const newUrl = jellyfinService.getStreamUrl(item.Id, idx, selectedSubtitleIndex, mediaSourceId, maxBitrate);
                                     setStreamUrl(newUrl);
                                 }
                             }}
@@ -339,19 +287,17 @@ const VidstackPlayer = () => {
                             onSelectSubtitle={(idx) => {
                                 setSelectedSubtitleIndex(idx);
                                 if (item && item.MediaSources) {
-                                    // RELOAD STREAM on Subtitle Change (Hybrid Way)
-                                    // If Text -> No burn-in (null in URL). Track will be shown via effect.
-                                    // If Complex -> Burn-in (idx in URL). Track will be hidden via effect.
+                                    // Always pass subtitle index to URL - Jellyfin handles delivery
                                     const mediaSourceId = item.MediaSources[0].Id;
-                                    const subStream = subtitleStreams.find(s => s.Index === idx);
-                                    const isText = subStream && isTextSubtitle(subStream.Codec);
-                                    const subBurnIndex = (subStream && !isText) ? idx : null;
-
-                                    const newUrl = jellyfinService.getStreamUrl(item.Id, selectedAudioIndex, subBurnIndex, mediaSourceId, maxBitrate);
+                                    const newUrl = jellyfinService.getStreamUrl(item.Id, selectedAudioIndex, idx, mediaSourceId, maxBitrate);
+                                    console.log(`[Player] Subtitle changed to index ${idx}, reloading stream`);
                                     setStreamUrl(newUrl);
                                 }
                             }}
-                            onOpenSubtitleSearch={() => { }}
+                            onOpenSubtitleSearch={() => {
+                                setShowSettings(false);
+                                setShowSubtitleSearch(true);
+                            }}
                             onDeleteSubtitle={() => { }}
                             playbackRate={playbackRate}
                             setPlaybackRate={(rate) => {
@@ -393,6 +339,34 @@ const VidstackPlayer = () => {
                         />
                     )}
                 </MediaPlayer>
+
+                {/* Subtitle Search Modal */}
+                {showSubtitleSearch && (
+                    <SubtitleModal
+                        isOpen={showSubtitleSearch}
+                        onClose={() => setShowSubtitleSearch(false)}
+                        seriesId={item?.SeriesId}
+                        initialSeasonId={currentSeasonId || item?.SeasonId}
+                        initialEpisodeId={item?.Id}
+                        isMovie={item?.Type === 'Movie'}
+                        onSubtitleDownloaded={async () => {
+                            setShowSubtitleSearch(false);
+                            // Re-fetch item to refresh subtitle streams
+                            try {
+                                const user = await jellyfinService.getCurrentUser();
+                                const data = await jellyfinService.getItemDetails(user.Id, id);
+                                setItem(data);
+                                if (data.MediaSources && data.MediaSources.length > 0) {
+                                    const mediaSource = data.MediaSources[0];
+                                    const subs = mediaSource.MediaStreams.filter(s => s.Type === 'Subtitle');
+                                    setSubtitleStreams(subs);
+                                }
+                            } catch (err) {
+                                console.error('Failed to refresh item after subtitle download:', err);
+                            }
+                        }}
+                    />
+                )}
             </div>
 
             {/* --- Metadata & Episodes (Ported from old Player.jsx) --- */}

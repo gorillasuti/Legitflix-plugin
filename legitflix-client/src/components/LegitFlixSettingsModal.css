@@ -137,8 +137,18 @@
     /* Prevent flex overflow */
 }
 
+.content-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: auto;
+}
+
 .content-header {
-    padding: 15px 24px;
+    padding: 13px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
@@ -198,7 +208,7 @@
     font-size: 1.5rem;
     cursor: pointer;
     line-height: 1;
-    padding: 4px;
+    padding: 8px 12px;
     border-radius: 4px;
 }
 
