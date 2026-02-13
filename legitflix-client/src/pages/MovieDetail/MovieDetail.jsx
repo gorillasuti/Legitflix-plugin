@@ -1,11 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
 import { Button } from '@/components/ui/button';
 import './MovieDetail.css';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import jellyfinService from '../../services/jellyfin';
-// Footer removed as per SeriesDetail changes
+import Footer from '../../components/Footer';
+import MoviePlayer from './MoviePlayer';
 
 const MovieDetail = () => {
     const { id } = useParams();
@@ -25,15 +27,14 @@ const MovieDetail = () => {
 
     // Trailer / Clean View States
     const [isTrailerPlaying, setIsTrailerPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
     const [isCleanView, setIsCleanView] = useState(false);
     const [showTrailerHelp, setShowTrailerHelp] = useState(false);
     const [showBlockedModal, setShowBlockedModal] = useState(false);
     const [trailerKey, setTrailerKey] = useState(null);
+    const [isMuted, setIsMuted] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
     const [isPlayed, setIsPlayed] = useState(false);
 
-    const dropdownRef = useRef(null); // For generic dropdowns/season if needed, but not used here
     const langDropdownRef = useRef(null);
     const trailerHelpTimeout = useRef(null);
     const cleanViewTimeout = useRef(null);
@@ -48,9 +49,6 @@ const MovieDetail = () => {
                 if (!user) return;
 
                 // 1. Fetch Movie Details
-                // Use getItemDetails or getItem. Series uses getSeries. Movies use getItem usually or getItemDetails.
-                // SeriesDetail used jellyfinService.getSeries which calls userLibrary.getItem with specific fields.
-                // We'll effectively do the same for Movie.
                 const movieData = await jellyfinService.getItemDetails(user.Id, id);
                 setMovie(movieData);
                 setIsFavorite(movieData.UserData?.IsFavorite || false);
@@ -77,6 +75,7 @@ const MovieDetail = () => {
         };
         loadData();
     }, [id]);
+
 
     // Click outside handler for dropdowns
     useEffect(() => {
@@ -128,6 +127,7 @@ const MovieDetail = () => {
     const toggleMute = () => {
         const newMute = !isMuted;
         setIsMuted(newMute);
+        // postMessage to YT player
         const action = newMute ? 'mute' : 'unMute';
         trailerIframeRef.current?.contentWindow?.postMessage(
             JSON.stringify({ event: 'command', func: action, args: [] }),
@@ -158,9 +158,10 @@ const MovieDetail = () => {
         }
 
         setIsTrailerPlaying(true);
-        setIsCleanView(false);
+        setIsCleanView(false); // Reset clean view start state
         startCleanViewTimer();
 
+        // YouTube Blocking Detection
         let receivedMessage = false;
         const messageHandler = (event) => {
             if (typeof event.data === 'string' && (event.data.includes('"event"') || event.data.includes('"id"'))) {
@@ -169,8 +170,11 @@ const MovieDetail = () => {
             }
         };
         window.addEventListener('message', messageHandler);
+
+        // Store handler to remove later if needed (though we rely on state reset)
         window.lfMessageHandler = messageHandler;
 
+        // Auto-show help if no message received (but we now always show the button too)
         trailerHelpTimeout.current = setTimeout(() => {
             if (!receivedMessage && isTrailerPlaying) {
                 console.log('Possible block detected: No YT API message received.');
@@ -184,10 +188,17 @@ const MovieDetail = () => {
         setIsCleanView(false);
         setShowTrailerHelp(false);
         setShowBlockedModal(false);
-        setIsMuted(false);
+        setIsMuted(false); // Reset mute on stop
 
-        if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
-        if (trailerHelpTimeout.current) clearTimeout(trailerHelpTimeout.current);
+        if (cleanViewTimeout.current) {
+            clearTimeout(cleanViewTimeout.current);
+            cleanViewTimeout.current = null;
+        }
+        if (trailerHelpTimeout.current) {
+            clearTimeout(trailerHelpTimeout.current);
+            trailerHelpTimeout.current = null;
+        }
+
         if (window.lfMessageHandler) {
             window.removeEventListener('message', window.lfMessageHandler);
             delete window.lfMessageHandler;
@@ -197,15 +208,58 @@ const MovieDetail = () => {
     // Clean up on unmount
     useEffect(() => {
         return () => {
-            // Check if refs exist before accessing .current (React safety)
-            // But for timeouts it's just ID.
             if (cleanViewTimeout.current) clearTimeout(cleanViewTimeout.current);
             if (trailerHelpTimeout.current) clearTimeout(trailerHelpTimeout.current);
             if (window.lfMessageHandler) window.removeEventListener('message', window.lfMessageHandler);
         };
     }, []);
 
-    if (loading) return <div className="lf-movie-container" style={{ color: 'white' }}>Loading...</div>;
+    // Skeleton Loader
+    if (loading) {
+        return (
+            <div className="lf-movie-container">
+                <Navbar alwaysFilled={true} />
+                <section className="lf-movie-hero">
+                    <div className="lf-movie-hero__backdrop" style={{ background: '#141414' }}></div>
+                    <div className="lf-movie-hero__content">
+                        <div className="lf-movie-hero__poster">
+                            <SkeletonLoader type="rect" width="100%" height="100%" style={{ aspectRatio: '2/3', borderRadius: '8px' }} />
+                        </div>
+
+                        <div className="lf-movie-hero__info">
+                            <h1 className="lf-movie-hero__title" style={{ marginBottom: '1rem' }}>
+                                <SkeletonLoader type="text" width="60%" height="3rem" />
+                            </h1>
+
+                            <div className="lf-movie-hero__meta" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                                <SkeletonLoader type="text" width="60px" />
+                                <SkeletonLoader type="text" width="40px" />
+                                <SkeletonLoader type="text" width="80px" />
+                            </div>
+
+                            <div className="lf-movie-hero__details">
+                                <div className="lf-movie-hero__description">
+                                    <SkeletonLoader type="text" width="100%" />
+                                    <SkeletonLoader type="text" width="95%" />
+                                    <SkeletonLoader type="text" width="90%" />
+                                </div>
+
+                                <div className="lf-movie-hero__cast-info" style={{ marginTop: '1rem' }}>
+                                    <SkeletonLoader type="text" width="80%" />
+                                    <SkeletonLoader type="text" width="70%" />
+                                </div>
+                            </div>
+
+                            <div className="lf-movie-hero__actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+                                <SkeletonLoader type="rect" width="180px" height="48px" style={{ borderRadius: '24px' }} />
+                                <SkeletonLoader type="rect" width="160px" height="48px" style={{ borderRadius: '24px' }} />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
     if (!movie) return <div className="lf-movie-container" style={{ color: 'white' }}>Movie not found</div>;
 
     const backdropUrl = jellyfinService.getImageUrl(movie, 'Backdrop');
@@ -215,7 +269,7 @@ const MovieDetail = () => {
     // Cast processing: Take top 10
     const cast = movie.People ? movie.People.slice(0, 10) : [];
 
-    // Dummy options
+    // Dummy languages for selector (In real app, we'd scan available streams from first ep)
     const audioOptions = [{ code: 'en', name: 'English' }, { code: 'ja', name: 'Japanese' }];
     const subOptions = [{ code: 'en', name: 'English' }, { code: 'es', name: 'Spanish' }, { code: 'hu', name: 'Hungarian' }];
 
@@ -225,6 +279,13 @@ const MovieDetail = () => {
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
         return hours > 0 ? `${hours}h ${remainingMinutes}m` : `${minutes}m`;
+    };
+
+    const scrollToPlayer = () => {
+        const playerSection = document.querySelector('.lf-movie-player-container');
+        if (playerSection) {
+            playerSection.scrollIntoView({ behavior: 'smooth' });
+        }
     };
 
     return (
@@ -252,20 +313,21 @@ const MovieDetail = () => {
                             title="Trailer"
                         />
                     )}
-                    {/* Help Button - Always show when playing */}
-                    {isTrailerPlaying && (
-                        <button
-                            className="lf-trailer-help-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowBlockedModal(true);
-                            }}
-                        >
-                            <span className="material-icons">help_outline</span>
-                            <span>Trouble playing?</span>
-                        </button>
-                    )}
                 </div>
+
+                {/* Trouble Playing - shows in clean-view with logo */}
+                {isTrailerPlaying && (
+                    <button
+                        className="lf-trailer-help-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowBlockedModal(true);
+                        }}
+                    >
+                        <span className="material-icons">help_outline</span>
+                        <span>Trouble playing?</span>
+                    </button>
+                )}
 
                 {/* Clean View Logo */}
                 {logoUrl && (
@@ -329,10 +391,13 @@ const MovieDetail = () => {
                         <div className="lf-movie-hero__actions">
                             <button
                                 className="lf-btn lf-btn--primary lf-btn--ring-hover"
-                                onClick={() => navigate(`/play/${movie.Id}`)}
+                                onClick={scrollToPlayer}
                             >
                                 <span className="material-icons">play_arrow</span>
-                                Start Watching
+                                {movie.UserData?.PlaybackPositionTicks > 0
+                                    ? 'Resume'
+                                    : 'Start Watching'
+                                }
                             </button>
                             <button
                                 className="lf-btn lf-btn--glass lf-btn--ring-hover-secondary"
@@ -355,6 +420,13 @@ const MovieDetail = () => {
                                 <span className="material-icons">{isFavorite ? 'bookmark' : 'bookmark_border'}</span>
                             </button>
                             <button
+                                className={`lf-btn lf-btn--glass lf-btn--icon-only ${isPlayed ? 'is-active' : ''}`}
+                                onClick={togglePlayed}
+                                title={isPlayed ? "Mark Unwatched" : "Mark Watched"}
+                            >
+                                <span className="material-icons">{isPlayed ? 'visibility_off' : 'visibility'}</span>
+                            </button>
+                            <button
                                 className="lf-btn lf-btn--glass lf-btn--icon-only"
                                 onClick={() => setIsSubtitleModalOpen(true)}
                                 title="Edit Subtitles"
@@ -368,87 +440,9 @@ const MovieDetail = () => {
 
             <hr className="lf-section-divider" />
 
-            {/* PLAYER SECTION (Replaces Episodes) */}
-            <div className="lf-content-section" id="lfDirectPlayer">
-                {/* Header for Player Section - similar to Episode Header but simplified */}
-                <div className="lf-section-header">
-                    <h2 className="lf-section-title">{movie.Name}</h2>
-
-                    {/* Filter Controls (Audio/Subs and Mark Watched) */}
-                    <div className="lf-filter-controls">
-                        {/* Audio & Subs Dropdown */}
-                        <div className={`lf-filter-dropdown ${isLangDropdownOpen ? 'is-open' : ''}`} ref={langDropdownRef}>
-                            <button
-                                className="lf-filter-btn"
-                                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                                title="Audio & Subtitles"
-                            >
-                                <span className="material-icons">subtitles</span>
-                                <span>Audio & Subs</span>
-                                <span className="material-icons">expand_more</span>
-                            </button>
-                            {/* Dropdown Menu - Simplified for readability here, reusing same structure */}
-                            <div className="lf-filter-dropdown__menu lf-lang-menu">
-                                <div className="lf-lang-section">
-                                    <div className="lf-dropdown-section-title">Audio</div>
-                                    {audioOptions.map(opt => (
-                                        <div
-                                            key={opt.code}
-                                            className={`lf-filter-dropdown__option ${audioPref === opt.code ? 'is-selected' : ''}`}
-                                            onClick={() => handlePrefChange('audio', opt.code)}
-                                        >
-                                            <span>{opt.name}</span>
-                                            {audioPref === opt.code && <span className="material-icons">check</span>}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="lf-lang-separator"></div>
-                                <div className="lf-lang-section">
-                                    <div className="lf-dropdown-section-title">Subtitles</div>
-                                    {subOptions.map(opt => (
-                                        <div
-                                            key={opt.code}
-                                            className={`lf-filter-dropdown__option ${subPref === opt.code ? 'is-selected' : ''}`}
-                                            onClick={() => handlePrefChange('sub', opt.code)}
-                                        >
-                                            <span>{opt.name}</span>
-                                            {subPref === opt.code && <span className="material-icons">check</span>}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="lf-lang-footer">
-                                    <button
-                                        className="lf-edit-subs-btn"
-                                        onClick={() => {
-                                            setIsLangDropdownOpen(false);
-                                            setIsSubtitleModalOpen(true);
-                                        }}
-                                    >
-                                        <span className="material-icons">edit</span>
-                                        <span>Edit Subtitles</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Mark Watched Toggle (Replaces Bulk Edit) */}
-                        <button
-                            className="lf-filter-btn"
-                            onClick={togglePlayed}
-                            title={isPlayed ? "Mark as Unwatched" : "Mark as Watched"}
-                        >
-                            <span className="material-icons">{isPlayed ? 'visibility_off' : 'visibility'}</span>
-                            <span>{isPlayed ? 'Mark Unwatched' : 'Mark Watched'}</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div className="lf-movie-player-main">
-                    <div className="lf-movie-player-placeholder">
-                        <span className="material-icons" style={{ fontSize: '64px', opacity: 0.5 }}>play_circle_outline</span>
-                        <p style={{ marginTop: '10px', fontWeight: 500 }}>Click 'Start Watching' to play movie</p>
-                    </div>
-                </div>
+            {/* Embedded Player Section */}
+            <div className="lf-movie-player-container">
+                <MoviePlayer itemId={movie.Id} />
             </div>
 
             <hr className="lf-section-divider" />
@@ -507,19 +501,25 @@ const MovieDetail = () => {
 
             {/* Blocked Modal */}
             {showBlockedModal && (
-                <div className="lf-blocked-modal-overlay">
-                    <div className="lf-blocked-modal">
-                        <span className="material-icons lf-blocked-icon">block</span>
-                        <h3>Content blocked by browser</h3>
-                        <p>The trailer cannot be played because your browser blocked it. This usually happens due to tracking protection or ad blockers affecting the YouTube player.</p>
+                <div className="lf-blocked-modal-overlay" onClick={() => { setShowBlockedModal(false); handleStopTrailer(); }}>
+                    <div className="lf-blocked-modal" onClick={(e) => e.stopPropagation()}>
                         <button
-                            className="lf-btn lf-btn--primary"
+                            className="lf-blocked-modal__close"
+                            onClick={() => { setShowBlockedModal(false); handleStopTrailer(); }}
+                        >
+                            <span className="material-icons">close</span>
+                        </button>
+                        <span className="material-icons lf-blocked-icon">error_outline</span>
+                        <h3>Playback issue</h3>
+                        <p>The trailer can't play — your browser's tracking protection or ad blocker is likely blocking the YouTube embed.</p>
+                        <button
+                            className="lf-btn lf-btn--glass"
                             onClick={() => {
                                 setShowBlockedModal(false);
                                 handleStopTrailer();
                             }}
                         >
-                            Close
+                            Got it
                         </button>
                     </div>
                 </div>
