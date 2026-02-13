@@ -347,8 +347,6 @@ const Player = () => {
                     video.muted = true;
                     // B. Update React state so the mute button icon is correct
                     setIsMuted(true);
-                    setVolume(0);
-
                     // C. Retry muted (this will work)
                     try {
                         await video.play();
@@ -426,13 +424,13 @@ const Player = () => {
     useEffect(() => {
         const video = videoRef.current;
         if (video) {
-            // Always sync video properties to React State
-            const targetVolume = isMuted ? 0 : volume;
-
-            // Only set if different, to avoid stuttering
-            if (Math.abs(video.volume - targetVolume) > 0.01) {
-                video.volume = targetVolume;
+            // 1. Sync Volume (Don't force to 0 if muted, let video.muted handle silence)
+            // This ensures that when we unmute, the volume is already at 100% (or previous level)
+            if (Math.abs(video.volume - volume) > 0.01) {
+                video.volume = volume;
             }
+
+            // 2. Sync Mute State
             if (video.muted !== isMuted) {
                 video.muted = isMuted;
             }
@@ -483,12 +481,12 @@ const Player = () => {
             const initJassub = () => {
                 const assUrl = jellyfinService.getRawSubtitleUrl(item.Id, mediaSourceId, selectedSubtitleIndex, 'ass');
                 try {
-                    // Use the imported Class directly
+                    // Use the imported class directly
                     jassubRef.current = new JASSUB({
                         video: video,
                         subUrl: assUrl,
-                        workerUrl: '/jassub-worker.js', // Must be in public/
-                        wasmUrl: '/jassub-worker.wasm',   // Must be in public/
+                        workerUrl: '/jassub-worker.js',
+                        wasmUrl: '/jassub-worker.wasm',
                         onDemand: true
                     });
                 } catch (e) {
@@ -673,23 +671,16 @@ const Player = () => {
     }, []);
 
     const toggleMute = useCallback(() => {
-        const video = videoRef.current;
-        if (video) {
-            const newMutedState = !isMuted;
-            video.muted = newMutedState;
-            setIsMuted(newMutedState);
+        if (videoRef.current) {
+            // Just toggle the state. The useEffect above will handle the video player.
+            setIsMuted(prev => !prev);
 
-            if (newMutedState) { // Muting
-                setLastVolume(volume > 0 ? volume : 1);
-                setVolume(0);
-                video.volume = 0;
-            } else { // Unmuting
-                const volToRestore = lastVolume > 0 ? lastVolume : 1;
-                setVolume(volToRestore);
-                video.volume = volToRestore;
+            // Optional: If volume was 0 by accident, bump it to 1 when unmuting
+            if (volume === 0) {
+                setVolume(1);
             }
         }
-    }, [isMuted, volume, lastVolume, videoRef]);
+    }, [volume]);
 
     const handleSeek = (e) => {
         const time = parseFloat(e.target.value);
