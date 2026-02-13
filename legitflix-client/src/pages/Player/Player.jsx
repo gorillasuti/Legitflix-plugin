@@ -820,9 +820,9 @@ const Player = () => {
             const currentChapter = item.Chapters[currentChapterIndex];
             const name = currentChapter.Name.toLowerCase();
 
-            // 2. Check if the active chapter is an Intro
-            // We check for "intro" or "opening" in the name
-            if (name.includes('intro') || name.includes('opening')) {
+            // 2. Intro Search (Expanded list)
+            const lowerName = name.toLowerCase();
+            if (lowerName.includes('intro') || lowerName.includes('opening') || lowerName === 'op' || lowerName === 'avant') {
 
                 // We found an intro! Now we need the target (Start of NEXT chapter)
                 const nextChapter = item.Chapters[currentChapterIndex + 1];
@@ -848,8 +848,8 @@ const Player = () => {
                 setShowSkipIntro(false);
             }
 
-            // 3. Outro Logic
-            if (name.includes('outro') || name.includes('ending') || name.includes('credits')) {
+            // 3. Outro Search (Expanded list)
+            if (lowerName.includes('outro') || lowerName.includes('ending') || lowerName.includes('credits') || lowerName === 'ed') {
                 setShowSkipOutro(true);
 
                 // Auto-skip outro
