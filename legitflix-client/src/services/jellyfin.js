@@ -286,6 +286,23 @@ class JellyfinService {
         }
     }
 
+    async refreshItem(itemId) {
+        if (!this.api) this.initialize();
+        try {
+            await this.api.items.refreshItem({
+                itemId,
+                metadataRefreshMode: 'Default',
+                imageRefreshMode: 'Default',
+                replaceAllMetadata: false,
+                replaceAllImages: false
+            });
+            return true;
+        } catch (e) {
+            console.error("Failed to refresh item", e);
+            return false;
+        }
+    }
+
     async getLatestItems(userId, parentId) {
         if (!this.api) this.initialize();
         try {

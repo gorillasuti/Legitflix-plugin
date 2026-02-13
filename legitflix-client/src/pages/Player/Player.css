@@ -103,6 +103,12 @@ video,
     background: #000;
 }
 
+/* Ensure Vidstack provider fills height */
+[data-media-provider] {
+    height: 100% !important;
+    width: 100% !important;
+}
+
 .lf-player-video-wrapper canvas,
 .vds-media-provider canvas,
 .jassub-canvas {

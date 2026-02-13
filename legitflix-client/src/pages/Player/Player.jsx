@@ -290,12 +290,26 @@ const VidstackPlayer = () => {
                     }}
                     title={item?.Name}
                     autoPlay={autoPlay}
+                    onAutoPlay={(detail) => {
+                        console.log("[Player] Autoplay started", detail);
+                        setIsBuffering(false);
+                        isPausedRef.current = false;
+                        resetHideTimer();
+                    }}
+                    onAutoPlayFail={(detail) => {
+                        console.warn("[Player] Autoplay failed", detail);
+                        setIsBuffering(false);
+                        isPausedRef.current = true;
+                        setControlsVisible(true);
+                    }}
                     crossOrigin
                     onFullscreenChange={setIsFullscreen}
                     onTrackChange={onTrackChange}
                     className="lf-vidstack-player"
                     // Buffering / Loading State Handlers
                     onWaiting={() => setIsBuffering(true)}
+                    onStalled={() => setIsBuffering(true)}
+                    onSeeking={() => setIsBuffering(true)}
                     onPlaying={() => {
                         setIsBuffering(false);
                         isPausedRef.current = false;
@@ -464,6 +478,7 @@ const VidstackPlayer = () => {
                             setShowSubtitleSearch(false);
                             // Re-fetch item to refresh subtitle streams
                             try {
+                                await jellyfinService.refreshItem(id);
                                 const user = await jellyfinService.getCurrentUser();
                                 const data = await jellyfinService.getItemDetails(user.Id, id);
                                 setItem(data);
