@@ -5,6 +5,7 @@ import {
     MuteButton,
     VolumeSlider,
     FullscreenButton,
+    SeekButton,
     useMediaState,
     useMediaRemote
 } from '@vidstack/react';
@@ -153,6 +154,11 @@ const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleN
 
                 <div className="lf-player-controls-row">
                     <div className="controls-left">
+                        {/* Seek Backward */}
+                        <SeekButton className="icon-btn" seconds={-10}>
+                            <span className="material-icons">replay_10</span>
+                        </SeekButton>
+
                         {/* Play Toggle */}
                         <PlayButton className="icon-btn">
                             <span className="material-icons">
@@ -160,12 +166,15 @@ const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleN
                             </span>
                         </PlayButton>
 
+                        {/* Seek Forward */}
+                        <SeekButton className="icon-btn" seconds={10}>
+                            <span className="material-icons">forward_10</span>
+                        </SeekButton>
+
                         {/* Volume Control */}
                         <div className="volume-container">
                             <MuteButton className="icon-btn">
-                                <span className="material-icons">
-                                    {isMuted || volume === 0 ? 'volume_off' : volume < 0.5 ? 'volume_down' : 'volume_up'}
-                                </span>
+                                <VolumeIcon />
                             </MuteButton>
                             <div className="volume-slider-wrapper">
                                 <VolumeSlider.Root className="volume-slider">
@@ -183,6 +192,11 @@ const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleN
                     </div>
 
                     <div className="controls-right">
+                        {/* Settings Button */}
+                        <button className="icon-btn" onClick={onSettingsClick} title="Settings">
+                            <span className="material-icons">settings</span>
+                        </button>
+
                         <FullscreenButton className="icon-btn">
                             <span className="material-icons">fullscreen</span>
                         </FullscreenButton>
@@ -192,5 +206,15 @@ const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleN
         </div>
     );
 };
+
+// Helper Component for Volume Icon
+function VolumeIcon() {
+    const volume = useMediaState('volume');
+    const isMuted = useMediaState('muted');
+
+    if (isMuted || volume === 0) return <span className="material-icons">volume_off</span>;
+    if (volume < 0.5) return <span className="material-icons">volume_down</span>;
+    return <span className="material-icons">volume_up</span>;
+}
 
 export default PlayerLayout;

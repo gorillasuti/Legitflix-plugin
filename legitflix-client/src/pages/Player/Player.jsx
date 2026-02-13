@@ -5,6 +5,7 @@ import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/Navbar';
 import PlayerLayout from './PlayerLayout';
+import PlayerSettingsModal from '../../components/PlayerSettingsModal';
 import JASSUB from 'jassub';
 import './Player.css'; // Shared CSS
 
@@ -25,6 +26,16 @@ const VidstackPlayer = () => {
     const [currentSeasonId, setCurrentSeasonId] = useState(null);
     const [nextEpisodeId, setNextEpisodeId] = useState(null);
     const [isFavorite, setIsFavorite] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+
+    // Settings State
+    const [settingsTab, setSettingsTab] = useState('General');
+    const [maxBitrate, setMaxBitrate] = useState(null);
+    const [audioStreams, setAudioStreams] = useState([]);
+    const [selectedAudioIndex, setSelectedAudioIndex] = useState(null);
+    const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState(null); // Local tracking
+    const [playbackRate, setPlaybackRate] = useState(1);
+    const [autoPlay, setAutoPlay] = useState(true);
 
     // 1. Fetch Data
     useEffect(() => {
@@ -43,9 +54,18 @@ const VidstackPlayer = () => {
                     const url = jellyfinService.getStreamUrl(data.Id, null, null, mediaSource.Id);
                     setStreamUrl(url);
 
-                    // Filter Subtitles
+                    // Filter Subtitles & Audio
                     const subs = mediaSource.MediaStreams.filter(s => s.Type === 'Subtitle');
+                    const audios = mediaSource.MediaStreams.filter(s => s.Type === 'Audio');
                     setSubtitleStreams(subs);
+                    setAudioStreams(audios);
+
+                    // Set Defaults
+                    const defSub = subs.find(s => s.IsDefault);
+                    if (defSub) setSelectedSubtitleIndex(defSub.Index);
+
+                    const defAudio = audios.find(s => s.IsDefault) || audios[0];
+                    if (defAudio) setSelectedAudioIndex(defAudio.Index);
                 }
 
                 // Load Seasons/Episodes if it's an episode
@@ -93,29 +113,54 @@ const VidstackPlayer = () => {
     }, [item]);
 
     // 3. Handle ASS/SSA Subtitles
-    const onTrackChange = (track) => {
-        if (track && (track.type === 'ass' || track.content?.type === 'ass')) {
-            const videoEl = playerRef.current?.querySelector('video');
-            if (videoEl && !jassubInstance) {
-                try {
-                    const instance = new JASSUB({
-                        video: videoEl,
-                        subUrl: track.src,
-                        workerUrl: '/jassub-worker.js',
-                        wasmUrl: '/jassub-worker.wasm',
-                        onDemand: true
-                    });
-                    setJassubInstance(instance);
-                } catch (e) {
-                    console.error("JASSUB Init Error", e);
-                }
-            }
-        } else {
-            if (jassubInstance) {
-                jassubInstance.destroy();
-                setJassubInstance(null);
+    // 3. Handle ASS/SSA Subtitles (Debug Version)
+    // Ref for JASSUB instance to manage cleanup across re-renders
+    const jassubRef = useRef(null);
+
+    useEffect(() => {
+        // 1. Find video element in Vidstack DOM
+        const videoElement = playerRef.current?.querySelector('video');
+
+        console.log("[JASSUB Debug] Video Element found?", !!videoElement);
+        console.log("[JASSUB Debug] Subtitle Streams:", subtitleStreams);
+
+        // Find active ASS track (logic: default or selected)
+        // Note: checking 'ass' or 'ssa' codec. 
+        // In Vidstack, we might rely on the 'track' event, but for initial load:
+        const assTrack = subtitleStreams.find(s => (s.Codec === 'ass' || s.Codec === 'ssa') && (s.Index === selectedSubtitleIndex || (selectedSubtitleIndex === null && s.IsDefault)));
+
+        console.log("[JASSUB Debug] Active or Default ASS Track candidate:", assTrack);
+
+        if (assTrack && videoElement && !jassubRef.current) {
+            console.log("[JASSUB Debug] Initializing JASSUB...");
+            const assUrl = jellyfinService.getRawSubtitleUrl(item.Id, item.MediaSources[0].Id, assTrack.Index, 'ass');
+
+            try {
+                jassubRef.current = new JASSUB({
+                    video: videoElement,
+                    subUrl: assUrl,
+                    workerUrl: './jassub-worker.js', // Relative to root
+                    wasmUrl: './jassub-worker.wasm',
+                    onDemand: true
+                });
+                console.log("[JASSUB Debug] Success!");
+            } catch (e) {
+                console.error("[JASSUB Debug] Error:", e);
             }
         }
+
+        // Cleanup
+        return () => {
+            if (jassubRef.current) {
+                jassubRef.current.destroy();
+                jassubRef.current = null;
+            }
+        };
+    }, [subtitleStreams, item, selectedSubtitleIndex]); // Ensure 'item' is a dependency for getRawSubtitleUrl
+
+    const onTrackChange = (track) => {
+        // JASSUB is now handled by useEffect for debug/initial load
+        // Future: Handle track switching here if needed
     };
 
     const handleNextEpisode = () => {
@@ -175,7 +220,57 @@ const VidstackPlayer = () => {
                         config={config}
                         nextEpisodeId={nextEpisodeId}
                         handleNextEpisode={handleNextEpisode}
+                        onSettingsClick={() => setShowSettings(true)}
                     />
+
+                    {showSettings && (
+                        <PlayerSettingsModal
+                            isOpen={showSettings}
+                            onClose={() => setShowSettings(false)}
+                            settingsTab={settingsTab}
+                            setSettingsTab={setSettingsTab}
+                            maxBitrate={maxBitrate}
+                            setMaxBitrate={setMaxBitrate}
+                            audioStreams={audioStreams}
+                            selectedAudioIndex={selectedAudioIndex}
+                            onSelectAudio={(idx) => {
+                                setSelectedAudioIndex(idx);
+                                if (item && item.MediaSources) {
+                                    const mediaSourceId = item.MediaSources[0].Id;
+                                    const newUrl = jellyfinService.getStreamUrl(item.Id, idx, null, mediaSourceId);
+                                    setStreamUrl(newUrl);
+                                }
+                            }}
+                            subtitleStreams={subtitleStreams}
+                            selectedSubtitleIndex={selectedSubtitleIndex}
+                            onSelectSubtitle={(idx) => {
+                                setSelectedSubtitleIndex(idx);
+                                if (playerRef.current) {
+                                    // Vidstack: Switch text track
+                                    const tracks = playerRef.current.textTracks;
+                                    for (const track of tracks) {
+                                        // Match by label or language + kind
+                                        // Simple match by index if possible, otherwise rely on label
+                                        // For now, we rely on JASSUB debug effect for ASS
+                                        if (track.language === subtitleStreams.find(s => s.Index === idx)?.Language) {
+                                            track.mode = 'showing';
+                                        } else {
+                                            track.mode = 'disabled';
+                                        }
+                                    }
+                                }
+                            }}
+                            onOpenSubtitleSearch={() => { }}
+                            onDeleteSubtitle={() => { }}
+                            playbackRate={playbackRate}
+                            setPlaybackRate={(rate) => {
+                                setPlaybackRate(rate);
+                                if (playerRef.current) playerRef.current.playbackRate = rate;
+                            }}
+                            autoPlay={autoPlay}
+                            setAutoPlay={setAutoPlay}
+                        />
+                    )}
                 </MediaPlayer>
             </div>
 
