@@ -347,6 +347,8 @@ const Player = () => {
                     video.muted = true;
                     // B. Update React state so the mute button icon is correct
                     setIsMuted(true);
+                    // Explicitly removed setVolume(0) to fix audio bug
+
                     // C. Retry muted (this will work)
                     try {
                         await video.play();

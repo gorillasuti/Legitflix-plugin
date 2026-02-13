@@ -46,23 +46,27 @@
     background: #000;
 }
 
-/* JASSUB Canvas Style - Ensure visibility */
 .lf-player-video-wrapper canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100% !important;
     height: 100% !important;
-    z-index: 2147483647;
-    /* Max z-index */
+    z-index: 10;
+    /* Higher than the video (1) */
     pointer-events: none;
-    /* Click-through */
 }
 
 .lf-player-video {
+    position: absolute;
+    /* REQUIRED for z-index to work */
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: contain;
+    z-index: 1;
+    /* Force it to the bottom */
 }
 
 /* Subtitle (::cue) styling */
