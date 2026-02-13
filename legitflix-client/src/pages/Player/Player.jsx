@@ -99,6 +99,8 @@ const VidstackPlayer = () => {
                     setCurrentSeasonId(data.SeasonId);
 
                     // Fix: getEpisodes(userId, seriesId, seasonId)
+                    const episodesData = await jellyfinService.getEpisodes(user.Id, data.SeriesId, data.SeasonId);
+
                     // Sort episodes by IndexNumber to ensure correct order
                     const sortedEpisodes = episodesData.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
                     setEpisodes(sortedEpisodes);
@@ -158,7 +160,6 @@ const VidstackPlayer = () => {
         return () => clearInterval(interval);
     }, [item]);
 
-    // 3. Handle ASS/SSA Subtitles
     // 3. Handle ASS/SSA Subtitles (Debug Version)
     // Ref for JASSUB instance and explicit canvas
     const jassubRef = useRef(null);
@@ -169,12 +170,12 @@ const VidstackPlayer = () => {
         const videoElement = document.querySelector('.lf-vidstack-player video');
 
         console.log("[JASSUB Debug] Video Element found?", !!videoElement);
-        console.log("[JASSUB Debug] Subtitle Streams:", subtitleStreams);
+        // console.log("[JASSUB Debug] Subtitle Streams:", subtitleStreams);
 
         // Find active ASS track (logic: default or selected)
         const assTrack = subtitleStreams.find(s => (s.Codec === 'ass' || s.Codec === 'ssa') && (s.Index === selectedSubtitleIndex || (selectedSubtitleIndex === null && s.IsDefault)));
 
-        console.log("[JASSUB Debug] Active or Default ASS Track candidate:", assTrack);
+        // console.log("[JASSUB Debug] Active or Default ASS Track candidate:", assTrack);
 
         if (assTrack && videoElement && canvasRef.current && !jassubRef.current) {
             console.log("[JASSUB Debug] Initializing JASSUB with manual canvas...");
@@ -208,7 +209,7 @@ const VidstackPlayer = () => {
                 jassubRef.current = null;
             }
         };
-    }, [subtitleStreams, item, selectedSubtitleIndex]);
+    }, [subtitleStreams, item, selectedSubtitleIndex]); // dependencies
 
     const onTrackChange = (track) => {
         // JASSUB is now handled by useEffect for debug/initial load
@@ -267,7 +268,8 @@ const VidstackPlayer = () => {
                                 default={sub.IsDefault}
                             />
                         ))}
-                        <canvas ref={canvasRef} className="jassub-canvas" />
+                        {/* Key by subtitle index to force re-creation of canvas on track change */}
+                        <canvas ref={canvasRef} className="jassub-canvas" key={selectedSubtitleIndex} />
                     </MediaProvider>
 
                     <PlayerLayout

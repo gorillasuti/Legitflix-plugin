@@ -170,8 +170,8 @@ const PlayerLayout = ({
                 <div className="lf-player-timeline-container">
                     <TimeSlider.Root className="lf-player-timeline-track">
                         <TimeSlider.Track className="lf-player-timeline-track-bg">
-                            <TimeSlider.TrackFill className="lf-player-timeline-fill" />
                             <TimeSlider.Progress className="lf-player-timeline-buffered" />
+                            <TimeSlider.TrackFill className="lf-player-timeline-fill" />
                         </TimeSlider.Track>
 
                         <TimeSlider.Thumb className="lf-player-timeline-thumb" />
