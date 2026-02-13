@@ -118,8 +118,9 @@ const VidstackPlayer = () => {
     const jassubRef = useRef(null);
 
     useEffect(() => {
-        // 1. Find video element in Vidstack DOM
-        const videoElement = playerRef.current?.querySelector('video');
+        // 1. Find video element in Vidstack DOM using class selector
+        // playerRef.current might be the API instance, not the element itself
+        const videoElement = document.querySelector('.lf-vidstack-player video');
 
         console.log("[JASSUB Debug] Video Element found?", !!videoElement);
         console.log("[JASSUB Debug] Subtitle Streams:", subtitleStreams);
