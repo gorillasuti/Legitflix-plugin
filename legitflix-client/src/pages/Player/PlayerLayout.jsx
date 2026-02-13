@@ -11,7 +11,7 @@ import {
 } from '@vidstack/react';
 import './Player.css'; // Keep your existing CSS!
 
-const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleNextEpisode }) => {
+const PlayerLayout = ({ item, chapters, navigate, config, nextEpisodeId, handleNextEpisode, onSettingsClick }) => {
     // Hooks to access player state WITHOUT useRefs
     const currentTime = useMediaState('currentTime');
     const duration = useMediaState('duration');
