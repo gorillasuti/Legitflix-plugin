@@ -33,11 +33,83 @@ const VidstackPlayer = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showSubtitleSearch, setShowSubtitleSearch] = useState(false);
+    const [trickplayUrl, setTrickplayUrl] = useState(null);
 
     // Auto-hide controls & cursor
     const [controlsVisible, setControlsVisible] = useState(true);
     const hideTimerRef = useRef(null);
     const isPausedRef = useRef(false);
+
+    // Initial Load - Get Item & Streams
+    useEffect(() => {
+        // ... (existing item loading logic)
+    }, [id, config, navigate]);
+
+    // Trickplay (Thumbnails) Loading
+    useEffect(() => {
+        if (!item?.Id) return;
+
+        let vttUrl = null;
+
+        const loadTrickplay = async () => {
+            // Clean up previous
+            if (trickplayUrl) URL.revokeObjectURL(trickplayUrl);
+            setTrickplayUrl(null);
+
+            try {
+                const manifest = await jellyfinService.getTrickplayManifest(item.Id);
+                if (manifest && Object.keys(manifest).length > 0) {
+                    // Manifest is usually: { [width]: { Width, Height, TileWidth, TileHeight, ThumbnailCount, Interval, Bandwidth } }
+                    // OR an array. Let's handle both or assume object based on endpoint docs.
+                    // Actually Jellyfin GetTrickplayInfo returns dictionary keyed by Width (int) or just values?
+                    // Let's assume finding the best width ~320px
+
+                    let options = Object.values(manifest); // If it's an object keyed by width
+                    if (!options.length && Array.isArray(manifest)) options = manifest;
+
+                    // Sort by width, find closest to 320
+                    options = options.sort((a, b) => a.Width - b.Width);
+                    const bestOption = options.find(o => o.Width >= 320) || options[options.length - 1];
+
+                    if (bestOption) {
+                        const { Width, Interval, ThumbnailCount } = bestOption; // Interval is usually ms
+                        // Generate VTT
+                        let vttContent = 'WEBVTT\n\n';
+
+                        for (let i = 0; i < ThumbnailCount; i++) {
+                            const start = i * Interval;
+                            const end = (i + 1) * Interval;
+
+                            const formatTime = (ms) => {
+                                const totalSeconds = Math.floor(ms / 1000);
+                                const hh = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+                                const mm = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+                                const ss = (totalSeconds % 60).toString().padStart(2, '0');
+                                const mmm = (ms % 1000).toString().padStart(3, '0');
+                                return `${hh}:${mm}:${ss}.${mmm}`;
+                            };
+
+                            const imgUrl = jellyfinService.getTrickplayTileUrl(item.Id, Width, i);
+                            vttContent += `${formatTime(start)} --> ${formatTime(end)}\n`;
+                            vttContent += `${imgUrl}\n\n`;
+                        }
+
+                        const blob = new Blob([vttContent], { type: 'text/vtt' });
+                        vttUrl = URL.createObjectURL(blob);
+                        setTrickplayUrl(vttUrl);
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to load trickplay", e);
+            }
+        };
+
+        loadTrickplay();
+
+        return () => {
+            if (vttUrl) URL.revokeObjectURL(vttUrl);
+        };
+    }, [item?.Id]);
 
     // Helper for persistent state
     const usePersistentState = (key, defaultValue) => {
@@ -379,6 +451,7 @@ const VidstackPlayer = () => {
                                 resetHideTimer();
                             }
                         }}
+                        trickplayUrl={trickplayUrl}
                     />
 
                     {showSettings && (

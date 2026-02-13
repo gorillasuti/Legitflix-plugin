@@ -128,7 +128,7 @@ const SeriesDetail = () => {
         try {
             const user = await jellyfinService.getCurrentUser();
             const episodesData = await jellyfinService.getEpisodes(user.Id, series.Id, selectedSeasonId);
-            setEpisodes(episodesData.Items || []);
+            setEpisodes(episodesData || []);
         } catch (error) {
             console.error("Failed to load episodes", error);
         }

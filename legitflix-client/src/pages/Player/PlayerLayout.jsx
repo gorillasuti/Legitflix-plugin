@@ -23,7 +23,8 @@ const PlayerLayout = ({
     autoSkipIntro,
     autoSkipOutro,
     controlsVisible,
-    onPausedChange
+    onPausedChange,
+    trickplayUrl
 }) => {
     // Hooks to access player state WITHOUT useRefs
     const currentTime = useMediaState('currentTime');
@@ -190,7 +191,7 @@ const PlayerLayout = ({
                     </TimeSlider.Track>
 
                     <TimeSlider.Preview className="media-slider-preview" noClamp>
-                        <TimeSlider.Thumbnail.Root src="" className="media-slider-thumbnail">
+                        <TimeSlider.Thumbnail.Root src={trickplayUrl} className="media-slider-thumbnail">
                             <TimeSlider.Thumbnail.Img />
                         </TimeSlider.Thumbnail.Root>
                         <TimeSlider.Value className="media-slider-value" />

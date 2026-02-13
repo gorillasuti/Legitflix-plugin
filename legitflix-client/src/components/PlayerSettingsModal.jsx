@@ -235,10 +235,10 @@ const PlayerSettingsModal = ({
                             <h3>Delete Subtitle?</h3>
                             <p>Are you sure you want to delete this subtitle permanently?</p>
                             <div className="settings-confirm-actions">
-                                <button className="lf-btn lf-btn--secondary" onClick={() => setDeleteConfirmIndex(null)}>
+                                <button className="btn-reset" onClick={() => setDeleteConfirmIndex(null)}>
                                     Cancel
                                 </button>
-                                <button className="lf-btn lf-btn--primary" style={{ backgroundColor: '#e74c3c', borderColor: '#c0392b' }} onClick={() => {
+                                <button className="btn-save lf-btn--ring-hover" style={{ backgroundColor: '#e74c3c', borderColor: '#c0392b' }} onClick={() => {
                                     onDeleteSubtitle(deleteConfirmIndex);
                                     setDeleteConfirmIndex(null);
                                 }}>
