@@ -6,7 +6,6 @@ import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/Navbar';
 import PlayerLayout from './PlayerLayout';
 import PlayerSettingsModal from '../../components/PlayerSettingsModal';
-import JASSUB from 'jassub';
 import './Player.css'; // Shared CSS
 
 const VidstackPlayer = () => {
@@ -77,54 +76,55 @@ const VidstackPlayer = () => {
                     setAudioStreams(audios);
 
                     // Set Defaults
-                    const defSub = subs.find(s => s.IsDefault);
-                    if (defSub) setSelectedSubtitleIndex(defSub.Index);
+                    // Only set defaults if not already selected (to avoid overriding user choice on soft reload if we had that)
+                    // But here we load once.
+                    let subIndex = selectedSubtitleIndex;
+                    if (subIndex === null) {
+                        const defSub = subs.find(s => s.IsDefault);
+                        if (defSub) {
+                            subIndex = defSub.Index;
+                            setSelectedSubtitleIndex(defSub.Index);
+                        }
+                    }
 
-                    const defAudio = audios.find(s => s.IsDefault) || audios[0];
-                    const audioIndex = defAudio ? defAudio.Index : null;
-                    if (defAudio) setSelectedAudioIndex(defAudio.Index);
+                    let audioIndex = selectedAudioIndex;
+                    if (audioIndex === null) {
+                        const defAudio = audios.find(s => s.IsDefault) || audios[0];
+                        if (defAudio) {
+                            audioIndex = defAudio.Index;
+                            setSelectedAudioIndex(defAudio.Index);
+                        }
+                    }
 
-                    // Fix: getStreamUrl(itemId, audioIndex, subIndex, mediaSourceId)
-                    // Reverting explicit AudioStreamIndex as it caused 400 Bad Request.
-                    // Relying on updated jellyfin.js codec settings to force transcoding.
-                    const url = jellyfinService.getStreamUrl(data.Id, null, null, mediaSource.Id, maxBitrate);
+                    // Native Jellyfin Way: Pass Audio AND Subtitle index to the HLS URL.
+                    // This forces the server to mix them in (burn-in or HLS segments)
+                    const url = jellyfinService.getStreamUrl(data.Id, audioIndex, subIndex, mediaSource.Id, maxBitrate);
+                    console.log("[Player] Stream URL:", url);
                     setStreamUrl(url);
                 }
 
                 // Load Seasons/Episodes if it's an episode
                 if (data.Type === 'Episode' && data.SeriesId) {
-                    // Fix: getSeasons(userId, seriesId)
                     const seasonsData = await jellyfinService.getSeasons(user.Id, data.SeriesId);
                     setSeasons(seasonsData);
                     setCurrentSeasonId(data.SeasonId);
 
-                    // Fix: getEpisodes(userId, seriesId, seasonId)
                     const episodesData = await jellyfinService.getEpisodes(user.Id, data.SeriesId, data.SeasonId);
-
-                    // Sort episodes by IndexNumber to ensure correct order
                     const sortedEpisodes = episodesData.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
                     setEpisodes(sortedEpisodes);
 
-                    // Find next episode logic
                     const currentIndex = sortedEpisodes.findIndex(e => e.Id === data.Id);
 
                     if (currentIndex !== -1 && currentIndex < sortedEpisodes.length - 1) {
-                        // Next episode in current season
                         setNextEpisodeId(sortedEpisodes[currentIndex + 1].Id);
                     } else if (seasonsData.length > 0) {
-                        // Check for next season
-                        // Sort seasons just in case
                         const sortedSeasons = seasonsData.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
                         const currentSeasonIndex = sortedSeasons.findIndex(s => s.Id === data.SeasonId);
 
                         if (currentSeasonIndex !== -1 && currentSeasonIndex < sortedSeasons.length - 1) {
                             const nextSeason = sortedSeasons[currentSeasonIndex + 1];
-                            console.log("[Player] End of season detected. Fetching first episode of:", nextSeason.Name);
-
-                            // Fetch first episode of next season
                             const nextEpisodes = await jellyfinService.getEpisodes(user.Id, data.SeriesId, nextSeason.Id);
                             if (nextEpisodes.length > 0) {
-                                // Default sort generic just to be safe
                                 nextEpisodes.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
                                 setNextEpisodeId(nextEpisodes[0].Id);
                             }
@@ -137,14 +137,13 @@ const VidstackPlayer = () => {
             }
         };
         loadData();
-    }, [id, maxBitrate]); // Reload stream if bitrate changes
+    }, [id, maxBitrate]);
 
     // 2. Playback Reporting
     useEffect(() => {
         const interval = setInterval(() => {
             if (playerRef.current && !playerRef.current.paused) {
                 const currentTime = playerRef.current.currentTime;
-                // mock or fetch real user ID if needed - actually user ID is not used within the reporting function itself in service
                 if (item && !isNaN(currentTime)) {
                     const mediaSourceId = item.MediaSources?.[0]?.Id;
                     jellyfinService.reportPlaybackProgress(
@@ -155,65 +154,14 @@ const VidstackPlayer = () => {
                     );
                 }
             }
-        }, 10000); // Report every 10s
+        }, 10000);
 
         return () => clearInterval(interval);
     }, [item]);
 
-    // 3. Handle ASS/SSA Subtitles (Debug Version)
-    // Ref for JASSUB instance and explicit canvas
-    const jassubRef = useRef(null);
-    const canvasRef = useRef(null);
-
-    useEffect(() => {
-        // 1. Find video element in Vidstack DOM using class selector
-        const videoElement = document.querySelector('.lf-vidstack-player video');
-
-        console.log("[JASSUB Debug] Video Element found?", !!videoElement);
-        // console.log("[JASSUB Debug] Subtitle Streams:", subtitleStreams);
-
-        // Find active ASS track (logic: default or selected)
-        const assTrack = subtitleStreams.find(s => (s.Codec === 'ass' || s.Codec === 'ssa') && (s.Index === selectedSubtitleIndex || (selectedSubtitleIndex === null && s.IsDefault)));
-
-        // console.log("[JASSUB Debug] Active or Default ASS Track candidate:", assTrack);
-
-        if (assTrack && videoElement && canvasRef.current && !jassubRef.current) {
-            console.log("[JASSUB Debug] Initializing JASSUB with manual canvas...");
-            const assUrl = jellyfinService.getRawSubtitleUrl(item.Id, item.MediaSources[0].Id, assTrack.Index, 'ass');
-
-            try {
-                jassubRef.current = new JASSUB({
-                    video: videoElement,
-                    canvas: canvasRef.current, // Explicit canvas
-                    subUrl: assUrl,
-                    workerUrl: './jassub-worker.js', // Relative to root
-                    wasmUrl: './jassub-worker.wasm',
-                    onDemand: true
-                });
-                console.log("[JASSUB Debug] Success!");
-
-                // Force resize on init just in case
-                setTimeout(() => {
-                    if (jassubRef.current) jassubRef.current.resize();
-                }, 500);
-
-            } catch (e) {
-                console.error("[JASSUB Debug] Error:", e);
-            }
-        }
-
-        // Cleanup
-        return () => {
-            if (jassubRef.current) {
-                jassubRef.current.destroy();
-                jassubRef.current = null;
-            }
-        };
-    }, [subtitleStreams, item, selectedSubtitleIndex]); // dependencies
 
     const onTrackChange = (track) => {
-        // JASSUB is now handled by useEffect for debug/initial load
-        // Future: Handle track switching here if needed
+        // Native handling
     };
 
     const handleNextEpisode = () => {
@@ -252,24 +200,19 @@ const VidstackPlayer = () => {
                     crossOrigin
                     onTrackChange={onTrackChange}
                     className="lf-vidstack-player"
-                    // Apply playback rate on mount/update
                     onCanPlay={() => {
                         if (playerRef.current) playerRef.current.playbackRate = playbackRate;
                     }}
                 >
                     <MediaProvider>
-                        {subtitleStreams.map(sub => (
-                            <Track
-                                key={sub.Index}
-                                src={jellyfinService.getSubtitleUrl(item.Id, item.MediaSources[0]?.Id, sub.Index)}
-                                kind="subtitles"
-                                label={sub.Title || sub.Language || `Track ${sub.Index}`}
-                                lang={sub.Language}
-                                default={sub.IsDefault}
-                            />
-                        ))}
-                        {/* Key by subtitle index to force re-creation of canvas on track change */}
-                        <canvas ref={canvasRef} className="jassub-canvas" key={selectedSubtitleIndex} />
+                        {/* 
+                            With server-side subtitles (burned in or HLS stream), we generally don't need to manually map Tracks 
+                            UNLESS we want to support switching without stream reload for text-based subs.
+                            But sticking to "Native" robust way often means letting the stream handle it.
+                            We will keep the Track setup for potential VTTs that come through separate from the burned stream,
+                            but ideally if we select an index in the URL, we shouldn't double add it.
+                            For now, keeping them doesn't hurt as long as they don't auto-show. 
+                        */}
                     </MediaProvider>
 
                     <PlayerLayout
@@ -297,8 +240,9 @@ const VidstackPlayer = () => {
                             onSelectAudio={(idx) => {
                                 setSelectedAudioIndex(idx);
                                 if (item && item.MediaSources) {
+                                    // RELOAD STREAM on Audio Change
                                     const mediaSourceId = item.MediaSources[0].Id;
-                                    const newUrl = jellyfinService.getStreamUrl(item.Id, idx, null, mediaSourceId, maxBitrate);
+                                    const newUrl = jellyfinService.getStreamUrl(item.Id, idx, selectedSubtitleIndex, mediaSourceId, maxBitrate);
                                     setStreamUrl(newUrl);
                                 }
                             }}
@@ -306,19 +250,11 @@ const VidstackPlayer = () => {
                             selectedSubtitleIndex={selectedSubtitleIndex}
                             onSelectSubtitle={(idx) => {
                                 setSelectedSubtitleIndex(idx);
-                                if (playerRef.current) {
-                                    // Vidstack: Switch text track
-                                    const tracks = playerRef.current.textTracks;
-                                    for (const track of tracks) {
-                                        // Match by label or language + kind
-                                        // Simple match by index if possible, otherwise rely on label
-                                        // For now, we rely on JASSUB debug effect for ASS
-                                        if (track.language === subtitleStreams.find(s => s.Index === idx)?.Language) {
-                                            track.mode = 'showing';
-                                        } else {
-                                            track.mode = 'disabled';
-                                        }
-                                    }
+                                if (item && item.MediaSources) {
+                                    // RELOAD STREAM on Subtitle Change (Native Way)
+                                    const mediaSourceId = item.MediaSources[0].Id;
+                                    const newUrl = jellyfinService.getStreamUrl(item.Id, selectedAudioIndex, idx, mediaSourceId, maxBitrate);
+                                    setStreamUrl(newUrl);
                                 }
                             }}
                             onOpenSubtitleSearch={() => { }}
