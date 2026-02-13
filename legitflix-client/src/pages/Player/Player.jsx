@@ -1,4 +1,5 @@
-﻿import { MediaPlayer, MediaProvider, Track, useMediaRemote, useMediaState } from '@vidstack/react';
+﻿import React, { useEffect, useState, useRef } from 'react';
+import { MediaPlayer, MediaProvider, Track, useMediaRemote, useMediaState } from '@vidstack/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
