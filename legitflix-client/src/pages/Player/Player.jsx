@@ -1,5 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from 'react';
-import { MediaPlayer, MediaProvider, Track, useMediaRemote } from '@vidstack/react';
+﻿import { MediaPlayer, MediaProvider, Track, useMediaRemote, useMediaState } from '@vidstack/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
@@ -13,6 +12,9 @@ const VidstackPlayer = () => {
     const navigate = useNavigate();
     const { config } = useTheme();
     const playerRef = useRef(null);
+
+    // Media State for UI
+    const isBuffering = useMediaState('buffering', playerRef);
 
     // Data State
     const [item, setItem] = useState(null);
@@ -227,13 +229,29 @@ const VidstackPlayer = () => {
         }
     };
 
-    if (!streamUrl) return <div className="loading-txt">Loading LegitFlix Player...</div>;
+    if (!streamUrl) {
+        return (
+            <div className="lf-player-page">
+                <Navbar alwaysFilled={true} />
+                <div className="lf-player-video-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="spinner"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="lf-player-page">
             <Navbar alwaysFilled={true} />
 
             <div className="lf-player-video-container">
+                {/* Buffering Spinner Overlay */}
+                {isBuffering && (
+                    <div className="lf-player-loader">
+                        <div className="spinner"></div>
+                    </div>
+                )}
+
                 <MediaPlayer
                     ref={playerRef}
                     src={{

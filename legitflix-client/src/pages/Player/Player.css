@@ -101,6 +101,18 @@
     padding: 4px 8px;
     border-radius: 4px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    /* Ensure visibility */
+    opacity: 1;
+    visibility: visible;
+    z-index: 100 !important;
+}
+
+video::-webkit-media-text-track-display {
+    z-index: 100 !important;
+}
+
+.vds-captions {
+    z-index: 100 !important;
 }
 
 
@@ -328,10 +340,12 @@
     left: 0;
     top: 0;
     bottom: 0;
-    background: var(--clr-accent, #ff6a00);
+    background: #ff6a00 !important;
+    /* Force orange accent */
     border-radius: 2px;
     height: 100%;
-    /* Ensure proper height */
+    z-index: 2;
+    /* Up z-index to be sure */
 }
 
 .lf-player-timeline-buffered {
@@ -341,6 +355,7 @@
     bottom: 0;
     background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
+    z-index: 1;
 }
 
 .lf-player-timeline-hover-fill {
