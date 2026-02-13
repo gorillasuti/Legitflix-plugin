@@ -9,7 +9,7 @@ import PlayerSettingsModal from '../../components/PlayerSettingsModal';
 import SubtitleModal from '../../components/SubtitleModal';
 import '../../pages/Player/Player.css'; // Shared CSS
 
-const MoviePlayer = ({ itemId }) => {
+const MoviePlayer = ({ itemId, forceAutoPlay = false }) => {
     // const { id } = useParams(); // Use prop
     const id = itemId;
     // const navigate = useNavigate(); // Maybe used for next episode or back, but in embedded we might not need it?
@@ -43,6 +43,7 @@ const MoviePlayer = ({ itemId }) => {
     // const [currentSeasonId, setCurrentSeasonId] = useState(null);
     // const [nextEpisodeId, setNextEpisodeId] = useState(null);
     const [isFavorite, setIsFavorite] = useState(false);
+    const [isPlayed, setIsPlayed] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showSubtitleSearch, setShowSubtitleSearch] = useState(false);
     const [trickplayUrl, setTrickplayUrl] = useState(null);
@@ -59,7 +60,7 @@ const MoviePlayer = ({ itemId }) => {
 
     // Trickplay (Thumbnails) Loading
     useEffect(() => {
-        if (!item?.Id) return;
+        if (!item?.Id || !item?.Trickplay) return;
 
         let vttUrl = null;
 
@@ -184,6 +185,7 @@ const MoviePlayer = ({ itemId }) => {
                 setItem(data);
                 setChapters(data.Chapters || []);
                 setIsFavorite(data.UserData?.IsFavorite || false);
+                setIsPlayed(data.UserData?.Played || false);
 
                 // Initialize Resume Time
                 if (data.UserData?.PlaybackPositionTicks) {
@@ -284,6 +286,19 @@ const MoviePlayer = ({ itemId }) => {
         }
     };
 
+
+    const togglePlayed = async () => {
+        if (!item) return;
+        try {
+            const user = await jellyfinService.getCurrentUser();
+            const newPlayed = !isPlayed;
+            await jellyfinService.markPlayed(user.Id, item.Id, newPlayed);
+            setIsPlayed(newPlayed);
+        } catch (err) {
+            console.error("Played toggle failed", err);
+        }
+    };
+
     if (!streamUrl) {
         return (
             <div className="lf-movie-player-embedded">
@@ -315,7 +330,7 @@ const MoviePlayer = ({ itemId }) => {
                         type: 'application/x-mpegurl'
                     }}
                     title={item?.Name}
-                    autoPlay={false} // Default to false for embedded initially? Or true if they clicked "Start Watching"? Let's stick to false so it doesn't autoplay when page loads. The "Start Watching" button will scroll to it. User can click play.
+                    autoPlay={forceAutoPlay} // Respond to explicit autoplay request
                     onAutoPlay={(detail) => {
                         console.log("[Player] Autoplay started", detail);
                         setIsBuffering(false);
@@ -394,6 +409,9 @@ const MoviePlayer = ({ itemId }) => {
                             }
                         }}
                         trickplayUrl={trickplayUrl}
+                        isMovie={true}
+                        isPlayed={isPlayed}
+                        onTogglePlayed={togglePlayed}
                     />
 
                     {showSettings && (

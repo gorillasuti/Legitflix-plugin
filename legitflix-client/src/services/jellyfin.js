@@ -411,7 +411,7 @@ class JellyfinService {
                 }
             });
             if (!response.ok) {
-                console.warn('[Trickplay] Manifest fetch failed:', response.status, response.statusText);
+                console.debug('[Trickplay] Manifest fetch failed (likely no trickplay available):', response.status);
                 return null;
             }
             const data = await response.json();
@@ -496,6 +496,27 @@ class JellyfinService {
     }
 
     // --- Account Settings Methods ---
+
+    async getNextUp(userId, seriesId) {
+        if (!this.api) this.initialize();
+        const query = {
+            UserId: userId,
+            SeriesId: seriesId,
+            Limit: 1,
+            Fields: ['PrimaryImageAspectRatio', 'Chapter Blurhashes', 'Overview']
+        };
+        // Construct query string manually or use api helper if available. 
+        // using fetch directly for custom endpoints often easy
+        const params = new URLSearchParams(query);
+        const response = await fetch(`${this.api.basePath}/Shows/NextUp?${params}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `MediaBrowser Token="${this.api.accessToken}"`
+            }
+        });
+        if (!response.ok) throw new Error('Failed to fetch next up');
+        return response.json();
+    }
 
     async updatePassword(userId, currentPw, newPw) {
         if (!this.api) this.initialize();

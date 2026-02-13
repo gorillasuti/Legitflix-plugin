@@ -47,7 +47,7 @@ const VidstackPlayer = () => {
 
     // Trickplay (Thumbnails) Loading
     useEffect(() => {
-        if (!item?.Id) return;
+        if (!item?.Id || !item?.Trickplay) return;
 
         let vttUrl = null;
 

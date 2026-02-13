@@ -24,7 +24,11 @@ const PlayerLayout = ({
     autoSkipOutro,
     controlsVisible,
     onPausedChange,
-    trickplayUrl
+
+    trickplayUrl,
+    isMovie = false,
+    isPlayed = false,
+    onTogglePlayed
 }) => {
     // Hooks to access player state WITHOUT useRefs
     const currentTime = useMediaState('currentTime');
@@ -136,21 +140,45 @@ const PlayerLayout = ({
             className={`lf-player-controls ${controlsVisible ? 'visible' : ''}`}
         >
 
-            {/* 1. TOP BAR (Title & Back) */}
-            <div className="lf-player-controls-top">
-                <button className="icon-btn back-btn" onClick={() => navigate(`/series/${item.SeriesId}`)}>
-                    <span className="material-icons">arrow_back</span>
-                </button>
-                <div className="player-title">
-                    {item ? (
-                        <>
-                            <span className="series-title">{item.SeriesName}</span>
-                            {item.SeriesName && item.Name && <span className="divider">|</span>}
-                            <span className="episode-title">{item.Name}</span>
-                        </>
-                    ) : 'Loading...'}
+            {/* 1. TOP BAR (Title & Back) - Hidden for Movies */}
+            {!isMovie && (
+                <div className="lf-player-controls-top">
+                    <button className="icon-btn back-btn" onClick={() => navigate(`/series/${item.SeriesId}`)}>
+                        <span className="material-icons">arrow_back</span>
+                    </button>
+                    <div className="player-title">
+                        {item ? (
+                            isMovie ? (
+                                <div className="lf-movies-header" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                    <span className="series-title">{item.Name}</span>
+
+                                    <button className="lf-btn lf-btn--sm lf-btn--glass" onClick={onSettingsClick}>
+                                        <span className="material-icons" style={{ fontSize: '18px', marginRight: '6px' }}>settings</span>
+                                        Audio & Subs
+                                    </button>
+
+                                    <button
+                                        className={`lf-btn lf-btn--sm lf-btn--glass ${isPlayed ? 'is-active' : ''}`}
+                                        onClick={onTogglePlayed}
+                                        style={isPlayed ? { color: 'var(--clr-success)', borderColor: 'var(--clr-success)' } : {}}
+                                    >
+                                        <span className="material-icons" style={{ fontSize: '18px', marginRight: '6px' }}>
+                                            {isPlayed ? 'check_circle' : 'check_circle_outline'}
+                                        </span>
+                                        {isPlayed ? 'Watched' : 'Mark Watched'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <span className="series-title">{item.SeriesName}</span>
+                                    {item.SeriesName && item.Name && <span className="divider">|</span>}
+                                    <span className="episode-title">{item.Name}</span>
+                                </>
+                            )
+                        ) : 'Loading...'}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* 2. CENTER (Play Button Overlay) */}
             {isPaused && (

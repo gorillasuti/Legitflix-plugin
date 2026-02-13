@@ -517,7 +517,15 @@ const SeriesDetail = () => {
                     <img className="lf-series-hero__poster" src={posterUrl} alt={series.Name} />
 
                     <div className="lf-series-hero__info">
-                        <h1 className="lf-series-hero__title">{series.Name}</h1>
+                        {logoUrl ? (
+                            <img
+                                className="lf-hero-title-logo"
+                                src={logoUrl}
+                                alt={series.Name}
+                            />
+                        ) : (
+                            <h1 className="lf-series-hero__title">{series.Name}</h1>
+                        )}
 
                         <div className="lf-series-hero__meta">
                             <span>{series.ProductionYear}</span>

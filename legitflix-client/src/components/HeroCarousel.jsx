@@ -125,28 +125,27 @@ const HeroCarousel = ({ onInfoClick }) => {
 
 
     const toggleFav = async (e, item) => {
-        e.stopPropagation(); // Prevent navigation
-        const btn = e.currentTarget;
+        // ... (existing code)
+    };
 
-        // Optimistic UI update
-        const isFav = item.UserData?.IsFavorite;
-        // We need to update local state to reflect change immediately
-        // This is tricky without updating the main items list, or we use local state for the button?
-        // Let's force update the items list
-
-        const newItem = { ...item, UserData: { ...item.UserData, IsFavorite: !isFav } };
-
-        setItems(prev => prev.map(i => i.Id === item.Id ? newItem : i));
-
-        try {
-            const user = await jellyfinService.getCurrentUser();
-            if (user) {
-                await jellyfinService.markFavorite(user.Id, item.Id, !isFav);
+    const handlePlay = (e, item) => {
+        e.stopPropagation();
+        if (item.Type === 'Series') {
+            if (item._nextUp) {
+                // Play next up episode
+                navigate(`/play/${item._nextUp.Id}`);
+            } else {
+                // No next up found? Go to series page or play first episode?
+                // Safest to go to series page
+                navigate(`/series/${item.Id}`);
             }
-        } catch (err) {
-            console.error("Failed to toggle fav", err);
-            // Revert
-            setItems(prev => prev.map(i => i.Id === item.Id ? item : i));
+        } else if (item.Type === 'Movie') {
+            navigate(`/movie/${item.Id}`, { state: { autoplay: true } });
+        } else if (item.Type === 'Episode') {
+            navigate(`/play/${item.Id}`);
+        } else {
+            // Fallback
+            navigate(`/item/${item.Id}`);
         }
     };
 
@@ -301,7 +300,7 @@ const HeroCarousel = ({ onInfoClick }) => {
                             <div className="hero-actions flex gap-3 items-center">
                                 <Button
                                     variant="ringHover"
-                                    onClick={(e) => { e.stopPropagation(); window.location.href = `/web/index.html?classic=true#!/playback?id=${item.Id}`; }}
+                                    onClick={(e) => handlePlay(e, item)}
                                 >
                                     <i className="material-icons">play_arrow</i>
                                     <span>{btnText} <small className="text-sm ml-1">{btnSubText}</small></span>

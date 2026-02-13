@@ -223,6 +223,24 @@
     color: var(--clr-text-main);
 }
 
+.lf-hero-title-logo {
+    width: auto;
+    max-width: 500px;
+    max-height: 200px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+@media (max-width: 768px) {
+    .lf-hero-title-logo {
+        max-width: 80%;
+        max-height: 120px;
+        margin: 0 auto 1rem;
+    }
+}
+
 .lf-series-hero__meta {
     display: flex;
     align-items: center;

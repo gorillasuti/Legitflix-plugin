@@ -401,35 +401,58 @@
     display: block;
 }
 
-/* ── Play Button Overlay ── */
+/* ── Play Overlay ── */
 .backdrop-play-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.85);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
-    border: 2px solid rgba(255, 255, 255, 0.7);
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.25s, transform 0.25s;
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
     pointer-events: none;
     z-index: 3;
+    backdrop-filter: blur(2px);
 }
 
 .backdrop-play-overlay .material-icons {
-    font-size: 26px;
     color: #fff;
-    margin-left: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Theme-specific Hover Colors */
+.backdrop-play-overlay.is-resume .material-icons {
+    background: rgba(var(--clr-accent-rgb, 255, 126, 0), 0.8);
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(var(--clr-accent-rgb, 255, 126, 0), 0.4);
+}
+
+.backdrop-play-overlay.is-history .material-icons {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .backdrop-card:hover .backdrop-play-overlay {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+}
+
+.backdrop-card:hover .backdrop-play-overlay .material-icons {
+    transform: scale(1.1);
+}
+
+.backdrop-play-overlay.is-resume:hover .material-icons {
+    background: var(--clr-accent);
 }
 
 /* ── Badges (Time-Left / Watched) ── */
@@ -451,9 +474,10 @@
 }
 
 .backdrop-badge.watched {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ccc;
-    backdrop-filter: blur(4px);
+    background: #ffffff26;
+    color: var(--clr-accent);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
 }
 
 /* ── Orange Progress Bar ── */

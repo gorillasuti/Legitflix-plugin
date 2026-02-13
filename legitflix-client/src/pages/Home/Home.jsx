@@ -32,12 +32,21 @@ const Home = () => {
                     setLibraries(res.Items || []);
 
                     const resume = await jellyfinService.getResumeItems(user.Id);
-                    const resumeList = resume.Items || [];
+                    // Filter: Must have progress and NOT be fully played
+                    const resumeList = (resume.Items || []).filter(item =>
+                        item.UserData &&
+                        !item.UserData.Played &&
+                        (item.UserData.PlaybackPositionTicks > 0)
+                    );
                     setResumeItems(resumeList);
 
                     // History (recently played, completed items)
                     const history = await jellyfinService.getHistoryItems(user.Id, 12);
-                    const historyList = (history.Items || []).filter(i => !resumeList.some(r => r.Id === i.Id));
+                    // Filter: Must be played or have a last played date, and NOT be in resume list
+                    const historyList = (history.Items || []).filter(i =>
+                        (i.UserData?.Played || i.UserData?.LastPlayedDate) &&
+                        !resumeList.some(r => r.Id === i.Id)
+                    );
                     setHistoryItems(historyList);
 
                     // --- Promo Logic (Ported from legacy theme) ---
@@ -195,7 +204,15 @@ const Home = () => {
                                             <div
                                                 key={item.Id}
                                                 className="backdrop-card"
-                                                onClick={() => window.location.href = `/web/index.html?classic=true#!/playback?id=${item.Id}`}
+                                                onClick={() => {
+                                                    if (item.Type === 'Movie') {
+                                                        // Go to movie page, but signal to auto-play/scroll
+                                                        navigate(`/movie/${item.Id}`, { state: { autoplay: true } });
+                                                    } else {
+                                                        // Episodes: Go directly to player
+                                                        navigate(`/play/${item.Id}`);
+                                                    }
+                                                }}
                                                 title={`Resume: ${item.Name}`}
                                             >
                                                 <div className="backdrop-card-image">
@@ -205,8 +222,8 @@ const Home = () => {
                                                         onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
                                                     />
                                                     {/* Play Overlay */}
-                                                    <div className="backdrop-play-overlay">
-                                                        <span className="material-icons">play_arrow</span>
+                                                    <div className="backdrop-play-overlay is-resume">
+                                                        <span className="material-icons" style={{ fontSize: '32px' }}>play_arrow</span>
                                                     </div>
                                                     {/* Time-Left or Watched Badge */}
                                                     {played ? (
@@ -256,8 +273,8 @@ const Home = () => {
                                                     alt={item.Name}
                                                     onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
                                                 />
-                                                <div className="backdrop-play-overlay">
-                                                    <span className="material-icons">info</span>
+                                                <div className="backdrop-play-overlay is-history">
+                                                    <span className="material-icons" style={{ fontSize: '28px' }}>replay</span>
                                                 </div>
                                             </div>
                                             <div className="backdrop-card-info">

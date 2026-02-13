@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SubtitleModal from '../../components/SubtitleModal';
 import { Button } from '@/components/ui/button';
@@ -75,6 +75,14 @@ const MovieDetail = () => {
         };
         loadData();
     }, [id]);
+
+    // Handle Auto-Play / Scroll from Navigation State
+    const location = useLocation();
+    useEffect(() => {
+        if (location.state?.autoplay && !loading && movie) {
+            scrollToPlayer();
+        }
+    }, [location.state, loading, movie]);
 
 
     // Click outside handler for dropdowns
@@ -342,7 +350,15 @@ const MovieDetail = () => {
                     <img className="lf-movie-hero__poster" src={posterUrl} alt={movie.Name} />
 
                     <div className="lf-movie-hero__info">
-                        <h1 className="lf-movie-hero__title">{movie.Name}</h1>
+                        {logoUrl ? (
+                            <img
+                                className="lf-hero-title-logo"
+                                src={logoUrl}
+                                alt={movie.Name}
+                            />
+                        ) : (
+                            <h1 className="lf-movie-hero__title">{movie.Name}</h1>
+                        )}
 
                         <div className="lf-movie-hero__meta">
                             <span>{movie.ProductionYear}</span>
@@ -419,20 +435,7 @@ const MovieDetail = () => {
                             >
                                 <span className="material-icons">{isFavorite ? 'bookmark' : 'bookmark_border'}</span>
                             </button>
-                            <button
-                                className={`lf-btn lf-btn--glass lf-btn--icon-only ${isPlayed ? 'is-active' : ''}`}
-                                onClick={togglePlayed}
-                                title={isPlayed ? "Mark Unwatched" : "Mark Watched"}
-                            >
-                                <span className="material-icons">{isPlayed ? 'visibility_off' : 'visibility'}</span>
-                            </button>
-                            <button
-                                className="lf-btn lf-btn--glass lf-btn--icon-only"
-                                onClick={() => setIsSubtitleModalOpen(true)}
-                                title="Edit Subtitles"
-                            >
-                                <span className="material-icons">subtitles</span>
-                            </button>
+
                         </div>
                     </div>
                 </div>
@@ -442,7 +445,7 @@ const MovieDetail = () => {
 
             {/* Embedded Player Section */}
             <div className="lf-movie-player-container">
-                <MoviePlayer itemId={movie.Id} />
+                <MoviePlayer itemId={movie.Id} forceAutoPlay={location.state?.autoplay} />
             </div>
 
             <hr className="lf-section-divider" />
