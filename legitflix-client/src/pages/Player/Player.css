@@ -67,14 +67,15 @@
 }
 
 .lf-player-video-wrapper canvas,
-.vds-media-provider canvas {
+.vds-media-provider canvas,
+.jassub-canvas {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    z-index: 99999 !important;
-    /* Above video */
+    z-index: 20 !important;
+    /* Ensure it's above video (1) but below controls (30) */
     pointer-events: none;
 }
 
@@ -297,15 +298,29 @@
 
 .lf-player-timeline-track {
     width: 100%;
-    height: 4px;
+    height: 5px;
+    /* Slightly thicker for better visibility */
     background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
     position: relative;
     transition: height 0.1s ease;
+    display: flex;
+    align-items: center;
+    /* Vertically center thumb/track */
 }
 
 .lf-player-timeline-container:hover .lf-player-timeline-track {
-    height: 6px;
+    height: 7px;
+}
+
+.lf-player-timeline-track-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    /* Let clicks pass to Root if needed, though Track usually handles them */
 }
 
 .lf-player-timeline-fill {
@@ -315,6 +330,8 @@
     bottom: 0;
     background: var(--clr-accent, #ff6a00);
     border-radius: 2px;
+    height: 100%;
+    /* Ensure proper height */
 }
 
 .lf-player-timeline-buffered {

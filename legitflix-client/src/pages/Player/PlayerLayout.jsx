@@ -128,7 +128,7 @@ const PlayerLayout = ({
 
             {/* 1. TOP BAR (Title & Back) */}
             <div className="lf-player-controls-top">
-                <button className="icon-btn back-btn" onClick={() => navigate(-1)}>
+                <button className="icon-btn back-btn" onClick={() => navigate(`/series/${item.SeriesId}`)}>
                     <span className="material-icons">arrow_back</span>
                 </button>
                 <div className="player-title">

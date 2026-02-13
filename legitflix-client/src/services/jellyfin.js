@@ -326,7 +326,7 @@ class JellyfinService {
         const deviceId = this.jellyfin.deviceInfo.id;
         const baseUrl = this.api.configuration.basePath;
 
-        let url = `${baseUrl}/Videos/${itemId}/master.m3u8?PlaySessionId=LegitFlix-${Date.now()}&api_key=${token}&DeviceId=${deviceId}&VideoCodec=h264,hevc,vp9,av1&AudioCodec=aac,mp3,opus,vorbis&TranscodingContainer=ts&TranscodingProtocol=hls`;
+        let url = `${baseUrl}/Videos/${itemId}/master.m3u8?PlaySessionId=LegitFlix-${Date.now()}&api_key=${token}&DeviceId=${deviceId}&VideoCodec=h264,hevc,vp9,av1&AudioCodec=aac,mp3&TranscodingContainer=fmp4&TranscodingProtocol=hls`;
 
         if (mediaSourceId) {
             url += `&MediaSourceId=${mediaSourceId}`;

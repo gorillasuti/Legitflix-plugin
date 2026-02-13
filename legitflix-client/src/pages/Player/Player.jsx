@@ -85,8 +85,9 @@ const VidstackPlayer = () => {
                     if (defAudio) setSelectedAudioIndex(defAudio.Index);
 
                     // Fix: getStreamUrl(itemId, audioIndex, subIndex, mediaSourceId)
-                    // Explicitly pass audioIndex to ensure correct track is transcoded/served
-                    const url = jellyfinService.getStreamUrl(data.Id, audioIndex, null, mediaSource.Id, maxBitrate);
+                    // Reverting explicit AudioStreamIndex as it caused 400 Bad Request.
+                    // Relying on updated jellyfin.js codec settings to force transcoding.
+                    const url = jellyfinService.getStreamUrl(data.Id, null, null, mediaSource.Id, maxBitrate);
                     setStreamUrl(url);
                 }
 
@@ -98,13 +99,34 @@ const VidstackPlayer = () => {
                     setCurrentSeasonId(data.SeasonId);
 
                     // Fix: getEpisodes(userId, seriesId, seasonId)
-                    const episodesData = await jellyfinService.getEpisodes(user.Id, data.SeriesId, data.SeasonId);
-                    setEpisodes(episodesData);
+                    // Sort episodes by IndexNumber to ensure correct order
+                    const sortedEpisodes = episodesData.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
+                    setEpisodes(sortedEpisodes);
 
-                    // Find next episode
-                    const currentIndex = episodesData.findIndex(e => e.Id === data.Id);
-                    if (currentIndex !== -1 && currentIndex < episodesData.length - 1) {
-                        setNextEpisodeId(episodesData[currentIndex + 1].Id);
+                    // Find next episode logic
+                    const currentIndex = sortedEpisodes.findIndex(e => e.Id === data.Id);
+
+                    if (currentIndex !== -1 && currentIndex < sortedEpisodes.length - 1) {
+                        // Next episode in current season
+                        setNextEpisodeId(sortedEpisodes[currentIndex + 1].Id);
+                    } else if (seasonsData.length > 0) {
+                        // Check for next season
+                        // Sort seasons just in case
+                        const sortedSeasons = seasonsData.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
+                        const currentSeasonIndex = sortedSeasons.findIndex(s => s.Id === data.SeasonId);
+
+                        if (currentSeasonIndex !== -1 && currentSeasonIndex < sortedSeasons.length - 1) {
+                            const nextSeason = sortedSeasons[currentSeasonIndex + 1];
+                            console.log("[Player] End of season detected. Fetching first episode of:", nextSeason.Name);
+
+                            // Fetch first episode of next season
+                            const nextEpisodes = await jellyfinService.getEpisodes(user.Id, data.SeriesId, nextSeason.Id);
+                            if (nextEpisodes.length > 0) {
+                                // Default sort generic just to be safe
+                                nextEpisodes.sort((a, b) => (a.IndexNumber || 0) - (b.IndexNumber || 0));
+                                setNextEpisodeId(nextEpisodes[0].Id);
+                            }
+                        }
                     }
                 }
 
@@ -138,37 +160,42 @@ const VidstackPlayer = () => {
 
     // 3. Handle ASS/SSA Subtitles
     // 3. Handle ASS/SSA Subtitles (Debug Version)
-    // Ref for JASSUB instance to manage cleanup across re-renders
+    // Ref for JASSUB instance and explicit canvas
     const jassubRef = useRef(null);
+    const canvasRef = useRef(null);
 
     useEffect(() => {
         // 1. Find video element in Vidstack DOM using class selector
-        // playerRef.current might be the API instance, not the element itself
         const videoElement = document.querySelector('.lf-vidstack-player video');
 
         console.log("[JASSUB Debug] Video Element found?", !!videoElement);
         console.log("[JASSUB Debug] Subtitle Streams:", subtitleStreams);
 
         // Find active ASS track (logic: default or selected)
-        // Note: checking 'ass' or 'ssa' codec. 
-        // In Vidstack, we might rely on the 'track' event, but for initial load:
         const assTrack = subtitleStreams.find(s => (s.Codec === 'ass' || s.Codec === 'ssa') && (s.Index === selectedSubtitleIndex || (selectedSubtitleIndex === null && s.IsDefault)));
 
         console.log("[JASSUB Debug] Active or Default ASS Track candidate:", assTrack);
 
-        if (assTrack && videoElement && !jassubRef.current) {
-            console.log("[JASSUB Debug] Initializing JASSUB...");
+        if (assTrack && videoElement && canvasRef.current && !jassubRef.current) {
+            console.log("[JASSUB Debug] Initializing JASSUB with manual canvas...");
             const assUrl = jellyfinService.getRawSubtitleUrl(item.Id, item.MediaSources[0].Id, assTrack.Index, 'ass');
 
             try {
                 jassubRef.current = new JASSUB({
                     video: videoElement,
+                    canvas: canvasRef.current, // Explicit canvas
                     subUrl: assUrl,
                     workerUrl: './jassub-worker.js', // Relative to root
                     wasmUrl: './jassub-worker.wasm',
                     onDemand: true
                 });
                 console.log("[JASSUB Debug] Success!");
+
+                // Force resize on init just in case
+                setTimeout(() => {
+                    if (jassubRef.current) jassubRef.current.resize();
+                }, 500);
+
             } catch (e) {
                 console.error("[JASSUB Debug] Error:", e);
             }
@@ -181,7 +208,7 @@ const VidstackPlayer = () => {
                 jassubRef.current = null;
             }
         };
-    }, [subtitleStreams, item, selectedSubtitleIndex]); // Ensure 'item' is a dependency for getRawSubtitleUrl
+    }, [subtitleStreams, item, selectedSubtitleIndex]);
 
     const onTrackChange = (track) => {
         // JASSUB is now handled by useEffect for debug/initial load
@@ -240,6 +267,7 @@ const VidstackPlayer = () => {
                                 default={sub.IsDefault}
                             />
                         ))}
+                        <canvas ref={canvasRef} className="jassub-canvas" />
                     </MediaProvider>
 
                     <PlayerLayout
@@ -304,6 +332,32 @@ const VidstackPlayer = () => {
                             setAutoSkipIntro={setAutoSkipIntro}
                             autoSkipOutro={autoSkipOutro}
                             setAutoSkipOutro={setAutoSkipOutro}
+                            updateConfig={async () => {
+                                // Save Server-Side Preferences (Language)
+                                try {
+                                    const user = await jellyfinService.getCurrentUser();
+
+                                    // Find selected streams to get languages
+                                    const audio = audioStreams.find(s => s.Index === selectedAudioIndex);
+                                    const sub = subtitleStreams.find(s => s.Index === selectedSubtitleIndex);
+
+                                    const config = {};
+                                    if (audio && audio.Language) config.AudioLanguagePreference = audio.Language;
+                                    if (sub && sub.Language) {
+                                        config.SubtitleLanguagePreference = sub.Language;
+                                        config.SubtitleMode = 'Always';
+                                    } else if (selectedSubtitleIndex === null) {
+                                        config.SubtitleMode = 'None';
+                                    }
+
+                                    if (Object.keys(config).length > 0) {
+                                        console.log("[Player] Saving user config:", config);
+                                        await jellyfinService.updateUserConfiguration(user.Id, config);
+                                    }
+                                } catch (e) {
+                                    console.error("Failed to save user config", e);
+                                }
+                            }}
                         />
                     )}
                 </MediaPlayer>
