@@ -1,0 +1,9 @@
+Version: 1.0.0.76
+Checksum: 4bab69903d5577dc6a8983036f5d6b7f
+
+Release Notes:
+- **Media Interaction**: Introduced a **Custom Context Menu** for all media cards on the Home page, allowing quick access to Play, Download, Delete, and Metadata Refresh.
+- **Improved Loading**: Updated **Skeleton Loaders** across Home, Movie, and Series pages to perfectly match the final UI layouts, providing a much smoother perceived loading experience.
+- **Player Overhaul**: Complete player rewrite for improved stability, featuring **Visual Polish** (Glassmorphism, animations) and **Interactive Controls** (Custom Seek Duration buttons, Arrow Key seeking).
+- **Homepage Enhancements**: Added **Click-and-Drag Scrolling** (Desktop) to all media rows, implemented **Smart History** (de-duplicates series to show latest episode), and added a **Carousel Bookmark Toggle**.
+- **UI & Performance**: Added smooth "Info Modal" entry animations, improved "Hover Card" performance, and reduced unnecessary re-renders.

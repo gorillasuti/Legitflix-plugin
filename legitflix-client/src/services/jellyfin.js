@@ -731,6 +731,38 @@ class JellyfinService {
         return response.data;
     }
 
+    async hideFromResume(itemId) {
+        if (!this.api) this.initialize();
+        const userId = this.api.user?.id || (await this.getCurrentUser())?.Id;
+        const basePath = this.api.configuration.basePath || '';
+        const url = `${basePath}/Users/${userId}/Items/${itemId}/HideFromResume`;
+
+        try {
+            const token = this.api.accessToken;
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `MediaBrowser Client="LegitFlix Client", Device="LegitFlix Web", DeviceId="legitflix-web", Version="1.0.0.18", Token="${token}"`
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: headers
+            });
+
+            if (!response.ok) {
+                // Fallback: If HideFromResume is not supported, maybe try updating userData to unplayed? 
+                // But for now let's throw or return false
+                console.warn(`HideFromResume failed: ${response.status}`);
+                return false;
+            }
+            return await response.json();
+        } catch (error) {
+            console.error("hideFromResume failed", error);
+            // It might fail if the endpoint doesn't return JSON (some void endpoints)
+            return true;
+        }
+    }
+
     getDownloadUrl(itemId) {
         if (!this.api) this.initialize();
         const baseUrl = this.api.configuration.basePath || '';

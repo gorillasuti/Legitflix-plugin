@@ -375,9 +375,6 @@
 }
 
 .lf-btn--ring-hover-secondary:hover::after {
-    border-color: rgba(255, 255, 255, 0.5);
-    /* Keep white/transparent border, or use secondary color if preferred. User asked for secondary color ring. assuming white/glass for now or maybe a specific color? "secondary color" usually implies a specific theme color. Let's use a standard white/glass for now as secondary usually means "not accent". */
-    border-color: rgba(255, 255, 255, 0.3);
     transform: scale(1.05);
 }
 

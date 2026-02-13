@@ -1,0 +1,150 @@
+/* Library.css */
+
+.library-page {
+    min-height: 100vh;
+    background-color: #0b0b0b;
+    /* Match app background or keep darker */
+    padding-top: 80px;
+    /* Space for Navbar */
+}
+
+/* ── Header ── */
+.library-header-container {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 0 4%;
+    display: flex;
+    justify-content: center;
+}
+
+.library-header-content {
+    width: 100%;
+    max-width: 1600px;
+    /* Constrain Width */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 10px 0 20px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.library-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+/* ── Controls (Sort/Filter) ── */
+.library-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.control-icon {
+    font-size: 1.2rem;
+    color: #888;
+}
+
+.control-select {
+    background-color: transparent;
+    color: #fff;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    padding-right: 5px;
+}
+
+.control-select option {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+.control-select:hover {
+    color: var(--clr-accent, #ff7e00);
+}
+
+
+/* ── Grid Container ── */
+.library-grid-container {
+    width: 100%;
+    padding: 0 4% 40px 4%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.library-grid {
+    width: 100%;
+    max-width: 1600px;
+    /* Constrain Width */
+    display: grid;
+    /* Responsive Grid: min item width ~160px, auto-fill */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    /* Ideally match the horizontal gap of MediaRow */
+}
+
+.library-grid-item {
+    aspect-ratio: 2 / 3;
+    /* Ensure cards keep shape */
+}
+
+/* ── Loader & Empty State ── */
+.library-loader {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+    color: #666;
+}
+
+.empty-state {
+    width: 100%;
+    max-width: 1600px;
+    text-align: center;
+    padding: 60px;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .library-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .library-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .library-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
+    }
+}

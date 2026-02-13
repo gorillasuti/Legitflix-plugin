@@ -72,7 +72,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setDefaultSubtitleLanguage(config.defaultSubtitleLanguage || 'auto');
             setAutoSkipIntro(config.autoSkipIntro || false);
             setAutoSkipOutro(config.autoSkipOutro || false);
-            setJellyseerrText(config.jellyseerrText || 'Request Feature');
+            setJellyseerrText(config.jellyseerrText || 'Request');
             setJellyseerrBackground(config.jellyseerrBackground || '');
             setSubSize(config.subtitleSize || '100%');
             setSubColor(config.subtitleColor || '#ffffff');
@@ -302,7 +302,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     <div className="setting-section" key="requestFeature">
                         <div className="setting-row">
                             <div>
-                                <h3 className="setting-title">Request Feature</h3>
+                                <h3 className="setting-title">Request</h3>
                                 <p className="setting-desc">Enable "{config.jellyseerrText || 'Request'}" card on Home screen</p>
                             </div>
                             <label className="toggle-switch">
@@ -337,7 +337,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                                 <input
                                     type="text"
                                     className="legit-input"
-                                    placeholder="Request Feature"
+                                    placeholder="Request"
                                     value={jellyseerrText}
                                     onChange={(e) => setJellyseerrText(e.target.value)}
                                 />

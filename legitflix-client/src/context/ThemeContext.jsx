@@ -30,7 +30,7 @@ export const ThemeProvider = ({ children }) => {
         enableJellyseerr: true,
         jellyseerrUrl: 'https://request.legitflix.eu',
         jellyseerrBackground: null,
-        jellyseerrText: 'Request Feature',
+        jellyseerrText: 'Request',
         // Visual Customization
         logoType: 'text', // 'text' | 'image'
         logoUrl: '',

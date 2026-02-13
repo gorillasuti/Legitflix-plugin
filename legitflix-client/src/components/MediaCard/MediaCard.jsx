@@ -18,8 +18,9 @@ const MediaCard = ({ item, onClick, onContextMenu }) => {
             onContextMenu={handleContextMenu}
         >
             <div className="media-card" onClick={() => onClick(item)}>
-                <div className="media-card-image">
+                <div className="media-card-image-container">
                     <img
+                        className="media-card-image"
                         src={imageUrl}
                         alt={item.Name}
                         loading="lazy"
@@ -28,11 +29,12 @@ const MediaCard = ({ item, onClick, onContextMenu }) => {
                 {/* Fallback title if image fails or for accessibility, though typically hidden if card has standard styling */}
                 <div className="media-card-title">{item.Name}</div>
 
-                {/* OVERLAY */}
+                {/* OVERLAY - Covers entire card including title/metadata */}
                 <HoverCard
                     item={item}
                     onPlay={() => onClick(item)}
                     onDetails={() => onClick(item)}
+                    onContextMenu={handleContextMenu}
                 />
             </div>
         </div>

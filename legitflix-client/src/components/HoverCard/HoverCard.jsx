@@ -2,15 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { jellyfinService } from '../../services/jellyfin';
 import './HoverCard.css';
 
-const HoverCard = ({ item, onPlay, onDetails }) => {
+const HoverCard = ({ item, onPlay, onDetails, onContextMenu }) => {
     // Stateless: Use item directly. Data is assumed pre-fetched.
     const details = item;
 
     return (
-        <div className="legitflix-hover-overlay" onClick={(e) => {
-            e.stopPropagation(); // Prevent card click
-            onDetails();
-        }}>
+        <div
+            className="legitflix-hover-overlay"
+            onClick={(e) => {
+                e.stopPropagation(); // Prevent card click
+                onDetails();
+            }}
+            onContextMenu={onContextMenu}
+        >
             <div className="hover-body">
                 <h3 className="hover-title">{details.Name}</h3>
                 <div className="hover-row">

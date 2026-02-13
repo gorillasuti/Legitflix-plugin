@@ -23,7 +23,7 @@ const JellyseerrCard = () => {
                     <div className="jellyseerr-overlay"></div>
                     <div className="jellyseerr-content">
                         <span className="material-icons card-icon">add_circle_outline</span>
-                        <span className="card-label">{config.jellyseerrText || 'Request Feature'}</span>
+                        <span className="card-label">{config.jellyseerrText || 'Request'}</span>
                     </div>
                 </div>
             </a>
