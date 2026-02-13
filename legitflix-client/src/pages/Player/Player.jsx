@@ -5,7 +5,7 @@ import { jellyfinService } from '../../services/jellyfin';
 import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/Navbar';
 import PlayerLayout from './PlayerLayout';
-import JASSUB from '../../lib/jassub';
+import JASSUB from 'jassub';
 import './Player.css'; // Shared CSS
 
 const VidstackPlayer = () => {

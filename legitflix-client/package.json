@@ -14,6 +14,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@vidstack/react": "^1.12.13",
     "autoprefixer": "^10.4.24",
+    "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "hls.js": "^1.6.15",
