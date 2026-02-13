@@ -158,25 +158,32 @@ const PlayerLayout = ({
                 </PlayButton>
             )}
 
-            {/* 3. SKIP BUTTONS */}
-            {showSkipIntro && (
-                <button className="lf-skip-btn" onClick={handleSkip}>
-                    Skip Intro
-                </button>
-            )}
-
-            {showSkipOutro && !showSkipIntro && (
-                <button className="lf-skip-btn" onClick={handleSkipCredits}>
-                    {nextEpisodeId ? 'Next Episode' : 'Skip Credits'}
-                </button>
-            )}
-
-
             {/* 4. BOTTOM BAR */}
             <div className="lf-player-controls-bottom">
 
                 {/* Timeline - Vidstack TimeSlider */}
                 <TimeSlider.Root className="media-slider">
+
+                    {showSkipIntro && (
+                        <button className="lf-skip-btn" style={{
+                            position: 'absolute',
+                            width: 'max-content',
+                            bottom: `calc(100% + var(--media-slider-preview-offset, 0px))`
+                        }}>
+                            Skip Intro
+                        </button>
+                    )}
+
+                    {showSkipOutro && !showSkipIntro && (
+                        <button className="lf-skip-btn" style={{
+                            position: 'absolute',
+                            width: 'max-content',
+                            bottom: `calc(100% + var(--media-slider-preview-offset, 0px))`
+                        }}>
+                            Next Episode
+                        </button>
+                    )}
+
                     <TimeSlider.Track className="media-slider-track">
                         <TimeSlider.TrackFill className="media-slider-track-fill media-slider-track" />
                         <TimeSlider.Progress className="media-slider-progress media-slider-track" />

@@ -14,9 +14,11 @@ const VidstackPlayer = () => {
     const navigate = useNavigate();
     const { config } = useTheme();
     const playerRef = useRef(null);
+    const resumeTimeRef = useRef(0);
 
     // Media State for UI
     const [isBuffering, setIsBuffering] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Data State
     const [item, setItem] = useState(null);
@@ -61,6 +63,7 @@ const VidstackPlayer = () => {
     const [autoSkipIntro, setAutoSkipIntro] = usePersistentState('autoSkipIntro', false);
     const [autoSkipOutro, setAutoSkipOutro] = usePersistentState('autoSkipOutro', false);
     const [preferredAudioLang, setPreferredAudioLang] = usePersistentState('preferredAudioLang', null);
+    const [preferredSubtitleLang, setPreferredSubtitleLang] = usePersistentState('preferredSubtitleLang', null);
 
     // Local/Ephemeral State
     const [audioStreams, setAudioStreams] = useState([]);
@@ -105,6 +108,12 @@ const VidstackPlayer = () => {
                 setChapters(data.Chapters || []);
                 setIsFavorite(data.UserData?.IsFavorite || false);
 
+                // Initialize Resume Time
+                if (data.UserData?.PlaybackPositionTicks) {
+                    resumeTimeRef.current = data.UserData.PlaybackPositionTicks / 10000000;
+                    console.log(`[Player] Initial resume time set to: ${resumeTimeRef.current}s`);
+                }
+
                 // Setup Stream URL
                 if (data.MediaSources && data.MediaSources.length > 0) {
                     const mediaSource = data.MediaSources[0];
@@ -117,7 +126,14 @@ const VidstackPlayer = () => {
                     // Set Defaults
                     let subIndex = selectedSubtitleIndex;
                     if (subIndex === null) {
-                        const defSub = subs.find(s => s.IsDefault);
+                        // Try to match saved language preference first
+                        let defSub = null;
+                        if (preferredSubtitleLang) {
+                            defSub = subs.find(s => s.Language === preferredSubtitleLang);
+                        }
+                        if (!defSub) {
+                            defSub = subs.find(s => s.IsDefault);
+                        }
                         if (defSub) {
                             subIndex = defSub.Index;
                             setSelectedSubtitleIndex(defSub.Index);
@@ -256,7 +272,7 @@ const VidstackPlayer = () => {
             <Navbar alwaysFilled={true} />
 
             <div
-                className={`lf-player-video-container ${!controlsVisible ? 'hide-cursor' : ''}`}
+                className={`lf-player-video-container ${!controlsVisible ? 'hide-cursor' : ''} ${isFullscreen ? 'is-fullscreen' : ''}`}
                 onMouseMove={resetHideTimer}
             >
                 {/* Buffering Spinner Overlay */}
@@ -275,6 +291,7 @@ const VidstackPlayer = () => {
                     title={item?.Name}
                     autoPlay={autoPlay}
                     crossOrigin
+                    onFullscreenChange={setIsFullscreen}
                     onTrackChange={onTrackChange}
                     className="lf-vidstack-player"
                     // Buffering / Loading State Handlers
@@ -291,6 +308,14 @@ const VidstackPlayer = () => {
                         setIsBuffering(false);
                         if (playerRef.current) {
                             playerRef.current.playbackRate = playbackRate;
+
+                            // Handle Resume / Seek
+                            if (resumeTimeRef.current > 0) {
+                                console.log(`[Player] Resuming playback at ${resumeTimeRef.current}s`);
+                                playerRef.current.currentTime = resumeTimeRef.current;
+                                resumeTimeRef.current = 0; // Clear after seek
+                            }
+
                             if (autoPlay) {
                                 playerRef.current.play().catch(() => { });
                             }
@@ -334,7 +359,11 @@ const VidstackPlayer = () => {
                             settingsTab={settingsTab}
                             setSettingsTab={setSettingsTab}
                             maxBitrate={maxBitrate}
-                            setMaxBitrate={setMaxBitrate}
+                            setMaxBitrate={(bitrate) => {
+                                // Save current time before bitrate switch
+                                if (playerRef.current) resumeTimeRef.current = playerRef.current.currentTime;
+                                setMaxBitrate(bitrate);
+                            }}
                             audioStreams={audioStreams}
                             selectedAudioIndex={selectedAudioIndex}
                             onSelectAudio={(idx) => {
@@ -346,6 +375,8 @@ const VidstackPlayer = () => {
                                 }
                                 if (item && item.MediaSources) {
                                     const mediaSourceId = item.MediaSources[0].Id;
+                                    // Save current time before switch
+                                    if (playerRef.current) resumeTimeRef.current = playerRef.current.currentTime;
                                     const newUrl = jellyfinService.getStreamUrl(item.Id, idx, selectedSubtitleIndex, mediaSourceId, maxBitrate);
                                     setStreamUrl(newUrl);
                                 }
@@ -357,9 +388,17 @@ const VidstackPlayer = () => {
                                 if (item && item.MediaSources) {
                                     // Always pass subtitle index to URL - Jellyfin handles delivery
                                     const mediaSourceId = item.MediaSources[0].Id;
+                                    // Save current time before switch
+                                    if (playerRef.current) resumeTimeRef.current = playerRef.current.currentTime;
                                     const newUrl = jellyfinService.getStreamUrl(item.Id, selectedAudioIndex, idx, mediaSourceId, maxBitrate);
                                     console.log(`[Player] Subtitle changed to index ${idx}, reloading stream`);
                                     setStreamUrl(newUrl);
+
+                                    // Persist subtitle language preference
+                                    const selectedStream = subtitleStreams.find(s => s.Index === idx);
+                                    if (selectedStream && selectedStream.Language) {
+                                        setPreferredSubtitleLang(selectedStream.Language);
+                                    }
                                 }
                             }}
                             onOpenSubtitleSearch={() => {
