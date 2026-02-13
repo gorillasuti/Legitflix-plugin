@@ -260,7 +260,7 @@ const PlayerLayout = ({
                         </button>
 
                         <FullscreenButton className="icon-btn">
-                            <span className="material-icons">fullscreen</span>
+                            <FullscreenIcon />
                         </FullscreenButton>
                     </div>
                 </div>
@@ -277,6 +277,12 @@ function VolumeIcon() {
     if (isMuted || volume === 0) return <span className="material-icons">volume_off</span>;
     if (volume < 0.5) return <span className="material-icons">volume_down</span>;
     return <span className="material-icons">volume_up</span>;
+}
+
+// Helper Component for Fullscreen Icon
+function FullscreenIcon() {
+    const isFullscreen = useMediaState('fullscreen');
+    return <span className="material-icons">{isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>;
 }
 
 export default PlayerLayout;

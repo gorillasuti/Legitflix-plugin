@@ -17,7 +17,6 @@ const VidstackPlayer = () => {
 
     // Media State for UI
     const [isBuffering, setIsBuffering] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Data State
     const [item, setItem] = useState(null);
@@ -257,7 +256,7 @@ const VidstackPlayer = () => {
             <Navbar alwaysFilled={true} />
 
             <div
-                className={`lf-player-video-container ${!controlsVisible ? 'hide-cursor' : ''} ${isFullscreen ? 'is-fullscreen' : ''}`}
+                className={`lf-player-video-container ${!controlsVisible ? 'hide-cursor' : ''}`}
                 onMouseMove={resetHideTimer}
             >
                 {/* Buffering Spinner Overlay */}
@@ -277,7 +276,6 @@ const VidstackPlayer = () => {
                     autoPlay={autoPlay}
                     crossOrigin
                     onTrackChange={onTrackChange}
-                    onFullscreenChange={(isFullscreenNow) => setIsFullscreen(isFullscreenNow)}
                     className="lf-vidstack-player"
                     // Buffering / Loading State Handlers
                     onWaiting={() => setIsBuffering(true)}

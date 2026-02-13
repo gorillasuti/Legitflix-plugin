@@ -82,9 +82,10 @@ const SeriesDetail = () => {
                 const seasonsData = await jellyfinService.getSeasons(user.Id, id);
                 let defaultSeasonId = null;
 
-                if (seasonsData.Items && seasonsData.Items.length > 0) {
-                    setSeasons(seasonsData.Items);
-                    defaultSeasonId = seasonsData.Items[0].Id;
+                // seasonsData is already the Items array from the service
+                if (seasonsData && seasonsData.length > 0) {
+                    setSeasons(seasonsData);
+                    defaultSeasonId = seasonsData[0].Id;
                 }
 
                 // 3. Smart Season Logic (Check Next Up)
@@ -94,7 +95,7 @@ const SeriesDetail = () => {
                         const nextUpEp = nextUpData.Items[0];
                         setNextUpEpisode(nextUpEp);
                         if (nextUpEp.SeasonId) {
-                            const seasonExists = seasonsData.Items.find(s => s.Id === nextUpEp.SeasonId);
+                            const seasonExists = seasonsData.find(s => s.Id === nextUpEp.SeasonId);
                             if (seasonExists) {
                                 defaultSeasonId = nextUpEp.SeasonId;
                             }
