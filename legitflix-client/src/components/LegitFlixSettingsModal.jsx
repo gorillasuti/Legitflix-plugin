@@ -44,6 +44,11 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [defaultSubtitleLanguage, setDefaultSubtitleLanguage] = useState(config.defaultSubtitleLanguage || 'auto');
     const [autoSkipIntro, setAutoSkipIntro] = useState(config.autoSkipIntro || false);
     const [autoSkipOutro, setAutoSkipOutro] = useState(config.autoSkipOutro || false);
+
+    // Jellyseerr/Request Customization
+    const [jellyseerrText, setJellyseerrText] = useState(config.jellyseerrText || 'Request Feature');
+    const [jellyseerrBackground, setJellyseerrBackground] = useState(config.jellyseerrBackground || '');
+
     // Subtitle Customization
     const [subSize, setSubSize] = useState(config.subtitleSize || '100%');
     const [subColor, setSubColor] = useState(config.subtitleColor || '#ffffff');
@@ -67,6 +72,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setDefaultSubtitleLanguage(config.defaultSubtitleLanguage || 'auto');
             setAutoSkipIntro(config.autoSkipIntro || false);
             setAutoSkipOutro(config.autoSkipOutro || false);
+            setJellyseerrText(config.jellyseerrText || 'Request Feature');
+            setJellyseerrBackground(config.jellyseerrBackground || '');
             setSubSize(config.subtitleSize || '100%');
             setSubColor(config.subtitleColor || '#ffffff');
             setSubBackground(config.subtitleBackground || 'drop-shadow');
@@ -129,6 +136,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             subtitleSize: subSize,
             subtitleColor: subColor,
             subtitleBackground: subBackground,
+            jellyseerrText,
+            jellyseerrBackground,
         });
         onClose();
     };
@@ -227,7 +236,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             render: () => (
                 <div className="setting-section" key="logoUrl">
                     <h3>Custom Logo URL</h3>
-                    <p className="setting-desc">Enter a direct URL to an image to replace the top-left logo.</p>
+                    <p className="setting-desc">Enter a direct URL to an image to replace the Legitflix logo.</p>
                     <input
                         type="text"
                         className="legit-input"
@@ -329,8 +338,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                                     type="text"
                                     className="legit-input"
                                     placeholder="Request Feature"
-                                    value={config.jellyseerrText || ''}
-                                    onChange={(e) => updateConfig({ jellyseerrText: e.target.value })}
+                                    value={jellyseerrText}
+                                    onChange={(e) => setJellyseerrText(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -355,9 +364,21 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                                         className="legit-input"
                                         style={{ marginTop: 0 }}
                                         placeholder="https://example.com/background.jpg"
-                                        value={config.jellyseerrBackground || ''}
-                                        onChange={(e) => updateConfig({ jellyseerrBackground: e.target.value || null })}
+                                        value={jellyseerrBackground}
+                                        onChange={(e) => setJellyseerrBackground(e.target.value)}
                                     />
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                    <button
+                                        className="lf-btn lf-btn--secondary"
+                                        onClick={() => {
+                                            setPickerMode('jellyseerr');
+                                            setShowBannerPicker(true);
+                                        }}
+                                        style={{ flex: 1 }}
+                                    >
+                                        <span className="material-icons">image</span> Browse Gallery
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -850,7 +871,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     if (pickerMode === 'app') {
                         updateConfig({ appBackground: url });
                     } else if (pickerMode === 'jellyseerr') {
-                        updateConfig({ jellyseerrBackground: url });
+                        setJellyseerrBackground(url);
                     }
                     setShowBannerPicker(false);
                 }}

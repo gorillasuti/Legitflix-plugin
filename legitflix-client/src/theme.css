@@ -3599,11 +3599,6 @@ body.legitflix-selection-mode .actionSheetMenuItem:hover .actionSheetItemText {
     backdrop-filter: blur(4px);
 }
 
-.btn-close-modal:hover {
-    background: white;
-    color: black;
-    transform: rotate(90deg);
-}
 
 /* Ensure Logo doesn't get cut off */
 .info-logo {

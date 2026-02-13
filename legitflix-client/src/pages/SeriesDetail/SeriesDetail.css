@@ -360,11 +360,6 @@
     transition: all 0.3s ease;
 }
 
-.lf-btn--ring-hover:hover::after {
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: scale(1.05);
-}
-
 .lf-btn--ring-hover-secondary {
     position: relative;
     overflow: hidden;

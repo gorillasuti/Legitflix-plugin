@@ -79,20 +79,40 @@
     background-size: cover;
     background-position: center;
     /* Animation for the "pop" effect */
-    animation: cardFadeIn 0.15s ease forwards;
+    /* Animation for the "pop" effect */
+    animation: cardEntrance 0.3s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    transform-origin: center center;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    /* Push content to bottom */
 }
 
-@keyframes cardFadeIn {
-    from {
+.media-card-hover-overlay.closing {
+    animation: cardExit 0.2s ease-in forwards;
+    pointer-events: none;
+}
+
+@keyframes cardEntrance {
+    0% {
         opacity: 0;
+        transform: scale(0.95);
     }
 
-    to {
+    100% {
         opacity: 1;
+        transform: scale(1.05);
+        /* Match hover scale */
+    }
+}
+
+@keyframes cardExit {
+    0% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.95);
     }
 }
 
@@ -110,13 +130,12 @@
 
 /* ── Content ── */
 .hover-overlay-content {
-    position: relative;
+    position: absolute;
     z-index: 2;
-    padding: 12px;
+    padding: 32px 12px 12px 12px;
     display: flex;
     flex-direction: column;
     height: 100%;
-    /* No gap here, as we split into top group and bottom actions */
 }
 
 .hover-info-group {

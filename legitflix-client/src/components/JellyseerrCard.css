@@ -1,3 +1,7 @@
+.jellyseerr-card-wrapper {
+    aspect-ratio: 2 / 3;
+}
+
 .jellyseerr-card {
     display: block;
     width: 100%;

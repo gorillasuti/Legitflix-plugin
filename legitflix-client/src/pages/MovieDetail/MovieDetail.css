@@ -326,19 +326,6 @@
     z-index: 10;
 }
 
-.lf-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: var(--radius-md);
-    font-family: var(--font-primary);
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-}
 
 .lf-btn--sm {
     padding: 8px 16px;

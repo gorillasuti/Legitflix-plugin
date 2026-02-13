@@ -275,7 +275,7 @@
 
 .user-name {
     color: #fff;
-    font-weight: 700;
+    font-weight: 500;
     font-size: 1rem;
     margin-bottom: 2px;
 }
@@ -283,7 +283,7 @@
 .user-status {
     color: var(--clr-accent, #f47521);
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 400;
     display: flex;
     align-items: center;
     gap: 4px;

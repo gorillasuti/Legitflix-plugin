@@ -11,11 +11,15 @@ const MediaCard = ({ item, onClick }) => {
     const cardRef = useRef(null);
     const [userData, setUserData] = useState(item.UserData || {});
 
+    const [isClosing, setIsClosing] = useState(false);
+
     const handleMouseEnter = async () => {
         if (hoverTimer.current) {
             clearTimeout(hoverTimer.current);
             hoverTimer.current = null;
         }
+
+        setIsClosing(false); // Cancel closing if re-entered
 
         if (cardRef.current) {
             const rect = cardRef.current.getBoundingClientRect();
@@ -23,7 +27,7 @@ const MediaCard = ({ item, onClick }) => {
                 top: rect.top + window.scrollY,
                 left: rect.left + window.scrollX,
                 width: rect.width,
-                height: rect.height // Track full height including info
+                height: rect.height
             });
             setIsHovered(true);
 
@@ -31,7 +35,6 @@ const MediaCard = ({ item, onClick }) => {
                 try {
                     const user = await jellyfinService.getCurrentUser();
                     if (user) {
-                        // Use getItemDetails to get MediaSources/MediaStreams
                         const fullItem = await jellyfinService.getItemDetails(user.Id, item.Id);
                         setDetails(fullItem);
                         setUserData(fullItem.UserData || {});
@@ -45,8 +48,12 @@ const MediaCard = ({ item, onClick }) => {
 
     const handleMouseLeave = () => {
         hoverTimer.current = setTimeout(() => {
-            setIsHovered(false);
-        }, 100); // 100ms grace period
+            setIsClosing(true); // Trigger fade out
+            setTimeout(() => {
+                setIsHovered(false);
+                setIsClosing(false);
+            }, 200); // Match CSS fade out duration
+        }, 100); // Grace period
     };
 
     const handleOverlayEnter = () => {
@@ -146,7 +153,7 @@ const MediaCard = ({ item, onClick }) => {
 
         return createPortal(
             <div
-                className="media-card-hover-overlay"
+                className={`media-card-hover-overlay ${isClosing ? 'closing' : ''}`}
                 style={{
                     top: topPos,
                     left: leftPos,
@@ -211,7 +218,7 @@ const MediaCard = ({ item, onClick }) => {
                             onClick={(e) => handleAction(e, 'played')}
                             title={userData.Played ? "Mark Unplayed" : "Mark Played"}
                         >
-                            <span className="material-icons">add</span>
+                            <span className="material-icons">{userData.Played ? 'check' : 'add'}</span>
                         </button>
                     </div>
                 </div>

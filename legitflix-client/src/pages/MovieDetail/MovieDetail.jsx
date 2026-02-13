@@ -265,6 +265,19 @@ const MovieDetail = () => {
                         </div>
                     </div>
                 </section>
+
+                <div className="lf-content-section">
+                    <SkeletonLoader type="text" width="200px" height="2rem" style={{ marginBottom: '20px' }} />
+                    <div className="lf-cast-grid">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="lf-cast-card">
+                                <SkeletonLoader type="rect" width="100px" height="100px" style={{ borderRadius: '50%', marginBottom: '10px' }} />
+                                <SkeletonLoader type="text" width="80%" style={{ margin: '0 auto 4px' }} />
+                                <SkeletonLoader type="text" width="60%" style={{ margin: '0 auto' }} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     }

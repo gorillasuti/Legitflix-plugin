@@ -1,179 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import HeroCarousel from '../../components/HeroCarousel';
-import MediaRow from '../../components/MediaRow';
-import InfoModal from '../../components/InfoModal';
-import JellyseerrCard from '../../components/JellyseerrCard';
-import Navbar from '../../components/Navbar';
-import SkeletonLoader from '../../components/SkeletonLoader';
-import { jellyfinService } from '../../services/jellyfin';
-import { useTheme } from '../../context/ThemeContext';
-import './Home.css';
-import { useDraggableScroll } from '../../hooks/useDraggableScroll';
-import { Button } from '../../components/ui/button';
-import Footer from '../../components/Footer';
+import ContextMenu from '../../components/ContextMenu';
 
-const DraggableRow = ({ children, className }) => {
-    const ref = React.useRef(null);
-    const { events } = useDraggableScroll(ref);
-    return (
-        <div
-            ref={ref}
-            className={`${className} cursor-grab active:cursor-grabbing`}
-            {...events}
-        >
-            {children}
-        </div>
-    );
-};
+// ... existing imports ...
 
 const Home = () => {
-    const [libraries, setLibraries] = useState([]);
-    const [resumeItems, setResumeItems] = useState([]);
-    const [historyItems, setHistoryItems] = useState([]);
-    const [promoItems, setPromoItems] = useState([]); // New state for promos
-    const [loading, setLoading] = useState(true);
-    const [modalItem, setModalItem] = useState(null); // ID of item to show in modal
-    const { config } = useTheme(); // Consuming ThemeContext
-    const navigate = useNavigate();
+    // ... existing state ...
+    const [contextMenu, setContextMenu] = useState(null); // { x, y, item }
 
-    useEffect(() => {
-        const fetchLibraries = async () => {
-            setLoading(true);
-            try {
-                const user = await jellyfinService.getCurrentUser();
-                if (user) {
-                    const res = await jellyfinService.getUserViews(user.Id);
-                    setLibraries(res.Items || []);
+    // ... existing useEffect ...
 
-                    const resume = await jellyfinService.getResumeItems(user.Id);
-                    // Filter: Must have progress and NOT be fully played
-                    const resumeList = (resume.Items || []).filter(item =>
-                        item.UserData &&
-                        !item.UserData.Played &&
-                        (item.UserData.PlaybackPositionTicks > 0)
-                    );
-                    setResumeItems(resumeList);
-
-                    setResumeItems(resumeList);
-
-                    // --- History Logic Refactored ---
-                    const history = await jellyfinService.getHistoryItems(user.Id, 100); // Fetch more to allow filtering
-                    let rawHistory = history.Items || [];
-
-                    // 1. Filter out duplicates (multiple episodes of same series) -> Keep latest
-                    const seriesMap = new Map();
-                    const standaloneItems = [];
-
-                    rawHistory.forEach(item => {
-                        if (item.Type === 'Episode' && item.SeriesId) {
-                            if (!seriesMap.has(item.SeriesId)) {
-                                seriesMap.set(item.SeriesId, item);
-                            }
-                            // Since history is sorted by date descending, the first one we see is the latest
-                        } else {
-                            standaloneItems.push(item);
-                        }
-                    });
-
-                    // 2. Combine back
-                    let filteredHistory = [...standaloneItems, ...Array.from(seriesMap.values())];
-
-                    // 3. Sort again by LastPlayedDate to be sure
-                    filteredHistory.sort((a, b) => new Date(b.UserData.LastPlayedDate) - new Date(a.UserData.LastPlayedDate));
-
-                    // 4. Checking if series is fully played (Optional advanced check)
-                    // For now, let's at least filter out items that are strictly just episodes of already displayed series
-                    // The user asked: "If I watched every episode of that series don't show"
-                    // To do this strictly, we'd need to fetch Series status for each SeriesId.
-                    // Doing this efficiently:
-                    const seriesIdsToCheck = Array.from(seriesMap.keys());
-                    if (seriesIdsToCheck.length > 0) {
-                        const visibleHistory = [];
-                        for (const item of filteredHistory) {
-                            if (item.Type === 'Episode' && item.SeriesId) {
-                                // We need to check if the SERIES is played. 
-                                // The Episode item itself doesn't tell us if the whole Series is played.
-                                // We can fetch the series info. parallelizing for performance.
-                                // Or simpler: check if the user has a "Next Up" for this series? 
-                                // actually, let's just fetch the Series Item. helper: jellyfinService.getItem(user.Id, item.SeriesId)
-                                try {
-                                    // We can optimize this by fetching only UserData for these series
-                                    // But for < 20 items it's okay-ish.
-                                    // Let's postpone this check slightly or do it in effect?
-                                    // No, let's do it right.
-                                    const seriesItem = await jellyfinService.getItem(user.Id, item.SeriesId);
-                                    if (seriesItem && !seriesItem.UserData?.Played) {
-                                        visibleHistory.push(item);
-                                    }
-                                } catch (e) {
-                                    // removing if check failed? or keeping? let's keep.
-                                    visibleHistory.push(item);
-                                }
-                            } else {
-                                visibleHistory.push(item);
-                            }
-                        }
-                        filteredHistory = visibleHistory;
-                    }
-
-                    // 5. Final filter: remove if in resume list (already done previously but good to keep)
-                    const finalHistory = filteredHistory.filter(i =>
-                        !resumeList.some(r => r.Id === i.Id)
-                    ).slice(0, 15); // Limit to reasonable amount
-
-                    setHistoryItems(finalHistory);
-
-                    // --- Promo Logic (Ported from legacy theme) ---
-                    // 1. Get Candidates (Latest Movies/Series)
-                    const candidatesFn = async () => {
-                        const sortMode = config.contentSortMode || 'latest';
-                        const sortMap = {
-                            latest: { sortBy: 'DateCreated', sortOrder: 'Descending' },
-                            random: { sortBy: 'Random', sortOrder: 'Descending' },
-                            topRated: { sortBy: 'CommunityRating', sortOrder: 'Descending' },
-                        };
-                        const { sortBy, sortOrder } = sortMap[sortMode] || sortMap.latest;
-
-                        return jellyfinService.getItems(user.Id, {
-                            limit: 20,
-                            recursive: true,
-                            includeItemTypes: config.promoMediaTypes || ['Movie', 'Series'],
-                            sortBy,
-                            sortOrder,
-                            imageTypeLimit: 1,
-                            enableImageTypes: ['Primary', 'Backdrop', 'Thumb', 'Logo'],
-                            fields: ['Overview', 'ProductionYear', 'ImageTags', 'OfficialRating', 'CommunityRating', 'Genres']
-                        });
-                    };
-
-                    const candidatesRes = await candidatesFn();
-                    const candidates = candidatesRes.Items || [];
-
-                    // 2. Filter out Resume items (and maybe Next Up if we had it, but Resume is main one)
-                    // LEGACY PARITY: Do NOT filter out Resume items for Promo. 
-                    // Promo should be the absolute latest items added to the server.
-                    // const resumeIds = new Set(resumeList.map(i => i.Id));
-                    // const filtered = candidates.filter(i => !resumeIds.has(i.Id));
-
-                    // 3. Take Top 3
-                    setPromoItems(candidates.slice(0, 3));
-                }
-            } catch (e) {
-                console.error("Failed to fetch data", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchLibraries();
-    }, [config]);
-
-    const openModal = (id) => {
-        setModalItem(id);
+    const handleContextMenu = (e, item) => {
+        e.preventDefault();
+        setContextMenu({
+            x: e.pageX,
+            y: e.pageY,
+            item: item
+        });
     };
 
-    const closeModal = () => {
-        setModalItem(null);
+    const closeContextMenu = () => {
+        setContextMenu(null);
+    };
+
+    const handleMenuAction = async (action, item) => {
+        closeContextMenu();
+        switch (action) {
+            case 'play':
+                if (item.Type === 'Movie' || item.Type === 'Episode') {
+                    navigate(`/play/${item.Id}`);
+                } else {
+                    navigate(`/item/${item.Id}`, { state: { autoplay: true } });
+                }
+                break;
+            case 'shuffle':
+                // navigate(`/play/${item.Id}?shuffle=true`); // TODO: Implement Shuffle Play
+                console.log('Shuffle play not fully implemented yet');
+                break;
+            case 'download':
+                const url = jellyfinService.getDownloadUrl(item.Id);
+                window.open(url, '_blank');
+                break;
+            case 'delete':
+                if (window.confirm(`Are you sure you want to delete "${item.Name}"? This cannot be undone.`)) {
+                    await jellyfinService.deleteItem(item.Id);
+                    // Refresh data
+                    // setLibraries triggers re-fetch, but maybe we need a force refresh key
+                    // For now, reloading page or just refetching logic
+                    window.location.reload();
+                }
+                break;
+            case 'refresh':
+                await jellyfinService.refreshItem(item.Id);
+                break;
+            default:
+                console.log('Action not implemented:', action);
+                break;
+        }
+    };
+
+    const getContextMenuOptions = (item) => {
+        if (!item) return [];
+        return [
+            { label: 'Play', icon: 'play_arrow', action: () => handleMenuAction('play', item) },
+            { label: 'Shuffle', icon: 'shuffle', action: () => handleMenuAction('shuffle', item) },
+            { type: 'separator' },
+            { label: 'Select', icon: 'check_circle_outline', action: () => handleMenuAction('select', item) },
+            { label: 'Add to collection', icon: 'playlist_add', action: () => handleMenuAction('add_collection', item) },
+            { label: 'Add to playlist', icon: 'queue_music', action: () => handleMenuAction('add_playlist', item) },
+            { label: 'Download', icon: 'download', action: () => handleMenuAction('download', item) },
+            { label: 'Delete', icon: 'delete', danger: true, action: () => handleMenuAction('delete', item) },
+            { type: 'separator' },
+            { label: 'Edit metadata', icon: 'edit', action: () => handleMenuAction('edit_metadata', item) },
+            { label: 'Edit images', icon: 'image', action: () => handleMenuAction('edit_images', item) },
+            { label: 'Identify', icon: 'search', action: () => handleMenuAction('identify', item) },
+            { label: 'Refresh metadata', icon: 'refresh', action: () => handleMenuAction('refresh', item) },
+        ];
     };
 
     return (
@@ -183,45 +83,73 @@ const Home = () => {
 
             <div className="home-content-container" style={{ position: 'relative', zIndex: 10 }}>
                 {loading ? (
+                    // ... existing skeleton loader ...
                     <div style={{ padding: '0 4.2%', marginTop: '40px' }}>
                         {/* Browse Libraries Row */}
                         <SkeletonLoader width="180px" height="24px" style={{ marginBottom: '20px' }} />
                         <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '50px' }}>
-                            {/* ... Skeletons ... */}
                             {[1, 2, 3, 4, 5, 6].map(i => (
-                                <div key={i} style={{ flex: '0 0 160px' }}>
-                                    <SkeletonLoader width="100%" height="240px" style={{ borderRadius: '8px' }} />
+                                <div key={i} style={{ flex: '0 0 15vw', minWidth: '140px', maxWidth: '240px' }}>
+                                    <SkeletonLoader width="100%" height="150%" style={{ borderRadius: '8px', aspectRatio: '2/3' }} />
                                 </div>
                             ))}
                         </div>
 
-                        {/* Continue Watching Row */}
+                        {/* Continue Watching Row - 16:9 Aspect Ratio */}
                         <SkeletonLoader width="220px" height="24px" style={{ marginBottom: '20px' }} />
                         <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '50px' }}>
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <div key={i} style={{ flex: '0 0 280px' }}>
-                                    <SkeletonLoader width="100%" height="157px" style={{ borderRadius: '4px', marginBottom: '8px' }} />
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} style={{ flex: '0 0 320px' }}>
+                                    <SkeletonLoader width="100%" height="180px" style={{ borderRadius: '6px', marginBottom: '8px' }} />
                                     <SkeletonLoader width="70%" height="14px" style={{ marginBottom: '4px' }} />
                                     <SkeletonLoader width="40%" height="12px" />
                                 </div>
                             ))}
                         </div>
 
-                        {/* Promo Section */}
+                        {/* History Row - 16:9 Aspect Ratio */}
+                        <SkeletonLoader width="220px" height="24px" style={{ marginBottom: '20px' }} />
+                        <div style={{ display: 'flex', gap: '15px', overflow: 'hidden', marginBottom: '50px' }}>
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} style={{ flex: '0 0 320px' }}>
+                                    <SkeletonLoader width="100%" height="180px" style={{ borderRadius: '6px', marginBottom: '8px' }} />
+                                    <SkeletonLoader width="70%" height="14px" style={{ marginBottom: '4px' }} />
+                                    <SkeletonLoader width="40%" height="12px" />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Promo Section: Hero + 2 Cards */}
                         <div style={{ marginBottom: '50px' }}>
-                            <SkeletonLoader width="100%" height="300px" style={{ borderRadius: '12px', marginBottom: '15px' }} />
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <SkeletonLoader width="50%" height="180px" style={{ borderRadius: '12px' }} />
-                                <SkeletonLoader width="50%" height="180px" style={{ borderRadius: '12px' }} />
+                            {/* Hero Skeleton */}
+                            <div style={{ width: '100%', height: '500px', marginBottom: '16px', position: 'relative' }}>
+                                <SkeletonLoader width="100%" height="100%" style={{ borderRadius: '12px' }} />
+                                {/* Fake Content inside Hero */}
+                                <div style={{ position: 'absolute', top: '40%', left: '40px', width: '40%' }}>
+                                    <SkeletonLoader width="60%" height="60px" style={{ marginBottom: '20px' }} />
+                                    <SkeletonLoader width="40%" height="20px" style={{ marginBottom: '20px' }} />
+                                    <SkeletonLoader width="100%" height="16px" style={{ marginBottom: '8px' }} />
+                                    <SkeletonLoader width="90%" height="16px" style={{ marginBottom: '24px' }} />
+                                    <SkeletonLoader width="140px" height="45px" style={{ borderRadius: '6px' }} />
+                                </div>
+                            </div>
+                            {/* Two Small Cards */}
+                            <div style={{ display: 'flex', gap: '16px' }}>
+                                <div style={{ flex: 1, height: '260px' }}>
+                                    <SkeletonLoader width="100%" height="100%" style={{ borderRadius: '12px' }} />
+                                </div>
+                                <div style={{ flex: 1, height: '260px' }}>
+                                    <SkeletonLoader width="100%" height="100%" style={{ borderRadius: '12px' }} />
+                                </div>
                             </div>
                         </div>
 
                         {/* Latest Media Row */}
                         <SkeletonLoader width="180px" height="24px" style={{ marginBottom: '20px' }} />
                         <div style={{ display: 'flex', gap: '15px', overflow: 'hidden' }}>
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <div key={i} style={{ flex: '0 0 220px' }}>
-                                    <SkeletonLoader width="100%" height="330px" style={{ borderRadius: '4px' }} />
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <div key={i} style={{ flex: '0 0 15vw', minWidth: '140px', maxWidth: '240px' }}>
+                                    <SkeletonLoader width="100%" height="150%" style={{ borderRadius: '8px', aspectRatio: '2/3' }} />
                                 </div>
                             ))}
                         </div>
@@ -237,7 +165,6 @@ const Home = () => {
                                         key={lib.Id}
                                         className="library-card"
                                         onClick={(e) => {
-                                            // Handled by onClickCapture in DraggableRow but we can also check here if we wanted
                                             navigate(`/library/${lib.Id}`)
                                         }}
                                     >
@@ -286,13 +213,12 @@ const Home = () => {
                                                 className="backdrop-card"
                                                 onClick={() => {
                                                     if (item.Type === 'Movie') {
-                                                        // Go to movie page, but signal to auto-play/scroll
                                                         navigate(`/movie/${item.Id}`, { state: { autoplay: true } });
                                                     } else {
-                                                        // Episodes: Go directly to player
                                                         navigate(`/play/${item.Id}`);
                                                     }
                                                 }}
+                                                onContextMenu={(e) => handleContextMenu(e, item)}
                                                 title={`Resume: ${item.Name}`}
                                             >
                                                 <div className="backdrop-card-image">
@@ -346,6 +272,7 @@ const Home = () => {
                                             key={item.Id}
                                             className="backdrop-card"
                                             onClick={() => navigate(`/item/${item.Id}`)}
+                                            onContextMenu={(e) => handleContextMenu(e, item)}
                                             title={item.Name}
                                         >
                                             <div className="backdrop-card-image">
@@ -380,7 +307,10 @@ const Home = () => {
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '50px' }}>
                                 <div className="promo2-wrapper">
                                     {/* ── Hero Banner (Item 1) ── */}
-                                    <div className="promo2-hero" onClick={() => navigate(`/item/${promoItems[0].Id}`)}>
+                                    <div className="promo2-hero"
+                                        onClick={() => navigate(`/item/${promoItems[0].Id}`)}
+                                        onContextMenu={(e) => handleContextMenu(e, promoItems[0])}
+                                    >
                                         <img
                                             src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Backdrop/0?maxWidth=1400&quality=90`}
                                             className="promo2-hero-img"
@@ -436,7 +366,12 @@ const Home = () => {
                                     {(promoItems[1] || promoItems[2]) && (
                                         <div className="promo2-row">
                                             {promoItems.slice(1, 3).map(item => (
-                                                <div key={item.Id} className="promo2-card" onClick={() => navigate(`/item/${item.Id}`)}>
+                                                <div
+                                                    key={item.Id}
+                                                    className="promo2-card"
+                                                    onClick={() => navigate(`/item/${item.Id}`)}
+                                                    onContextMenu={(e) => handleContextMenu(e, item)}
+                                                >
                                                     <div className="promo2-card-text">
                                                         {item.ImageTags?.Logo ? (
                                                             <img
@@ -500,6 +435,7 @@ const Home = () => {
                                 title={`Latest ${lib.Name}`}
                                 libraryId={lib.Id}
                                 onCardClick={(item) => navigate(`/item/${item.Id}`)}
+                                onContextMenu={(e, item) => handleContextMenu(e, item)}
                             />
                         ))}
 
@@ -513,6 +449,15 @@ const Home = () => {
                 isOpen={!!modalItem}
                 onClose={closeModal}
             />
+
+            {contextMenu && (
+                <ContextMenu
+                    x={contextMenu.x}
+                    y={contextMenu.y}
+                    options={getContextMenuOptions(contextMenu.item)}
+                    onClose={closeContextMenu}
+                />
+            )}
         </div>
     );
 };

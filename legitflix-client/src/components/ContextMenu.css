@@ -1,0 +1,66 @@
+.lf-context-menu {
+    position: fixed;
+    z-index: 9999;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    padding: 6px 0;
+    min-width: 220px;
+    color: #eee;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    animation: fadeIn 0.1s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.lf-context-menu__item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    gap: 12px;
+}
+
+.lf-context-menu__item:hover {
+    background-color: #2a2a2a;
+}
+
+.lf-context-menu__icon {
+    font-size: 18px;
+    color: #aaa;
+}
+
+.lf-context-menu__item:hover .lf-context-menu__icon {
+    color: #fff;
+}
+
+.lf-context-menu__separator {
+    height: 1px;
+    background-color: #333;
+    margin: 6px 0;
+}
+
+.lf-context-menu__item.is-danger {
+    color: #ff6b6b;
+}
+
+.lf-context-menu__item.is-danger .lf-context-menu__icon {
+    color: #ff6b6b;
+}
+
+.lf-context-menu__item.is-danger:hover {
+    background-color: rgba(255, 107, 107, 0.1);
+}

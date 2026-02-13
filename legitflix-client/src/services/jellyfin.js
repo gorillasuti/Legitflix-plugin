@@ -725,6 +725,18 @@ class JellyfinService {
         }
         return true;
     }
+    async deleteItem(itemId) {
+        if (!this.api) this.initialize();
+        const response = await this.api.items.deleteItem({ itemId });
+        return response.data;
+    }
+
+    getDownloadUrl(itemId) {
+        if (!this.api) this.initialize();
+        const baseUrl = this.api.configuration.basePath || '';
+        const token = this.api.accessToken;
+        return `${baseUrl}/Items/${itemId}/Download?api_key=${token}`;
+    }
 }
 
 const jellyfinService = new JellyfinService();

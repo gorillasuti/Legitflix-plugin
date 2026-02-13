@@ -14,11 +14,20 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
     const [userId, setUserId] = useState(null);
 
     // Fetch Details on Open
+    // Fetch Details on Open
     useEffect(() => {
         if (!isOpen || !itemId) return;
 
+        // Reset state
+        setIsVisible(false);
+        setDetails(null);
+        setTrailers([]);
+        setActiveTrailerId(null);
+
         const fetchData = async () => {
-            setIsVisible(true);
+            // Delay visibility slightly to allow mount
+            setTimeout(() => setIsVisible(true), 10);
+
             const user = await jellyfinService.getCurrentUser();
             // --- HELPER FUNCTIONS ---
             const getYoutubeId = (url) => {

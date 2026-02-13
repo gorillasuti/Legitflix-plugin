@@ -446,6 +446,29 @@ const SeriesDetail = () => {
                         </div>
                     </div>
                 </section>
+
+                <div className="lf-content-section">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <SkeletonLoader type="rect" width="200px" height="40px" style={{ borderRadius: '8px' }} />
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <SkeletonLoader type="rect" width="100px" height="40px" style={{ borderRadius: '8px' }} />
+                            <SkeletonLoader type="rect" width="100px" height="40px" style={{ borderRadius: '8px' }} />
+                        </div>
+                    </div>
+                    <div className="lf-episode-grid">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                            <div key={i} className="lf-episode-card" style={{ pointerEvents: 'none' }}>
+                                <div className="lf-episode-card__thumbnail">
+                                    <SkeletonLoader type="rect" width="100%" height="100%" />
+                                </div>
+                                <div className="lf-episode-card__info">
+                                    <SkeletonLoader type="text" width="80%" height="1.2em" style={{ marginBottom: '4px' }} />
+                                    <SkeletonLoader type="text" width="60%" height="1em" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     }

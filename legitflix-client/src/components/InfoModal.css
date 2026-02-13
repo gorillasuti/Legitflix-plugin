@@ -43,9 +43,12 @@
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
 
     /* Animation Initial State */
+    /* Animation Initial State */
     opacity: 0;
-    transform: scale(0.96) translateY(20px);
-    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: scale(0.9) translateY(20px);
+    will-change: transform, opacity;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    /* Expo out for premium feel */
 }
 
 .legitflix-info-modal.visible .info-modal-content {

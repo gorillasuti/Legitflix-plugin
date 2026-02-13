@@ -113,6 +113,7 @@ const MediaRow = ({ title, libraryId, onCardClick }) => {
                             key={item.Id}
                             item={item}
                             onClick={() => onCardClick ? onCardClick(item) : navigate(`/item/${item.Id}`)}
+                            onContextMenu={onContextMenu}
                         />
                     ))}
                 </div>

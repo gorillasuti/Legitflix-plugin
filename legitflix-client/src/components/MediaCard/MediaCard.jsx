@@ -3,12 +3,19 @@ import { jellyfinService } from '../../services/jellyfin';
 import HoverCard from '../HoverCard/HoverCard';
 import './MediaCard.css';
 
-const MediaCard = ({ item, onClick }) => {
+const MediaCard = ({ item, onClick, onContextMenu }) => {
     const imageUrl = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?fillHeight=300&fillWidth=200&quality=90`;
+
+    const handleContextMenu = (e) => {
+        if (onContextMenu) {
+            onContextMenu(e, item);
+        }
+    };
 
     return (
         <div
             className="media-card-wrapper"
+            onContextMenu={handleContextMenu}
         >
             <div className="media-card" onClick={() => onClick(item)}>
                 <div className="media-card-image">
