@@ -264,9 +264,17 @@ const VidstackPlayer = () => {
                     crossOrigin
                     onTrackChange={onTrackChange}
                     className="lf-vidstack-player"
-                    // Apply playback rate on mount/update
+                    // Buffering / Loading State Handlers
+                    onWaiting={() => setIsBuffering(true)}
+                    onPlaying={() => setIsBuffering(false)}
                     onCanPlay={() => {
+                        setIsBuffering(false);
                         if (playerRef.current) playerRef.current.playbackRate = playbackRate;
+                    }}
+                    onLoadedData={() => setIsBuffering(false)}
+                    onError={(e) => {
+                        console.error("Player Error:", e);
+                        setIsBuffering(false);
                     }}
                 >
                     <MediaProvider>
