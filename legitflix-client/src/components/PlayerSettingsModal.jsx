@@ -42,6 +42,7 @@ const PlayerSettingsModal = ({
     const [localAutoPlay, setLocalAutoPlay] = useState(autoPlay);
     const [localAutoSkipIntro, setLocalAutoSkipIntro] = useState(autoSkipIntro);
     const [localAutoSkipOutro, setLocalAutoSkipOutro] = useState(autoSkipOutro);
+    const [deleteConfirmIndex, setDeleteConfirmIndex] = useState(null);
 
     // Sync local state with props when modal opens
     React.useEffect(() => {
@@ -140,7 +141,7 @@ const PlayerSettingsModal = ({
                         {stream.IsExternal && (
                             <button
                                 className="lf-btn lf-btn--secondary"
-                                onClick={(e) => { e.stopPropagation(); onDeleteSubtitle(stream.Index); }}
+                                onClick={(e) => { e.stopPropagation(); setDeleteConfirmIndex(stream.Index); }}
                                 title="Delete Subtitle"
                                 style={{ width: '40px', padding: 0, justifyContent: 'center' }}
                             >
@@ -226,6 +227,27 @@ const PlayerSettingsModal = ({
     return (
         <div className="legit-settings-overlay" onClick={onClose}>
             <div className="legit-settings-modal" onClick={e => e.stopPropagation()} style={{ pointerEvents: 'auto', flexDirection: 'row', width: '800px', height: '500px', maxWidth: '95vw' }}>
+
+                {/* Delete Confirmation Overlay */}
+                {deleteConfirmIndex !== null && (
+                    <div className="settings-confirm-overlay" onClick={() => setDeleteConfirmIndex(null)}>
+                        <div className="settings-confirm-box" onClick={e => e.stopPropagation()}>
+                            <h3>Delete Subtitle?</h3>
+                            <p>Are you sure you want to delete this subtitle permanently?</p>
+                            <div className="settings-confirm-actions">
+                                <button className="lf-btn lf-btn--secondary" onClick={() => setDeleteConfirmIndex(null)}>
+                                    Cancel
+                                </button>
+                                <button className="lf-btn lf-btn--primary" style={{ backgroundColor: '#e74c3c', borderColor: '#c0392b' }} onClick={() => {
+                                    onDeleteSubtitle(deleteConfirmIndex);
+                                    setDeleteConfirmIndex(null);
+                                }}>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Sidebar */}
                 <div className="legit-settings-sidebar">

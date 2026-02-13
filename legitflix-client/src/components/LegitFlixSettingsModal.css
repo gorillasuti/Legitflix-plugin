@@ -36,6 +36,54 @@
     display: flex;
     flex-direction: column;
     animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+/* Confirmation Overlay */
+.settings-confirm-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.settings-confirm-box {
+    background: #2a2a2a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 24px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.settings-confirm-box h3 {
+    margin: 0 0 12px 0;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.settings-confirm-box p {
+    color: #ccc;
+    font-size: 0.9rem;
+    margin: 0 0 20px 0;
+    line-height: 1.4;
+}
+
+.settings-confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
 }
 
 .legit-settings-modal.expanded {

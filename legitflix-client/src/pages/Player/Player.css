@@ -705,7 +705,7 @@ video::-webkit-media-text-track-display {
 
 .lf-player-episodes-panel {
     background: #1f1f1f;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     display: flex;
     flex-direction: column;

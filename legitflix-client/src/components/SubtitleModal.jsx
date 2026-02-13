@@ -58,6 +58,13 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
     const [searching, setSearching] = useState(false);
     const [error, setError] = useState(null);
 
+    const [statusMessage, setStatusMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+
+    const showStatus = (type, text) => {
+        setStatusMessage({ type, text });
+        setTimeout(() => setStatusMessage(null), 3000);
+    };
+
     useEffect(() => {
         if (isOpen && seriesId) {
             if (isMovie) {
@@ -66,6 +73,7 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
                 loadSeasons();
             }
         }
+        setStatusMessage(null); // Reset on open
     }, [isOpen, seriesId, isMovie]);
 
     useEffect(() => {
@@ -128,13 +136,23 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
         }
     };
 
-    const handleDelete = async (index) => {
-        if (!window.confirm('Are you sure you want to delete this subtitle?')) return;
+    const [deleteConfirm, setDeleteConfirm] = useState(null); // index to delete
+
+    const handleDelete = (index) => {
+        setDeleteConfirm(index);
+    };
+
+    const confirmDelete = async () => {
+        if (deleteConfirm === null) return;
         try {
-            await jellyfinService.deleteSubtitle(selectedEpisode, index);
+            await jellyfinService.deleteSubtitle(selectedEpisode, deleteConfirm);
+            showStatus('success', 'Subtitle deleted successfully.');
             loadCurrentSubtitles();
+            if (onSubtitleDownloaded) onSubtitleDownloaded();
         } catch (err) {
-            alert('Failed to delete subtitle');
+            showStatus('error', 'Failed to delete subtitle.');
+        } finally {
+            setDeleteConfirm(null);
         }
     };
 
@@ -146,8 +164,9 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
         try {
             const results = await jellyfinService.searchRemoteSubtitles(selectedEpisode, searchLanguage);
             setSearchResults(results || []);
+            if (!results || results.length === 0) showStatus('error', 'No subtitles found.');
         } catch (err) {
-            alert('Search failed');
+            showStatus('error', 'Search failed.');
         } finally {
             setSearching(false);
         }
@@ -156,11 +175,11 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
     const handleDownload = async (subtitleId) => {
         try {
             await jellyfinService.downloadRemoteSubtitles(selectedEpisode || initialEpisodeId, subtitleId);
-            alert('Subtitle downloaded!');
+            showStatus('success', 'Subtitle downloaded!');
             loadCurrentSubtitles();
             if (onSubtitleDownloaded) onSubtitleDownloaded();
         } catch (err) {
-            alert('Download failed');
+            showStatus('error', 'Download failed.');
         }
     };
 
@@ -169,6 +188,20 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
     return (
         <div className="lf-sub-overlay" onClick={onClose}>
             <div className="lf-sub-modal" onClick={(e) => e.stopPropagation()}>
+                {/* Delete Confirmation Overlay */}
+                {deleteConfirm !== null && (
+                    <div className="lf-sub-overlay" style={{ background: 'rgba(0,0,0,0.85)', zIndex: 10 }} onClick={() => setDeleteConfirm(null)}>
+                        <div className="lf-sub-confirm-box" onClick={e => e.stopPropagation()}>
+                            <h3>Delete Subtitle?</h3>
+                            <p>Are you sure you want to delete this subtitle? This action cannot be undone.</p>
+                            <div className="lf-sub-confirm-actions">
+                                <button className="lf-sub-action-btn" onClick={() => setDeleteConfirm(null)}>Cancel</button>
+                                <button className="lf-sub-action-btn lf-sub-action-btn--delete" onClick={confirmDelete}>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="lf-sub-header">
                     <h3>Subtitles Manager</h3>
@@ -176,6 +209,13 @@ const SubtitleModal = ({ isOpen, onClose, seriesId, initialSeasonId, initialEpis
                         <span className="material-icons">close</span>
                     </button>
                 </div>
+
+                {/* Status Message */}
+                {statusMessage && (
+                    <div className={`lf-sub-status lf-sub-status--${statusMessage.type}`}>
+                        {statusMessage.text}
+                    </div>
+                )}
 
                 {/* Content */}
                 <div className="lf-sub-content">

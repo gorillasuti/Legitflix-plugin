@@ -298,6 +298,21 @@ const VidstackPlayer = () => {
                     }}
                     onAutoPlayFail={(detail) => {
                         console.warn("[Player] Autoplay failed", detail);
+
+                        // Try muted autoplay if unmuted failed (common browser policy)
+                        if (!detail.muted && playerRef.current) {
+                            console.log("[Player] Attempting muted autoplay fallback...");
+                            playerRef.current.muted = true;
+                            playerRef.current.play().then(() => {
+                                console.log("[Player] Muted autoplay succeeded");
+                            }).catch(() => {
+                                setIsBuffering(false);
+                                isPausedRef.current = true;
+                                setControlsVisible(true);
+                            });
+                            return;
+                        }
+
                         setIsBuffering(false);
                         isPausedRef.current = true;
                         setControlsVisible(true);
@@ -419,7 +434,38 @@ const VidstackPlayer = () => {
                                 setShowSettings(false);
                                 setShowSubtitleSearch(true);
                             }}
-                            onDeleteSubtitle={() => { }}
+                            onDeleteSubtitle={async (index) => {
+                                try {
+                                    // Delete the subtitle via API
+                                    await jellyfinService.deleteSubtitle(item.Id, index);
+
+                                    // Refresh item to update stream indices immediately
+                                    await jellyfinService.refreshItem(item.Id);
+
+                                    // Re-fetch updated item details
+                                    const user = await jellyfinService.getCurrentUser();
+                                    const data = await jellyfinService.getItemDetails(user.Id, id);
+                                    setItem(data);
+                                    if (data.MediaSources && data.MediaSources.length > 0) {
+                                        const mediaSource = data.MediaSources[0];
+                                        const subs = mediaSource.MediaStreams.filter(s => s.Type === 'Subtitle');
+                                        setSubtitleStreams(subs);
+
+                                        // If deleted subtitle was selected, reset selection
+                                        if (selectedSubtitleIndex === index) {
+                                            setSelectedSubtitleIndex(null);
+                                            // Reset stream URL? Jellyfin handles fallback usually, but maybe re-fetch URL.
+                                            // But if we reset to null, we're good.
+                                            const mediaSourceId = mediaSource.Id;
+                                            const newUrl = jellyfinService.getStreamUrl(item.Id, selectedAudioIndex, null, mediaSourceId, maxBitrate);
+                                            setStreamUrl(newUrl);
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error("Failed to delete subtitle from Player Settings", e);
+                                    alert("Failed to delete subtitle."); // Fallback alert if modal not wired to show toast
+                                }
+                            }}
                             playbackRate={playbackRate}
                             setPlaybackRate={(rate) => {
                                 setPlaybackRate(rate);
