@@ -26,6 +26,9 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    optimizeDeps: {
+      include: ['maverick.js', 'maverick.js/react', '@vidstack/react'],
+    },
     worker: {
       format: 'es'
     },

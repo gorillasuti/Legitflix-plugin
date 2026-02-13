@@ -1,4 +1,4 @@
-$version = "1.0.0.62"
+$version = "1.0.0.63"
 $dllName = "LegitFlix.Plugin.dll"
 $zipName = "LegitFlix.Plugin_${version}.zip"
 # Adjust build dir to be relative to the script location if running from root
@@ -10,14 +10,14 @@ $buildDir = Join-Path $projectDir "bin\Release\net9.0"
 $publishDir = Join-Path $projectDir "publish"
 
 # 0. Build React App
-Write-Host "Building React Client..."
-Set-Location $clientDir
-npm install
-npm run build
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "React build failed!"
-    exit 1
-}
+# Write-Host "Building React Client..."
+# Set-Location $clientDir
+# npm install --legacy-peer-deps
+# npm run build
+# if ($LASTEXITCODE -ne 0) {
+#     Write-Error "React build failed!"
+#     exit 1
+# }
 
 # Copy Build Artifacts to Plugin Assets
 # Vite handles output to Assets/Client directly via vite.config.js

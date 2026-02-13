@@ -875,6 +875,62 @@
 }
 
 
+/* VIDSTACK OVERRIDES */
+.lf-vidstack-player {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: black;
+}
+
+.vds-slider-track {
+    background-color: rgba(255, 255, 255, 0.3);
+    height: 4px;
+    width: 100%;
+    position: relative;
+    border-radius: 2px;
+}
+
+.vds-slider-track-fill {
+    background-color: var(--clr-accent, #ff6a00);
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 2px;
+}
+
+.vds-slider-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    /* Let clicks pass to slider */
+}
+
+.lf-player-timeline-container:hover .vds-slider-thumb,
+.volume-slider-wrapper:hover .vds-slider-thumb {
+    opacity: 1;
+}
+
+/* Ensure Vidstack media provider fills container */
+.vds-media-provider {
+    width: 100%;
+    height: 100%;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .lf-player-content-container {

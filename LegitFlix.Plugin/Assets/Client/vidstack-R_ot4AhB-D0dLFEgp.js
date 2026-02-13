@@ -1,0 +1,1 @@
+import{H as t,s,a as r}from"./app.js";class d extends t{$$PROVIDER_TYPE="AUDIO";get type(){return"audio"}airPlay;constructor(i,e){super(i,e),s(()=>{this.airPlay=new r(this.media,e)},this.scope)}setup(){super.setup(),this.type==="audio"&&this.ctx.notify("provider-setup",this)}get audio(){return this.media}}export{d as AudioProvider};
