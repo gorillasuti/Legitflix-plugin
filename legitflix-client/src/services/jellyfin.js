@@ -204,7 +204,7 @@ class JellyfinService {
     async getSeasons(userId, seriesId) {
         if (!this.api) this.initialize();
         const response = await this.api.tvShows.getSeasons({ userId, seriesId });
-        return response.data;
+        return response.data.Items || [];
     }
 
     async getEpisodes(userId, seriesId, seasonId) {
@@ -215,7 +215,7 @@ class JellyfinService {
             seasonId,
             fields: ['MediaSources', 'RunTimeTicks', 'UserData', 'Overview', 'Path']
         });
-        return response.data;
+        return response.data.Items || [];
     }
 
     async getNextUp(userId, seriesId) {
