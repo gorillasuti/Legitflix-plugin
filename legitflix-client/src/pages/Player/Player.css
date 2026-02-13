@@ -330,62 +330,91 @@ video::-webkit-media-text-track-display {
 }
 
 /* ============================================
-   VIDSTACK SLIDER THEME (Timeline & Volume)
+   VIDSTACK SLIDER STYLING (Timeline & Volume)
    ============================================ */
 
-/* 
-   We use :where() to match Vidstack's specificity for variables, 
-   but ensure our overrides take precedence for specific colors.
-*/
-
-.lf-player-timeline-container .vds-time-slider,
-.volume-slider-wrapper .vds-slider {
-    /* Height & Width */
-    --media-slider-height: 48px;
-    --media-slider-track-height: 5px;
-
-    /* Colors */
-    --media-brand: #ff6a00;
-    /* Accent Color */
-    --media-slider-track-bg: rgba(255, 255, 255, 0.3);
-    --media-slider-track-fill-bg: var(--media-brand);
-    --media-slider-track-progress-bg: rgba(255, 255, 255, 0.5);
-
-    /* Thumb */
-    --media-slider-thumb-size: 14px;
-    --media-slider-thumb-bg: #fff;
-    --media-slider-thumb-border: none;
-    --media-slider-focused-thumb-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
-
-    /* Preview / Value */
-    --media-slider-value-bg: rgba(0, 0, 0, 0.85);
-    --media-slider-value-color: white;
-    --media-slider-value-padding: 2px 6px;
-    --media-slider-value-border-radius: 4px;
+/* Timeline Slider */
+.lf-player-timeline-container .vds-time-slider {
+    width: 100%;
+    height: 5px;
+    position: relative;
 }
 
-/* Timeline specific overrides */
-.lf-player-timeline-container .vds-time-slider {
-    --media-slider-track-height: 5px;
-    --media-slider-focused-track-height: 7px;
-    /* Grow on focus/hover */
-    width: 100%;
+.lf-player-timeline-container .vds-slider-track {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.lf-player-timeline-container .vds-slider-track-fill {
+    background: #ff6a00 !important;
+}
+
+.lf-player-timeline-container .vds-slider-progress {
+    background: rgba(255, 255, 255, 0.5) !important;
+}
+
+.lf-player-timeline-container .vds-slider-thumb {
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.lf-player-timeline-container:hover .vds-slider-thumb {
+    opacity: 1;
+}
+
+.lf-player-timeline-container:hover .vds-time-slider {
+    height: 7px;
+}
+
+/* Timeline preview tooltip */
+.lf-player-timeline-container .vds-slider-preview {
+    background: rgba(0, 0, 0, 0.85);
+    padding: 6px 10px;
+    border-radius: 4px;
+    color: #fff;
 }
 
 /* Volume specific overrides */
 .volume-slider-wrapper .vds-slider {
-    --media-slider-height: 30px;
-    /* Smaller touch area for volume */
-    --media-slider-track-height: 4px;
     width: 100%;
+    height: 4px;
+    position: relative;
+}
+
+.volume-slider-wrapper .vds-slider-track {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.volume-slider-wrapper .vds-slider-track-fill {
+    background: #ff6a00 !important;
+}
+
+.volume-slider-wrapper .vds-slider-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.volume-slider-wrapper .vds-slider-preview {
+    background: rgba(0, 0, 0, 0.85);
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.75rem;
 }
 
 /* Ensure focus rings and interactions work nicely */
 .vds-slider {
     cursor: pointer;
 }
-
-/* Hide the default dotted focus ring if preferred, Vidstack handles focus via opacity/shadow mostly */
 
 
 /* ============================================
