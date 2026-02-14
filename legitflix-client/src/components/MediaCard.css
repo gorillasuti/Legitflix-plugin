@@ -45,20 +45,11 @@
 .media-card-info {
     padding: 8px 2px 0;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 2px;
-}
-
-.media-card-title {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #e0e0e0;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    align-content: center;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .media-card-subtitle {
@@ -99,7 +90,7 @@
 
     100% {
         opacity: 1;
-        transform: scale(1.05);
+        transform: scale(1.02);
         /* Match hover scale */
     }
 }
@@ -119,11 +110,9 @@
 /* ── Gradient Overlay ── */
 .hover-overlay-gradient {
     position: absolute;
+    opacity: 0.75;
     inset: 0;
-    background: linear-gradient(to bottom,
-            rgba(0, 0, 0, 0.4) 0%,
-            rgba(0, 0, 0, 0.6) 40%,
-            rgba(0, 0, 0, 0.98) 100%);
+    background: #151515;
     z-index: 1;
     pointer-events: none;
 }
@@ -162,7 +151,7 @@
     flex-wrap: wrap;
     gap: 6px;
     font-size: 0.75rem;
-    color: #ccc;
+    color: #fff;
     font-weight: 500;
     margin-top: 2px;
 }

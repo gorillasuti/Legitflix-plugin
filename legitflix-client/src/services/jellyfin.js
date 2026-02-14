@@ -254,7 +254,7 @@ class JellyfinService {
         return response;
     }
 
-    async getHistoryItems(userId, limit = 12) {
+    async getHistoryItems(userId, limit = 50) {
         if (!this.api) this.initialize();
         const response = await this.getItems(userId, {
             sortBy: ['DatePlayed'],

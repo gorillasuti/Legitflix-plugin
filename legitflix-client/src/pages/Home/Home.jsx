@@ -58,8 +58,37 @@ const Home = () => {
                     ]);
 
                     if (views?.Items) setLibraries(views.Items);
-                    if (resume?.Items) setResumeItems(resume.Items);
-                    if (history?.Items) setHistoryItems(history.Items);
+
+                    if (resume?.Items) {
+                        // Filter out played items and limit to 15
+                        const filteredResume = resume.Items.filter(item => {
+                            const played = item.UserData?.Played || item.UserData?.PlayedPercentage >= 100;
+                            return !played;
+                        }).slice(0, 15);
+                        setResumeItems(filteredResume);
+                    }
+
+                    if (history?.Items) {
+                        // De-duplicate series: only show the latest episode of each series
+                        const seenSeries = new Set();
+                        const uniqueHistory = [];
+
+                        for (const item of history.Items) {
+                            if (item.Type === 'Episode') {
+                                if (!seenSeries.has(item.SeriesId)) {
+                                    seenSeries.add(item.SeriesId);
+                                    uniqueHistory.push(item);
+                                }
+                            } else {
+                                // Movies always show in history
+                                uniqueHistory.push(item);
+                            }
+
+                            if (uniqueHistory.length >= 15) break;
+                        }
+                        setHistoryItems(uniqueHistory);
+                    }
+
                     if (latest?.Items) setPromoItems(latest.Items);
                 }
             } catch (err) {

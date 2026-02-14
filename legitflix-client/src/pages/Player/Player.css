@@ -1061,3 +1061,38 @@ video {
         z-index: 100 !important;
     }
 }
+
+/* --- BACKDROP STYLES --- */
+.lf-player-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    /* Above video, below controls */
+    pointer-events: none;
+    animation: lf-backdrop-fade-in 0.4s ease forwards;
+}
+
+.lf-player-backdrop-image {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(4px);
+    transform: scale(1.05);
+}
+
+.lf-player-backdrop-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
+}
+
+@keyframes lf-backdrop-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

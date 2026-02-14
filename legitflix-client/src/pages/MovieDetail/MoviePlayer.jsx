@@ -198,7 +198,7 @@ const MoviePlayer = ({ itemId, forceAutoPlay = false }) => {
                 setIsPlayed(data.UserData?.Played || false);
 
                 if (data.BackdropImageTags && data.BackdropImageTags.length > 0) {
-                    setBackdropUrl(jellyfinService.getImageUrl(data.Id, 'Backdrop', { maxWidth: 1920, quality: 80 }));
+                    setBackdropUrl(jellyfinService.getImageUrl(data, 'Backdrop', { maxWidth: 1920, quality: 80 }));
                 }
 
                 // Initialize Resume Time

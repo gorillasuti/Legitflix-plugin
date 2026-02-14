@@ -34,6 +34,7 @@ const VidstackPlayer = () => {
     const [showSettings, setShowSettings] = useState(false);
     const [showSubtitleSearch, setShowSubtitleSearch] = useState(false);
     const [trickplayUrl, setTrickplayUrl] = useState(null);
+    const [backdropUrl, setBackdropUrl] = useState(null);
 
     // Auto-hide controls & cursor
     const [controlsVisible, setControlsVisible] = useState(true);
@@ -179,6 +180,23 @@ const VidstackPlayer = () => {
                 setItem(data);
                 setChapters(data.Chapters || []);
                 setIsFavorite(data.UserData?.IsFavorite || false);
+
+                // Fetch Backdrop (use SeriesId if episode for better quality)
+                if (data.BackdropImageTags && data.BackdropImageTags.length > 0) {
+                    setBackdropUrl(jellyfinService.getImageUrl(data, 'Backdrop', { maxWidth: 1920, quality: 80 }));
+                } else if (data.ParentBackdropImageTags && data.ParentBackdropImageTags.length > 0) {
+                    setBackdropUrl(jellyfinService.getImageUrl({ Id: data.ParentBackdropItemId, ImageTags: { Backdrop: data.ParentBackdropImageTags[0] } }, 'Backdrop', { maxWidth: 1920, quality: 80 }));
+                } else if (data.SeriesId) {
+                    // Try fetching series for backdrop if tags not on episode
+                    try {
+                        const series = await jellyfinService.getSeries(user.Id, data.SeriesId);
+                        if (series.BackdropImageTags && series.BackdropImageTags.length > 0) {
+                            setBackdropUrl(jellyfinService.getImageUrl(series, 'Backdrop', { maxWidth: 1920, quality: 80 }));
+                        }
+                    } catch (e) {
+                        console.warn("Failed to fetch series backdrop", e);
+                    }
+                }
 
                 // Initialize Resume Time
                 if (data.UserData?.PlaybackPositionTicks) {
@@ -452,6 +470,7 @@ const VidstackPlayer = () => {
                             }
                         }}
                         trickplayUrl={trickplayUrl}
+                        backdropUrl={backdropUrl}
                     />
 
                     {showSettings && (

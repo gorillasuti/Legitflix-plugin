@@ -169,17 +169,11 @@ const PlayerLayout = ({
         <div
             className={`lf-player-controls ${controlsVisible ? 'visible' : ''}`}
         >
-            {/* Backdrop for pre-playback */}
-            {backdropUrl && !hasStarted && (
-                <div className="lf-player-backdrop" style={{
-                    position: 'absolute',
-                    inset: 0,
-                    backgroundImage: `url(${backdropUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    zIndex: -1
-                }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }}></div>
+            {/* Backdrop for pre-playback and paused at start (0:00) */}
+            {backdropUrl && (!hasStarted || (isPaused && currentTime === 0)) && (
+                <div className="lf-player-backdrop">
+                    <div className="lf-player-backdrop-image" style={{ backgroundImage: `url(${backdropUrl})` }} />
+                    <div className="lf-player-backdrop-overlay" />
                 </div>
             )}
 

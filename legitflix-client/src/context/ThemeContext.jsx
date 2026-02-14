@@ -10,7 +10,7 @@ const ACCENT_LOGO_MAP = {
     '#00ff7e': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-green.png',
     '#ff3333': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-red.png',
     '#aa00ff': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-purple.png',
-    '#ff00aa': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-purple.png',  // Pink falls back to purple
+    '#ff00aa': 'https://raw.githubusercontent.com/gorillasuti/Legitflix-plugin/refs/heads/main/legitflix-client/public/default-logo-pink.png',  // Pink falls back to purple
 };
 
 export const getDefaultLogo = (accentColor) => {
