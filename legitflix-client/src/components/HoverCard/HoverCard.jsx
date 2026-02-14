@@ -3,8 +3,14 @@ import { jellyfinService } from '../../services/jellyfin';
 import './HoverCard.css';
 
 const HoverCard = ({ item, onPlay, onDetails, onContextMenu }) => {
-    // Stateless: Use item directly. Data is assumed pre-fetched.
     const details = item;
+
+    // Extract info from item
+    const rating = details.CommunityRating ? details.CommunityRating.toFixed(1) : null;
+    const year = details.ProductionYear || null;
+    const isSeries = details.Type === 'Series';
+    const seasons = isSeries ? (details.ChildCount ? `${details.ChildCount} Seasons` : null) : null;
+    const unplayed = details.UserData?.UnplayedItemCount || null;
 
     return (
         <div

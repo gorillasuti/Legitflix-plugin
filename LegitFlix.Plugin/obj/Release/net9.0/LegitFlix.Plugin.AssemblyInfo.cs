@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Total UI replacement for Jellyfin.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.77")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bbcf1f4baa50cada91745c8b6cbae5d607de9e77")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+17af5ad868cc795aaffb0b0c0aa157b54d83abeb")]
 [assembly: System.Reflection.AssemblyProductAttribute("LegitFlix.Plugin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LegitFlix.Plugin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.77")]
