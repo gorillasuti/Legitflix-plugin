@@ -143,6 +143,7 @@ const Home = () => {
 
     const handleContextMenu = (e, item, section = null) => {
         e.preventDefault();
+        e.stopPropagation();
         setContextMenu({
             x: e.pageX,
             y: e.pageY,
@@ -369,7 +370,10 @@ const Home = () => {
                                                 onContextMenu={(e) => handleContextMenu(e, item, 'resume')}
                                                 title={`Resume: ${item.Name}`}
                                             >
-                                                <div className="backdrop-card-image">
+                                                <div
+                                                    className="backdrop-card-image"
+                                                    onContextMenu={(e) => handleContextMenu(e, item, 'resume')}
+                                                >
                                                     <img
                                                         src={item.ImageTags?.Backdrop || item.BackdropImageTags?.length > 0
                                                             ? `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`
@@ -425,7 +429,10 @@ const Home = () => {
                                             onContextMenu={(e) => handleContextMenu(e, item, 'history')}
                                             title={item.Name}
                                         >
-                                            <div className="backdrop-card-image">
+                                            <div
+                                                className="backdrop-card-image"
+                                                onContextMenu={(e) => handleContextMenu(e, item, 'history')}
+                                            >
                                                 <img
                                                     src={item.ImageTags?.Backdrop || item.BackdropImageTags?.length > 0
                                                         ? `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`

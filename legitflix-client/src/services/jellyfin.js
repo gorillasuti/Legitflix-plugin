@@ -700,30 +700,51 @@ class JellyfinService {
         const token = this.api.accessToken;
         if (!token) throw new Error("No access token available for upload");
 
-        // Use simplified Authorization header: MediaBrowser Token="..."
-        // Standard X-Emby-Authorization sometimes causes issues with body parsers or proxies
-        const authHeader = `MediaBrowser Token="${token}"`;
+        // "Tutorial" (avatars.js) uses this header format and Base64 body
+        const authHeader = `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}", Token="${token}"`;
 
+        // avatars.js hardcodes image/png, but we should probably respect the file type if possible, 
+        // though the server might expect image/png if it's processing base64? 
+        // Let's stick to file.type but fall back to image/png.
         const contentType = file.type || 'image/png';
-        console.log(`[LegitFlix] Uploading ${type} image. Size: ${file.size}, Type: ${contentType}`);
+        console.log(`[LegitFlix] Uploading ${type} image as Base64. Size: ${file.size}, Type: ${contentType}`);
 
         try {
-            // Delete existing image first if replacing, to avoid conflicts (optional but safer)
-            // Silently ignore if deletion fails (e.g. image doesn't exist)
+            // Convert Blob/File to Base64 string
+            const toBase64 = (blob) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = reject;
+                reader.onload = () => {
+                    // result is "data:image/png;base64,....."
+                    // we need just the base64 part
+                    if (typeof reader.result === 'string') {
+                        resolve(reader.result.split(',')[1]);
+                    } else {
+                        reject(new Error("Failed to convert to base64 string"));
+                    }
+                };
+                reader.readAsDataURL(blob);
+            });
+
+            const base64Data = await toBase64(file);
+
+            // Delete existing image first if replacing
             try {
                 await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': authHeader }
+                    headers: {
+                        'Authorization': authHeader // Try Authorization header for delete too
+                    }
                 });
             } catch (e) { /* ignore */ }
 
             const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': contentType,
-                    'Authorization': authHeader
+                    'Content-Type': contentType,       // e.g. "image/png"
+                    'Authorization': authHeader        // Use the full Auth header again
                 },
-                body: file, // Send File/Blob directly
+                body: base64Data, // Send Base64 string
             });
 
             if (!response.ok) {
