@@ -6,7 +6,7 @@ import './MediaRow.css';
 import { useNavigate } from 'react-router-dom';
 import { useDraggableScroll } from '../hooks/useDraggableScroll';
 
-const MediaRow = ({ title, libraryId, onCardClick }) => {
+const MediaRow = ({ title, libraryId, onCardClick, onContextMenu }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [canScrollLeft, setCanScrollLeft] = useState(false);

@@ -304,7 +304,9 @@ const Home = () => {
                                             >
                                                 <div className="backdrop-card-image">
                                                     <img
-                                                        src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
+                                                        src={item.ImageTags?.Backdrop || item.BackdropImageTags?.length > 0
+                                                            ? `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`
+                                                            : `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`}
                                                         alt={item.Name}
                                                         draggable={false}
                                                         onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
@@ -358,7 +360,9 @@ const Home = () => {
                                         >
                                             <div className="backdrop-card-image">
                                                 <img
-                                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
+                                                    src={item.ImageTags?.Backdrop || item.BackdropImageTags?.length > 0
+                                                        ? `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`
+                                                        : `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`}
                                                     alt={item.Name}
                                                     draggable={false}
                                                     onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=500`; }}
@@ -495,10 +499,12 @@ const Home = () => {
                                                     </div>
                                                     <div className="promo2-card-img">
                                                         <img
-                                                            src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`}
+                                                            src={item.ImageTags?.Backdrop || item.BackdropImageTags?.length > 0
+                                                                ? `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`
+                                                                : `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`}
                                                             alt={item.Name}
-                                                            onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`; }}
                                                             draggable={false}
+                                                            onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`; }}
                                                         />
                                                     </div>
                                                 </div>
