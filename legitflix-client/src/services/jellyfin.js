@@ -700,25 +700,30 @@ class JellyfinService {
         const token = this.api.accessToken;
         if (!token) throw new Error("No access token available for upload");
 
-        // Jellyfin expects the raw binary in body for image upload
-        // Fix 401: Use standard X-Emby-Authorization header with Client/Device info
-        const authHeader = `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}", Token="${token}"`;
+        // Use simplified Authorization header: MediaBrowser Token="..."
+        // Standard X-Emby-Authorization sometimes causes issues with body parsers or proxies
+        const authHeader = `MediaBrowser Token="${token}"`;
 
         const contentType = file.type || 'image/png';
         console.log(`[LegitFlix] Uploading ${type} image. Size: ${file.size}, Type: ${contentType}`);
 
         try {
-            // Convert to ArrayBuffer to ensure raw binary is sent
-            // fetch body with File object sometimes causes boundary issues on some servers/browsers
-            const arrayBuffer = await file.arrayBuffer();
+            // Delete existing image first if replacing, to avoid conflicts (optional but safer)
+            // Silently ignore if deletion fails (e.g. image doesn't exist)
+            try {
+                await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': authHeader }
+                });
+            } catch (e) { /* ignore */ }
 
             const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': contentType,
-                    'X-Emby-Authorization': authHeader
+                    'Authorization': authHeader
                 },
-                body: arrayBuffer,
+                body: file, // Send File/Blob directly
             });
 
             if (!response.ok) {

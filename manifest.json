@@ -13,7 +13,7 @@
                 "changelog": "Player backdrop fix: only show at 0:00 start/paused.",
                 "targetAbi": "10.11.5.0",
                 "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.79/LegitFlix.Plugin_1.0.0.79.zip",
-                "checksum": "d6c746d8b1fcd770788a6a438f8cb56f",
+                "checksum": "22f5fe6bfe31bd2c41131379dd5da71f",
                 "timestamp": "2026-02-14T04:01:49Z"
             }
         ]
