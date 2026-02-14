@@ -335,3 +335,30 @@
         transform: rotate(360deg);
     }
 }
+
+/* Password Toggle */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.password-toggle:hover {
+    color: var(--clr-accent, #f47521);
+}
+
+.password-input-wrapper .auth-input {
+    padding-right: 40px;
+    /* Make room for icon */
+}

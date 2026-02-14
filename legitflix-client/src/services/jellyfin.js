@@ -631,20 +631,38 @@ class JellyfinService {
             if (data.Authenticated) {
                 // Save Session
                 this.initialize(data.AccessToken);
-                const userRes = await this.api.user.getUserById({ userId: data.UserId });
 
-                const storedData = {
-                    Servers: [{
-                        DateLastAccessed: new Date().toISOString(),
-                        AccessToken: data.AccessToken,
-                        UserId: userRes.data.Id,
-                        Name: userRes.data.Name,
-                        ManualAddress: this.api.basePath
-                    }]
-                };
-                localStorage.setItem('jellyfin_credentials', JSON.stringify(storedData));
+                let userProfile;
+                try {
+                    if (data.UserId) {
+                        const userRes = await this.api.user.getUserById({ userId: data.UserId });
+                        userProfile = userRes.data;
+                    } else {
+                        // Fallback using direct fetch to /Users/Me with the token
+                        const authHeader = `MediaBrowser Client="${this.jellyfin.clientInfo.name}", Device="${this.jellyfin.deviceInfo.name}", DeviceId="${this.jellyfin.deviceInfo.id}", Version="${this.jellyfin.clientInfo.version}", Token="${data.AccessToken}"`;
+                        const meRes = await fetch(`${this.api.basePath}/Users/Me`, {
+                            headers: { 'X-Emby-Authorization': authHeader }
+                        });
+                        if (!meRes.ok) throw new Error("Failed to fetch user profile via /Users/Me");
+                        userProfile = await meRes.json();
+                    }
 
-                return userRes.data;
+                    const storedData = {
+                        Servers: [{
+                            DateLastAccessed: new Date().toISOString(),
+                            AccessToken: data.AccessToken,
+                            UserId: userProfile.Id,
+                            Name: userProfile.Name,
+                            ManualAddress: this.api.basePath
+                        }]
+                    };
+                    localStorage.setItem('jellyfin_credentials', JSON.stringify(storedData));
+
+                    return userProfile;
+                } catch (err) {
+                    console.error("Quick Connect post-auth failed", err);
+                    return null;
+                }
             }
         }
 
@@ -689,21 +707,30 @@ class JellyfinService {
         const contentType = file.type || 'image/png';
         console.log(`[LegitFlix] Uploading ${type} image. Size: ${file.size}, Type: ${contentType}`);
 
-        const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': contentType,
-                'X-Emby-Authorization': authHeader
-            },
-            body: file,
-        });
+        try {
+            // Convert to ArrayBuffer to ensure raw binary is sent
+            // fetch body with File object sometimes causes boundary issues on some servers/browsers
+            const arrayBuffer = await file.arrayBuffer();
 
-        if (!response.ok) {
-            const txt = await response.text();
-            console.error("Upload failed response:", txt);
-            throw new Error(`Failed to upload image: ${response.status} ${response.statusText}`);
+            const response = await fetch(`${this.api.basePath}/Users/${userId}/Images/${type}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': contentType,
+                    'X-Emby-Authorization': authHeader
+                },
+                body: arrayBuffer,
+            });
+
+            if (!response.ok) {
+                const txt = await response.text();
+                console.error("Upload failed response:", txt);
+                throw new Error(`Failed to upload image: ${response.status} ${response.statusText}`);
+            }
+            return true;
+        } catch (e) {
+            console.error("uploadUserImage exception:", e);
+            throw e;
         }
-        return true;
     }
 
     async deleteUserImage(userId, type) {

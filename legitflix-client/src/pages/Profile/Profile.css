@@ -15,8 +15,8 @@
 }
 
 .settings-page-title {
-    font-size: 2.4rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 500;
     color: white;
     margin-bottom: 24px;
 }
@@ -535,7 +535,7 @@ input:checked+.slider:before {
 
 /* ===== PASSWORD FORM ===== */
 .password-form {
-    max-width: 600px;
+    /* max-width: 600px; */
 }
 
 /* ===== RESPONSIVE ===== */

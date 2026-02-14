@@ -23,7 +23,6 @@
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s;
-    background-color: #202020;
     aspect-ratio: 2/3;
 }
 

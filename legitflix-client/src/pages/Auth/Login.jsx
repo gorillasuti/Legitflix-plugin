@@ -13,6 +13,7 @@ const Login = () => {
 
     const [username, setUsername] = useState(prefilledUsername);
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -137,13 +138,21 @@ const Login = () => {
 
                         <div className="form-group">
                             <label>Password</label>
-                            <input
-                                type="password"
-                                className="auth-input"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Enter password"
-                            />
+                            <div className="password-input-wrapper">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    className="auth-input"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter password"
+                                />
+                                <span
+                                    className="material-icons password-toggle"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? 'visibility_off' : 'visibility'}
+                                </span>
+                            </div>
                         </div>
 
                         {error && <div className="auth-error">{error}</div>}

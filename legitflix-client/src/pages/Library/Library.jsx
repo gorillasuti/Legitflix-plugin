@@ -4,6 +4,7 @@ import { jellyfinService } from '../../services/jellyfin';
 import MediaCard from '../../components/MediaCard/MediaCard';
 import Navbar from '../../components/Navbar';
 import ContextMenu from '../../components/ContextMenu';
+import CustomDropdown from '../../components/CustomDropdown';
 import './Library.css';
 
 const Library = () => {
@@ -168,35 +169,33 @@ const Library = () => {
 
                     <div className="library-controls">
                         {/* Sort Dropdown */}
-                        <div className="control-group">
-                            <span className="material-icons control-icon">sort</span>
-                            <select
-                                className="control-select"
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                            >
-                                <option value="DateCreated,Descending">Date Added</option>
-                                <option value="SortName,Ascending">Name (A-Z)</option>
-                                <option value="SortName,Descending">Name (Z-A)</option>
-                                <option value="ProductionYear,Descending">Release Date (Newest)</option>
-                                <option value="ProductionYear,Ascending">Release Date (Oldest)</option>
-                                <option value="CommunityRating,Descending">Rating</option>
-                            </select>
-                        </div>
+                        <CustomDropdown
+                            icon="sort"
+                            label="Sort By"
+                            value={sortBy}
+                            onChange={setSortBy}
+                            options={[
+                                { value: "DateCreated,Descending", label: "Date Added" },
+                                { value: "SortName,Ascending", label: "Name (A-Z)" },
+                                { value: "SortName,Descending", label: "Name (Z-A)" },
+                                { value: "ProductionYear,Descending", label: "Release Date (Newest)" },
+                                { value: "ProductionYear,Ascending", label: "Release Date (Oldest)" },
+                                { value: "CommunityRating,Descending", label: "Rating" }
+                            ]}
+                        />
 
                         {/* Filter Dropdown */}
-                        <div className="control-group">
-                            <span className="material-icons control-icon">filter_list</span>
-                            <select
-                                className="control-select"
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value)}
-                            >
-                                <option value="All">All Items</option>
-                                <option value="Unplayed">Unplayed</option>
-                                <option value="Favorites">Favorites</option>
-                            </select>
-                        </div>
+                        <CustomDropdown
+                            icon="filter_list"
+                            label="Filter By"
+                            value={filter}
+                            onChange={setFilter}
+                            options={[
+                                { value: "All", label: "All Items" },
+                                { value: "Unplayed", label: "Unplayed" },
+                                { value: "Favorites", label: "Favorites" }
+                            ]}
+                        />
                     </div>
                 </div>
             </div>
@@ -238,15 +237,17 @@ const Library = () => {
                 )}
             </div>
 
-            {contextMenu && (
-                <ContextMenu
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    options={getContextMenuOptions(contextMenu.item)}
-                    onClose={closeContextMenu}
-                />
-            )}
-        </div>
+            {
+                contextMenu && (
+                    <ContextMenu
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        options={getContextMenuOptions(contextMenu.item)}
+                        onClose={closeContextMenu}
+                    />
+                )
+            }
+        </div >
     );
 };
 

@@ -166,21 +166,9 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         if (!file || !userId) return;
         setUploading(true);
         try {
-            const res = await fetch(
-                `${jellyfinService.api.basePath}/Users/${userId}/Images/Primary`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': file.type,
-                        'X-Emby-Authorization': jellyfinService.api.authHeader,
-                    },
-                    body: file,
-                }
-            );
-            if (res.ok) {
-                setShowAvatarPicker(false);
-                // Ideally trigger a refresh or notify user, but for now just close
-            }
+            await jellyfinService.uploadUserImage(userId, 'Primary', file);
+            setShowAvatarPicker(false);
+            window.location.reload(); // Refresh to show new avatar
         } catch (err) {
             console.error("Avatar upload failed", err);
         } finally {
@@ -546,29 +534,6 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                     </div>
                     <div className="setting-row" style={{ alignItems: 'flex-start', gap: '20px' }}>
                         <div style={{ flex: 1 }}>
-                            <label className="setting-label">Seek Forward (Right Arrow)</label>
-                            <div className="time-stepper">
-                                <button
-                                    className="stepper-btn"
-                                    onClick={() => setPlayerSeekForward(prev => Math.max(5, prev - 5))}
-                                    disabled={playerSeekForward <= 5}
-                                >
-                                    <span className="material-icons">remove</span>
-                                </button>
-                                <div className="stepper-value">
-                                    <span className="stepper-number">{playerSeekForward}</span>
-                                    <span className="stepper-unit">sec</span>
-                                </div>
-                                <button
-                                    className="stepper-btn"
-                                    onClick={() => setPlayerSeekForward(prev => Math.min(300, prev + 5))}
-                                    disabled={playerSeekForward >= 300}
-                                >
-                                    <span className="material-icons">add</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div style={{ flex: 1 }}>
                             <label className="setting-label">Seek Backward (Left Arrow)</label>
                             <div className="time-stepper">
                                 <button
@@ -586,6 +551,29 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                                     className="stepper-btn"
                                     onClick={() => setPlayerSeekBackward(prev => Math.min(300, prev + 5))}
                                     disabled={playerSeekBackward >= 300}
+                                >
+                                    <span className="material-icons">add</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label className="setting-label">Seek Forward (Right Arrow)</label>
+                            <div className="time-stepper">
+                                <button
+                                    className="stepper-btn"
+                                    onClick={() => setPlayerSeekForward(prev => Math.max(5, prev - 5))}
+                                    disabled={playerSeekForward <= 5}
+                                >
+                                    <span className="material-icons">remove</span>
+                                </button>
+                                <div className="stepper-value">
+                                    <span className="stepper-number">{playerSeekForward}</span>
+                                    <span className="stepper-unit">sec</span>
+                                </div>
+                                <button
+                                    className="stepper-btn"
+                                    onClick={() => setPlayerSeekForward(prev => Math.min(300, prev + 5))}
+                                    disabled={playerSeekForward >= 300}
                                 >
                                     <span className="material-icons">add</span>
                                 </button>

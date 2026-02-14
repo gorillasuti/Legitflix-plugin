@@ -34,8 +34,16 @@ const SearchModal = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100);
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Escape' || e.key === 'F4') {
+                    onClose();
+                }
+            };
+            window.addEventListener('keydown', handleKeyDown);
+            return () => window.removeEventListener('keydown', handleKeyDown);
         }
-    }, [isOpen]);
+    }, [isOpen, onClose]);
 
     useEffect(() => {
         const fetchResults = async () => {

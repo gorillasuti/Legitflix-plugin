@@ -71,15 +71,15 @@ const SelectUser = () => {
                                 >
                                     <div className="user-avatar-container">
                                         <div className="auth-avatar-wrapper">
+                                            <div className="user-avatar-placeholder" style={{ display: 'none' }}>
+                                                <span className="material-icons">person</span>
+                                            </div>
                                             <img
                                                 src={`${jellyfinService.api.basePath || ''}/Users/${user.Id}/Images/Primary?quality=90`}
                                                 alt={user.Name}
                                                 className="auth-avatar"
                                                 onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.nextSibling.style.display = 'flex'; }}
                                             />
-                                        </div>
-                                        <div className="user-avatar-placeholder" style={{ display: 'none' }}>
-                                            <span className="material-icons">person</span>
                                         </div>
                                     </div>
                                     <span className="user-card-name">{user.Name}</span>

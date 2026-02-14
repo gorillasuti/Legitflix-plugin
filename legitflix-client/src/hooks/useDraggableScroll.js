@@ -8,6 +8,9 @@ export const useDraggableScroll = (ref, options = { direction: 'horizontal' }) =
     const isMouseDown = useRef(false);
 
     const onMouseDown = useCallback((e) => {
+        // Only drag on left click (button 0)
+        if (e.button !== 0) return;
+
         if (!ref.current) return;
         isMouseDown.current = true;
         setIsDragging(true);

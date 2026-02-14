@@ -3,11 +3,11 @@
     "versions": [
         {
             "changelog": "Player backdrop fix: only show at 0:00 start/paused.",
-            "version": "1.0.0.78",
-            "checksum": "361d2af94e6ebb6b373e0f2828945c39",
-            "timestamp": "2026-02-14T03:16:35Z",
+            "version": "1.0.0.79",
+            "checksum": "d6c746d8b1fcd770788a6a438f8cb56f",
+            "timestamp": "2026-02-14T04:01:49Z",
             "targetAbi": "10.11.5.0",
-            "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.78/LegitFlix.Plugin_1.0.0.78.zip"
+            "sourceUrl": "https://github.com/gorillasuti/Legitflix-plugin/releases/download/v1.0.0.79/LegitFlix.Plugin_1.0.0.79.zip"
         }
     ],
     "overview": "A complete overhaul of the Jellyfin web interface.",

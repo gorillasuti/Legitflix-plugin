@@ -27,14 +27,21 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         try {
             // Fetch blob from local/remote URL
             const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to download selected banner");
+
             const blob = await response.blob();
+            if (blob.size === 0) throw new Error("Downloaded banner is empty");
+
+            // Optional: Delete existing banner first to be safe
+            try { await jellyfinService.deleteUserImage(user.Id, 'Banner'); } catch (e) { /* ignore */ }
 
             // Use service to upload
             await jellyfinService.uploadUserImage(user.Id, 'Banner', blob);
 
-            setStatus('Banner updated! Refresh to see changes.');
+            setStatus('Banner updated! Reloading...');
+            setTimeout(() => window.location.reload(), 1000);
         } catch (err) {
-            console.error(err);
+            console.error('Banner upload error:', err);
             setStatus('Banner upload failed.');
         } finally {
             setUploading(false);

@@ -32,12 +32,14 @@ const BannerPickerModal = ({ isOpen, onClose, onSave, userId }) => {
 
     const getBackdropUrl = (item) => {
         const tag = item.BackdropImageTags?.[0];
-        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=80&maxWidth=600&tag=${tag}`;
+        const token = jellyfinService.api?.accessToken;
+        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=80&maxWidth=600&tag=${tag}&api_key=${token}`;
     };
 
     const getFullBackdropUrl = (item) => {
         const tag = item.BackdropImageTags?.[0];
-        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=90&maxWidth=1920&tag=${tag}`;
+        const token = jellyfinService.api?.accessToken;
+        return `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?quality=90&maxWidth=1920&tag=${tag}&api_key=${token}`;
     };
 
     const handleSave = () => {

@@ -42,25 +42,33 @@ const Home = () => {
             try {
                 const user = await jellyfinService.getCurrentUser();
                 if (user) {
+                    // Determine Sort Mode
+                    const sortMode = config.contentSortMode || 'latest';
+                    const sortMap = {
+                        latest: { sortBy: 'DateCreated', sortOrder: 'Descending' },
+                        random: { sortBy: 'Random', sortOrder: 'Descending' },
+                        topRated: { sortBy: 'CommunityRating', sortOrder: 'Descending' },
+                    };
+                    const { sortBy, sortOrder } = sortMap[sortMode] || sortMap.latest;
+
                     const [views, resume, history, latest] = await Promise.all([
                         jellyfinService.getUserViews(user.Id),
                         jellyfinService.getResumeItems(user.Id),
                         jellyfinService.getHistoryItems(user.Id),
                         jellyfinService.getItems(user.Id, {
-                            sortBy: ['DateCreated'],
-                            sortOrder: ['Descending'],
+                            sortBy: [sortBy],
+                            sortOrder: [sortOrder],
                             limit: 3,
                             recursive: true,
                             includeItemTypes: ['Movie', 'Series'],
                             imageTypes: ['Primary', 'Backdrop', 'Logo'],
-                            fields: ['PrimaryImageAspectRatio', 'Overview', 'DateCreated', 'ProductionYear', 'CommunityRating', 'OfficialRating', 'Genres', 'ImageTags']
+                            fields: ['PrimaryImageAspectRatio', 'Overview', 'DateCreated', 'ProductionYear', 'CommunityRating', 'OfficialRating', 'Genres', 'ImageTags', 'RunTimeTicks', 'UserData'] // Added RunTimeTicks and UserData
                         })
                     ]);
 
                     if (views?.Items) setLibraries(views.Items);
 
                     if (resume?.Items) {
-                        // Filter out played items and limit to 15
                         const filteredResume = resume.Items.filter(item => {
                             const played = item.UserData?.Played || item.UserData?.PlayedPercentage >= 100;
                             return !played;
@@ -69,10 +77,8 @@ const Home = () => {
                     }
 
                     if (history?.Items) {
-                        // De-duplicate series: only show the latest episode of each series
                         const seenSeries = new Set();
                         const uniqueHistory = [];
-
                         for (const item of history.Items) {
                             if (item.Type === 'Episode') {
                                 if (!seenSeries.has(item.SeriesId)) {
@@ -80,16 +86,31 @@ const Home = () => {
                                     uniqueHistory.push(item);
                                 }
                             } else {
-                                // Movies always show in history
                                 uniqueHistory.push(item);
                             }
-
                             if (uniqueHistory.length >= 15) break;
                         }
                         setHistoryItems(uniqueHistory);
                     }
 
-                    if (latest?.Items) setPromoItems(latest.Items);
+                    if (latest?.Items) {
+                        let promoItemsData = latest.Items;
+
+                        // Fetch Next Up for Series in Promo
+                        for (const item of promoItemsData) {
+                            if (item.Type === 'Series') {
+                                try {
+                                    const nextUp = await jellyfinService.getNextUp(user.Id, item.Id);
+                                    if (nextUp.Items && nextUp.Items.length > 0) {
+                                        item._nextUp = nextUp.Items[0];
+                                    }
+                                } catch (e) {
+                                    console.warn('Failed to fetch Next Up for promo item', e);
+                                }
+                            }
+                        }
+                        setPromoItems(promoItemsData);
+                    }
                 }
             } catch (err) {
                 console.error("Home fetch error", err);
@@ -98,7 +119,24 @@ const Home = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [config]); // Re-fetch when config changes (e.g. sort mode)
+
+    const handlePlay = (e, item) => {
+        e.stopPropagation();
+        if (item.Type === 'Series') {
+            if (item._nextUp) {
+                navigate(`/play/${item._nextUp.Id}`);
+            } else {
+                navigate(`/series/${item.Id}`);
+            }
+        } else if (item.Type === 'Movie') {
+            navigate(`/movie/${item.Id}`, { state: { autoplay: true } });
+        } else if (item.Type === 'Episode') {
+            navigate(`/play/${item.Id}`);
+        } else {
+            navigate(`/item/${item.Id}`);
+        }
+    };
 
     const openModal = (id) => setModalItem(id);
     const closeModal = () => setModalItem(null);
@@ -421,123 +459,176 @@ const Home = () => {
                             <section className="home-section" style={{ paddingLeft: '4%', paddingRight: '4%', marginBottom: '50px' }}>
                                 <div className="promo2-wrapper">
                                     {/* ── Hero Banner (Item 1) ── */}
-                                    <div className="promo2-hero"
-                                        onClick={() => navigate(`/item/${promoItems[0].Id}`)}
-                                        onContextMenu={(e) => handleContextMenu(e, promoItems[0])}
-                                    >
-                                        <img
-                                            src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Backdrop/0?maxWidth=1400&quality=90`}
-                                            className="promo2-hero-img"
-                                            alt={promoItems[0].Name}
-                                        />
-                                        <div className="promo2-hero-gradient" />
-                                        <div className="promo2-hero-content">
-                                            {promoItems[0].ImageTags?.Logo ? (
-                                                <img
-                                                    src={`${jellyfinService.api.basePath}/Items/${promoItems[0].Id}/Images/Logo/0?maxWidth=350&quality=90`}
-                                                    className="promo2-hero-logo"
-                                                    alt={promoItems[0].Name}
-                                                />
-                                            ) : (
-                                                <h2 className="promo2-hero-title">{promoItems[0].Name}</h2>
-                                            )}
-                                            <div className="promo2-meta-line">
-                                                <span className="promo2-badge">{promoItems[0].OfficialRating || '13+'}</span>
-                                                {promoItems[0].ProductionYear && (
-                                                    <>
-                                                        <span className="promo2-meta-dot">•</span>
-                                                        <span className="promo2-meta-text">{promoItems[0].ProductionYear}</span>
-                                                    </>
-                                                )}
-                                                {promoItems[0].Genres && promoItems[0].Genres.length > 0 && (
-                                                    <>
-                                                        <span className="promo2-meta-dot">•</span>
-                                                        <span className="promo2-meta-text">{promoItems[0].Genres.slice(0, 3).join(', ')}</span>
-                                                    </>
-                                                )}
-                                                {promoItems[0].CommunityRating && (
-                                                    <>
-                                                        <span className="promo2-meta-dot">•</span>
-                                                        <span className="promo2-meta-text">⭐ {promoItems[0].CommunityRating.toFixed(1)}</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                            {promoItems[0].Overview && (
-                                                <p className="promo2-hero-desc">{promoItems[0].Overview}</p>
-                                            )}
-                                            <Button
-                                                variant="ringHover"
-                                                size="lg"
-                                                className="promo2-btn"
-                                                onClick={(e) => { e.stopPropagation(); navigate(`/item/${promoItems[0].Id}`); }}
+                                    {(() => {
+                                        const item = promoItems[0];
+                                        let btnText = 'START WATCHING';
+                                        let btnSubText = '';
+
+                                        if (item.Type === 'Series') {
+                                            if (item._nextUp) {
+                                                const s = item._nextUp.ParentIndexNumber;
+                                                const e = item._nextUp.IndexNumber;
+                                                btnText = 'CONTINUE';
+                                                btnSubText = `S${s} E${e}`;
+                                            } else {
+                                                btnSubText = 'S1 E1';
+                                            }
+                                        } else {
+                                            if (item.UserData && item.UserData.PlaybackPositionTicks > 0) {
+                                                const pct = Math.round((item.UserData.PlaybackPositionTicks / item.RunTimeTicks) * 100);
+                                                if (pct > 2 && pct < 90) {
+                                                    btnText = 'CONTINUE';
+                                                    btnSubText = ` - ${pct}%`;
+                                                }
+                                            }
+                                        }
+
+                                        return (
+                                            <div className="promo2-hero"
+                                                onClick={() => navigate(`/item/${item.Id}`)}
+                                                onContextMenu={(e) => handleContextMenu(e, item)}
                                             >
-                                                WATCH NOW
-                                            </Button>
-                                        </div>
-                                    </div>
+                                                <img
+                                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=1400&quality=90`}
+                                                    className="promo2-hero-img"
+                                                    alt={item.Name}
+                                                />
+                                                <div className="promo2-hero-gradient" />
+                                                <div className="promo2-hero-content">
+                                                    {item.ImageTags?.Logo ? (
+                                                        <img
+                                                            src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Logo/0?maxWidth=350&quality=90`}
+                                                            className="promo2-hero-logo"
+                                                            alt={item.Name}
+                                                        />
+                                                    ) : (
+                                                        <h2 className="promo2-hero-title">{item.Name}</h2>
+                                                    )}
+                                                    <div className="promo2-meta-line">
+                                                        <span className="promo2-badge">{item.OfficialRating || '13+'}</span>
+                                                        {item.ProductionYear && (
+                                                            <>
+                                                                <span className="promo2-meta-dot">•</span>
+                                                                <span className="promo2-meta-text">{item.ProductionYear}</span>
+                                                            </>
+                                                        )}
+                                                        {item.Genres && item.Genres.length > 0 && (
+                                                            <>
+                                                                <span className="promo2-meta-dot">•</span>
+                                                                <span className="promo2-meta-text">{item.Genres.slice(0, 3).join(', ')}</span>
+                                                            </>
+                                                        )}
+                                                        {item.CommunityRating && (
+                                                            <>
+                                                                <span className="promo2-meta-dot">•</span>
+                                                                <span className="promo2-meta-text">⭐ {item.CommunityRating.toFixed(1)}</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    {item.Overview && (
+                                                        <p className="promo2-hero-desc">{item.Overview}</p>
+                                                    )}
+                                                    <Button
+                                                        variant="ringHover"
+                                                        size="lg"
+                                                        className="promo2-btn"
+                                                        onClick={(e) => handlePlay(e, item)}
+                                                    >
+                                                        <i className="material-icons" style={{ marginRight: '8px' }}>play_arrow</i>
+                                                        <span>{btnText} <small className="text-sm ml-1" style={{ opacity: 0.8 }}>{btnSubText}</small></span>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* ── Two Small Cards (Items 2 & 3) ── */}
                                     {(promoItems[1] || promoItems[2]) && (
                                         <div className="promo2-row">
-                                            {promoItems.slice(1, 3).map(item => (
-                                                <div
-                                                    key={item.Id}
-                                                    className="promo2-card"
-                                                    onClick={() => navigate(`/item/${item.Id}`)}
-                                                    onContextMenu={(e) => handleContextMenu(e, item)}
-                                                >
-                                                    <div className="promo2-card-text">
-                                                        {item.ImageTags?.Logo ? (
-                                                            <img
-                                                                src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Logo/0?maxWidth=220&quality=90`}
-                                                                className="promo2-card-logo"
-                                                                alt={item.Name}
-                                                            />
-                                                        ) : (
-                                                            <h3 className="promo2-card-title">{item.Name}</h3>
-                                                        )}
-                                                        <div className="promo2-meta-line promo2-meta-line--card">
-                                                            <span className="promo2-badge">{item.OfficialRating || '13+'}</span>
-                                                            {item.ProductionYear && (
-                                                                <>
-                                                                    <span className="promo2-meta-dot">•</span>
-                                                                    <span className="promo2-meta-text">{item.ProductionYear}</span>
-                                                                </>
+                                            {promoItems.slice(1, 3).map(item => {
+                                                let btnText = 'START WATCHING';
+                                                let btnSubText = '';
+
+                                                if (item.Type === 'Series') {
+                                                    if (item._nextUp) {
+                                                        const s = item._nextUp.ParentIndexNumber;
+                                                        const e = item._nextUp.IndexNumber;
+                                                        btnText = 'CONTINUE';
+                                                        btnSubText = `S${s} E${e}`;
+                                                    } else {
+                                                        btnSubText = 'S1 E1';
+                                                    }
+                                                } else {
+                                                    if (item.UserData && item.UserData.PlaybackPositionTicks > 0) {
+                                                        const pct = Math.round((item.UserData.PlaybackPositionTicks / item.RunTimeTicks) * 100);
+                                                        if (pct > 2 && pct < 90) {
+                                                            btnText = 'CONTINUE';
+                                                            btnSubText = ` - ${pct}%`;
+                                                        }
+                                                    }
+                                                }
+
+                                                return (
+                                                    <div
+                                                        key={item.Id}
+                                                        className="promo2-card"
+                                                        onClick={() => navigate(`/item/${item.Id}`)}
+                                                        onContextMenu={(e) => handleContextMenu(e, item)}
+                                                    >
+                                                        <div className="promo2-card-text">
+                                                            {item.ImageTags?.Logo ? (
+                                                                <img
+                                                                    src={`${jellyfinService.api.basePath}/Items/${item.Id}/Images/Logo/0?maxWidth=220&quality=90`}
+                                                                    className="promo2-card-logo"
+                                                                    alt={item.Name}
+                                                                />
+                                                            ) : (
+                                                                <h3 className="promo2-card-title">{item.Name}</h3>
                                                             )}
-                                                            {item.Genres && item.Genres.length > 0 && (
-                                                                <>
-                                                                    <span className="promo2-meta-dot">•</span>
-                                                                    <span className="promo2-meta-text">{item.Genres.slice(0, 2).join(', ')}</span>
-                                                                </>
-                                                            )}
-                                                            {item.CommunityRating && (
-                                                                <>
-                                                                    <span className="promo2-meta-dot">•</span>
-                                                                    <span className="promo2-meta-text">⭐ {item.CommunityRating.toFixed(1)}</span>
-                                                                </>
-                                                            )}
+                                                            <div className="promo2-meta-line promo2-meta-line--card">
+                                                                <span className="promo2-badge">{item.OfficialRating || '13+'}</span>
+                                                                {item.ProductionYear && (
+                                                                    <>
+                                                                        <span className="promo2-meta-dot">•</span>
+                                                                        <span className="promo2-meta-text">{item.ProductionYear}</span>
+                                                                    </>
+                                                                )}
+                                                                {item.Genres && item.Genres.length > 0 && (
+                                                                    <>
+                                                                        <span className="promo2-meta-dot">•</span>
+                                                                        <span className="promo2-meta-text">{item.Genres.slice(0, 2).join(', ')}</span>
+                                                                    </>
+                                                                )}
+                                                                {item.CommunityRating && (
+                                                                    <>
+                                                                        <span className="promo2-meta-dot">•</span>
+                                                                        <span className="promo2-meta-text">⭐ {item.CommunityRating.toFixed(1)}</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            <p className="promo2-card-desc">{item.Overview}</p>
+                                                            <Button
+                                                                variant="ringHover"
+                                                                className="promo2-btn"
+                                                                onClick={(e) => handlePlay(e, item)}
+                                                            >
+                                                                <i className="material-icons" style={{ marginRight: '6px', fontSize: '1.1rem' }}>play_arrow</i>
+                                                                <span>{btnText} <small className="text-sm ml-1" style={{ opacity: 0.8 }}>{btnSubText}</small></span>
+                                                            </Button>
                                                         </div>
-                                                        <p className="promo2-card-desc">{item.Overview}</p>
-                                                        <Button
-                                                            variant="ringHover"
-                                                            className="promo2-btn"
-                                                            onClick={(e) => { e.stopPropagation(); navigate(`/item/${item.Id}`); }}
-                                                        >
-                                                            START WATCHING
-                                                        </Button>
+                                                        <div className="promo2-card-img">
+                                                            <img
+                                                                src={item.ImageTags?.Backdrop || item.BackdropImageTags?.length > 0
+                                                                    ? `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`
+                                                                    : `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`}
+                                                                alt={item.Name}
+                                                                draggable={false}
+                                                                onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`; }}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="promo2-card-img">
-                                                        <img
-                                                            src={item.ImageTags?.Backdrop || item.BackdropImageTags?.length > 0
-                                                                ? `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Backdrop/0?maxWidth=500&quality=90`
-                                                                : `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`}
-                                                            alt={item.Name}
-                                                            draggable={false}
-                                                            onError={(e) => { e.target.src = `${jellyfinService.api.basePath}/Items/${item.Id}/Images/Primary?maxWidth=400`; }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>

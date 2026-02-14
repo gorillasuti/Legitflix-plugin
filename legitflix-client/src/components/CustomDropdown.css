@@ -1,0 +1,125 @@
+/* CustomDropdown.css */
+.custom-dropdown {
+    position: relative;
+    user-select: none;
+    min-width: 180px;
+}
+
+.custom-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    /* Glass effect base */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-dropdown-trigger:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.custom-dropdown.open .custom-dropdown-trigger {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.dropdown-icon {
+    font-size: 1.2rem;
+    color: #aaa;
+}
+
+.dropdown-label-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 2px;
+}
+
+.dropdown-label-tiny {
+    font-size: 0.65rem;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.dropdown-selected-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #eee;
+    white-space: nowrap;
+}
+
+.dropdown-arrow {
+    font-size: 1.2rem;
+    color: #888;
+    transition: transform 0.2s ease;
+}
+
+.custom-dropdown.open .dropdown-arrow {
+    transform: rotate(180deg);
+    color: #fff;
+}
+
+/* Menu */
+.custom-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    min-width: 200px;
+    /* Can be wider than trigger */
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    overflow: hidden;
+    animation: dropdownSlideIn 0.15s ease-out;
+    padding: 6px;
+}
+
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-dropdown-item {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    color: #ccc;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.1s;
+}
+
+.custom-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.custom-dropdown-item.selected {
+    background: rgba(var(--clr-accent-rgb, 255, 126, 0), 0.15);
+    color: var(--clr-accent, #ff7e00);
+    font-weight: 500;
+}
+
+.item-check {
+    font-size: 1rem;
+    color: var(--clr-accent, #ff7e00);
+}
