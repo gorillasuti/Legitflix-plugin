@@ -269,17 +269,81 @@
 
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
+    .hero-carousel-container {
+        height: 70vh;
+        min-height: 400px;
+        margin-bottom: -50px;
+    }
+
     .hero-content {
-        width: 80%;
-        top: 50%;
+        width: 90%;
+        left: 5%;
+        top: auto;
+        bottom: 80px;
+        transform: none;
+        align-items: flex-start;
+        text-align: left;
     }
 
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 2rem;
     }
 
     .hero-logo {
-        max-width: 250px;
-        height: 120px;
+        max-width: 200px;
+        height: 100px;
+        object-position: bottom left;
+    }
+
+    .hero-desc {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        max-height: 3em;
+    }
+
+    .hero-actions {
+        margin-top: 0.25rem;
+    }
+
+    .hero-indicators {
+        bottom: 20px;
+        left: 5%;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-carousel-container {
+        height: 60vh;
+        min-height: 350px;
+    }
+
+    .hero-title {
+        font-size: 1.5rem;
+    }
+
+    .hero-logo {
+        max-width: 160px;
+        height: 70px;
+    }
+
+    .hero-desc {
+        display: none;
+    }
+
+    .btn-hero-primary {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+
+    .btn-hero-bookmark,
+    .hero-button-info {
+        width: 36px;
+        height: 36px;
+    }
+
+    .btn-hero-bookmark .material-icons,
+    .hero-button-info .material-icons-outlined {
+        font-size: 20px;
     }
 }

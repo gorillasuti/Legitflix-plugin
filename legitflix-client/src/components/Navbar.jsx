@@ -23,6 +23,7 @@ const Navbar = ({ alwaysFilled = false }) => {
     const [showAvatarPicker, setShowAvatarPicker] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [hasEnhancedPlugin, setHasEnhancedPlugin] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
     const navigate = useNavigate();
     const dropdownRef = React.useRef(null);
 
@@ -133,9 +134,9 @@ const Navbar = ({ alwaysFilled = false }) => {
 
                         <div className="nav-links primary-links">
                             {/* Hide Home if Categories are disabled */}
-                            {config.showNavbarCategories && (
+                            {/* {config.showNavbarCategories && (
                                 <Link to="/" className="nav-link">Home</Link>
-                            )}
+                            )} */}
                             {/* Real Jellyfin library categories */}
                             {config.showNavbarCategories && libraries.map(lib => (
                                 <span
@@ -165,74 +166,95 @@ const Navbar = ({ alwaysFilled = false }) => {
                     {/* Right Section: Icons & Profile */}
                     <div className="nav-end">
                         <div className="nav-actions">
-                            {/* Search Icon - Toggleable */}
-                            {config.showNavbarSearch !== false && (
-                                <button
-                                    className="nav-icon-btn"
-                                    onClick={() => setShowSearch(true)}
-                                    title="Search (F4)"
-                                >
-                                    <span className="material-icons">search</span>
-                                </button>
-                            )}
+                            {/* Desktop Actions */}
+                            <div className="desktop-actions">
+                                {/* Search Icon - Toggleable */}
+                                {config.showNavbarSearch !== false && (
+                                    <button
+                                        className="nav-icon-btn"
+                                        onClick={() => setShowSearch(true)}
+                                        title="Search (F4)"
+                                    >
+                                        <span className="material-icons">search</span>
+                                    </button>
+                                )}
 
-                            {/* Favorites / Bookmarks - Toggleable */}
-                            {config.showNavbarBookmarks !== false && (
-                                <Link to="/favorites" className="nav-icon-btn" title="My List">
-                                    <span className="material-icons">bookmark_border</span>
-                                </Link>
-                            )}
+                                {/* Favorites / Bookmarks - Toggleable */}
+                                {config.showNavbarBookmarks !== false && (
+                                    <Link to="/favorites" className="nav-icon-btn" title="My List">
+                                        <span className="material-icons">bookmark_border</span>
+                                    </Link>
+                                )}
 
-                            {/* Random Button */}
-                            {config.showNavbarRandom !== false && (
-                                <button
-                                    className="nav-icon-btn"
-                                    onClick={async () => {
-                                        try {
-                                            const filters = config.randomContentFilters || { Movie: true, Series: true, Episode: true };
-                                            const includeItemTypes = Object.entries(filters)
-                                                .filter(([_, enabled]) => enabled)
-                                                .map(([type]) => type);
+                                {/* Random Button */}
+                                {config.showNavbarRandom !== false && (
+                                    <button
+                                        className="nav-icon-btn"
+                                        onClick={async () => {
+                                            try {
+                                                const filters = config.randomContentFilters || { Movie: true, Series: true, Episode: true };
+                                                const includeItemTypes = Object.entries(filters)
+                                                    .filter(([_, enabled]) => enabled)
+                                                    .map(([type]) => type);
 
-                                            if (includeItemTypes.length === 0) {
-                                                alert("Please select at least one content type in Theme Settings > Content.");
-                                                return;
-                                            }
-
-                                            const user = await jellyfinService.getCurrentUser();
-                                            if (!user) return;
-
-                                            const result = await jellyfinService.getItems(user.Id, {
-                                                sortBy: ['Random'],
-                                                limit: 1,
-                                                recursive: true,
-                                                includeItemTypes: includeItemTypes,
-                                                fields: ['MediaSources']
-                                            });
-
-                                            if (result && result.Items && result.Items.length > 0) {
-                                                const item = result.Items[0];
-                                                if (item.Type === 'Movie' || item.Type === 'Episode') {
-                                                    navigate(`/play/${item.Id}`);
-                                                } else if (item.Type === 'Series') {
-                                                    navigate(`/series/${item.Id}`);
-                                                } else {
-                                                    navigate(`/item/${item.Id}`);
+                                                if (includeItemTypes.length === 0) {
+                                                    alert("Please select at least one content type in Theme Settings > Content.");
+                                                    return;
                                                 }
-                                            } else {
-                                                alert("No items found to play randomly.");
-                                            }
-                                        } catch (e) {
-                                            console.error("Random play failed", e);
-                                        }
-                                    }}
-                                    title="Random - I'm feeling lucky"
-                                >
-                                    <span className="material-icons">casino</span>
-                                </button>
-                            )}
 
-                            {/* User Profile & Menu */}
+                                                const user = await jellyfinService.getCurrentUser();
+                                                if (!user) return;
+
+                                                const query = {
+                                                    sortBy: ['Random'],
+                                                    limit: 1,
+                                                    recursive: true,
+                                                    includeItemTypes: includeItemTypes,
+                                                    fields: ['MediaSources', 'SeriesId']
+                                                };
+
+                                                if (config.randomLibraries && config.randomLibraries.length > 0) {
+                                                    query.parentId = config.randomLibraries.join(',');
+                                                }
+
+                                                const result = await jellyfinService.getItems(user.Id, query);
+
+                                                if (result && result.Items && result.Items.length > 0) {
+                                                    const item = result.Items[0];
+                                                    if (item.Type === 'Movie') {
+                                                        navigate(`/movie/${item.Id}`);
+                                                    } else if (item.Type === 'Series') {
+                                                        navigate(`/series/${item.Id}`);
+                                                    } else if (item.Type === 'Episode' && item.SeriesId) {
+                                                        navigate(`/series/${item.SeriesId}`);
+                                                    } else {
+                                                        navigate(`/item/${item.Id}`);
+                                                    }
+                                                } else {
+                                                    alert("No items found to play randomly.");
+                                                }
+                                            } catch (e) {
+                                                console.error("Random play failed", e);
+                                            }
+                                        }}
+                                        title="Random - I'm feeling lucky"
+                                    >
+                                        <span className="material-icons">casino</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Mobile Hamburger */}
+                            <button
+                                className="nav-icon-btn mobile-hamburger"
+                                onClick={() => setShowMenu(true)} // Reusing showMenu for simplicity or create new state? Let's check existing usage.
+                            // Existing showMenu is for Profile Dropdown. We should create a separate state for Mobile Menu or unify. 
+                            // Let's use a new state: showMobileMenu
+                            >
+                                <span className="material-icons">menu</span>
+                            </button>
+
+                            {/* User Profile & Menu (Desktop) */}
                             <div
                                 className={`nav-avatar-container ${showMenu ? 'active' : ''}`}
                                 onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
@@ -351,6 +373,144 @@ const Navbar = ({ alwaysFilled = false }) => {
                     </div>
                 </div>
             </nav>
+
+            {/* Mobile Fullscreen Menu */}
+            <div className={`mobile-menu-overlay ${showMobileMenu ? 'active' : ''}`} onClick={() => setShowMobileMenu(false)}>
+                <div className="mobile-menu-drawer" onClick={(e) => e.stopPropagation()}>
+                    <div className="mobile-menu-header">
+                        <span className="mobile-menu-title">Menu</span>
+                        <button className="mobile-menu-close" onClick={() => setShowMobileMenu(false)}>
+                            <span className="material-icons">close</span>
+                        </button>
+                    </div>
+
+                    <div className="mobile-menu-content">
+                        {/* Quick Actions (The buttons we hid) */}
+                        <div className="mobile-menu-section">
+                            <h3 className="mobile-section-label">Quick Actions</h3>
+                            <div className="mobile-actions-grid">
+                                {config.showNavbarSearch !== false && (
+                                    <button
+                                        className="mobile-action-btn"
+                                        onClick={() => { setShowMobileMenu(false); setShowSearch(true); }}
+                                    >
+                                        <span className="material-icons">search</span>
+                                        <span>Search</span>
+                                    </button>
+                                )}
+                                {config.showNavbarBookmarks !== false && (
+                                    <button
+                                        className="mobile-action-btn"
+                                        onClick={() => { setShowMobileMenu(false); navigate('/favorites'); }}
+                                    >
+                                        <span className="material-icons">bookmark</span>
+                                        <span>My List</span>
+                                    </button>
+                                )}
+                                {config.showNavbarRandom !== false && (
+                                    <button
+                                        className="mobile-action-btn"
+                                        onClick={async () => {
+                                            setShowMobileMenu(false);
+                                            try {
+                                                const filters = config.randomContentFilters || { Movie: true, Series: true, Episode: true };
+                                                const includeItemTypes = Object.entries(filters)
+                                                    .filter(([_, enabled]) => enabled)
+                                                    .map(([type]) => type);
+
+                                                if (includeItemTypes.length === 0) {
+                                                    alert("Please select at least one content type in Theme Settings > Content.");
+                                                    return;
+                                                }
+
+                                                const user = await jellyfinService.getCurrentUser();
+                                                if (!user) return;
+
+                                                const query = {
+                                                    sortBy: ['Random'],
+                                                    limit: 1,
+                                                    recursive: true,
+                                                    includeItemTypes: includeItemTypes,
+                                                    fields: ['MediaSources', 'SeriesId']
+                                                };
+
+                                                if (config.randomLibraries && config.randomLibraries.length > 0) {
+                                                    query.parentId = config.randomLibraries.join(',');
+                                                }
+
+                                                const result = await jellyfinService.getItems(user.Id, query);
+
+                                                if (result && result.Items && result.Items.length > 0) {
+                                                    const item = result.Items[0];
+                                                    if (item.Type === 'Movie') {
+                                                        navigate(`/movie/${item.Id}`);
+                                                    } else if (item.Type === 'Series') {
+                                                        navigate(`/series/${item.Id}`);
+                                                    } else if (item.Type === 'Episode' && item.SeriesId) {
+                                                        navigate(`/series/${item.SeriesId}`);
+                                                    } else {
+                                                        navigate(`/item/${item.Id}`);
+                                                    }
+                                                } else {
+                                                    alert("No items found to play randomly.");
+                                                }
+                                            } catch (e) {
+                                                console.error("Random play failed", e);
+                                            }
+                                        }}
+                                    >
+                                        <span className="material-icons">casino</span>
+                                        <span>Random</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Libraries / Categories */}
+                        {config.showNavbarCategories && (
+                            <div className="mobile-menu-section">
+                                <h3 className="mobile-section-label">Categories</h3>
+                                <div className="mobile-links-list">
+                                    <button
+                                        className="mobile-link-item"
+                                        onClick={() => { setShowMobileMenu(false); navigate('/'); }}
+                                    >
+                                        <span className="material-icons">home</span>
+                                        Home
+                                    </button>
+                                    {libraries.map(lib => (
+                                        <button
+                                            key={lib.Id}
+                                            className="mobile-link-item"
+                                            onClick={() => { setShowMobileMenu(false); navigate(`/library/${lib.Id}`); }}
+                                        >
+                                            <span className="material-icons">
+                                                {lib.CollectionType === 'movies' ? 'movie' :
+                                                    lib.CollectionType === 'tvshows' ? 'tv' : 'folder'}
+                                            </span>
+                                            {lib.Name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Other Links */}
+                        {config.jellyseerrUrl && config.showNavbarRequests !== false && (
+                            <div className="mobile-menu-section">
+                                <h3 className="mobile-section-label">External</h3>
+                                <button
+                                    className="mobile-link-item"
+                                    onClick={() => { setShowMobileMenu(false); window.open(config.jellyseerrUrl, '_blank'); }}
+                                >
+                                    <span className="material-icons">campaign</span>
+                                    {config.jellyseerrText || 'Request Feature'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
             <LegitFlixSettingsModal isOpen={showLegitSettings} onClose={() => setShowLegitSettings(false)} userId={user?.Id} />

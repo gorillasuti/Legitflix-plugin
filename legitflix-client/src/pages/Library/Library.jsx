@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar';
 import ContextMenu from '../../components/ContextMenu';
 import CustomDropdown from '../../components/CustomDropdown';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import './Library.css';
 
 const Library = () => {
@@ -212,32 +213,40 @@ const Library = () => {
 
             <div className="library-grid-container">
                 <div className="library-grid">
-                    {items.map((item, index) => {
-                        // Use ref for last item to trigger infinite scroll
-                        if (items.length === index + 1) {
-                            return (
-                                <div ref={lastItemElementRef} key={item.Id} className="library-grid-item">
-                                    <MediaCard
-                                        item={item}
-                                        onClick={() => navigate(`/item/${item.Id}`)}
-                                        onContextMenu={handleContextMenu}
-                                    />
-                                </div>
-                            );
-                        } else {
-                            return (
-                                <div key={item.Id} className="library-grid-item">
-                                    <MediaCard
-                                        item={item}
-                                        onClick={() => navigate(`/item/${item.Id}`)}
-                                        onContextMenu={handleContextMenu}
-                                    />
-                                </div>
-                            );
-                        }
-                    })}
+                    {items.length > 0 ? (
+                        items.map((item, index) => {
+                            // Use ref for last item to trigger infinite scroll
+                            if (items.length === index + 1) {
+                                return (
+                                    <div ref={lastItemElementRef} key={item.Id} className="library-grid-item">
+                                        <MediaCard
+                                            item={item}
+                                            onClick={() => navigate(`/item/${item.Id}`)}
+                                            onContextMenu={handleContextMenu}
+                                        />
+                                    </div>
+                                );
+                            } else {
+                                return (
+                                    <div key={item.Id} className="library-grid-item">
+                                        <MediaCard
+                                            item={item}
+                                            onClick={() => navigate(`/item/${item.Id}`)}
+                                            onContextMenu={handleContextMenu}
+                                        />
+                                    </div>
+                                );
+                            }
+                        })
+                    ) : (
+                        loading && [...Array(12)].map((_, i) => (
+                            <div key={i} className="library-grid-item">
+                                <SkeletonLoader type="rect" width="100%" height="100%" style={{ aspectRatio: '2/3', borderRadius: '8px' }} />
+                            </div>
+                        ))
+                    )}
                 </div>
-                {loading && (
+                {loading && items.length > 0 && (
                     <div className="library-loader">
                         <span className="material-icons spin">autorenew</span>
                     </div>

@@ -854,3 +854,102 @@
         flex-wrap: wrap;
     }
 }
+
+/* ── Mobile Responsive Adjustments ── */
+@media (max-width: 768px) {
+    .lf-movie-hero {
+        height: auto;
+        min-height: 85vh;
+        /* Allow it to grow if content is long */
+        padding-top: 80px;
+        /* Navbar height */
+        align-items: flex-end;
+        /* Align content to bottom */
+    }
+
+    .lf-movie-hero::after {
+        background: linear-gradient(to top, #141414 10%, rgba(20, 20, 20, 0.9) 25%, rgba(20, 20, 20, 0.4) 60%, transparent 100%);
+    }
+
+    .lf-movie-hero__content {
+        flex-direction: column;
+        padding: 0;
+        gap: 20px;
+    }
+
+    .lf-movie-hero__poster {
+        display: none;
+        /* Hide poster on mobile */
+    }
+
+    .lf-movie-hero__info {
+        padding-top: 20px;
+        width: 100%;
+    }
+
+    .lf-movie-hero__title {
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
+    .lf-hero-title-logo {
+        max-width: 200px;
+        max-height: 100px;
+        margin-bottom: 10px;
+    }
+
+    .lf-movie-hero__meta {
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.85rem;
+    }
+
+    .lf-movie-hero__details {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .lf-movie-hero__description {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .lf-movie-hero__cast-info {
+        flex: 1 1 auto;
+        width: 100%;
+        margin-top: 0;
+    }
+
+    .lf-movie-hero__actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .lf-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 12px;
+        min-width: fit-content;
+    }
+
+    .lf-btn--icon-only {
+        flex: 0 0 auto;
+    }
+
+    /* Content Section */
+    .lf-content-section {
+        padding: 20px 16px;
+    }
+
+    .lf-content-section h2 {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+    }
+
+    /* Cast Grid if exists, or similar items */
+    .lf-cast-grid,
+    .lf-similar-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+    }
+}

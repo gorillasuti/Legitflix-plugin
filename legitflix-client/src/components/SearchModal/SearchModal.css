@@ -256,7 +256,10 @@
     opacity: 0.5;
 }
 
-.legit-search-helper p {
-    font-size: 1.1rem;
-    margin: 0;
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .legit-search-esc {
+        display: none;
+    }
 }

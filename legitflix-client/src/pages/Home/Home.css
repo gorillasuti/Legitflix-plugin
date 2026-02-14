@@ -258,44 +258,81 @@
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
+    .promo2-wrapper {
+        height: auto;
+        min-height: 0;
+        gap: 20px;
+    }
+
     .promo2-hero {
-        height: 280px;
+        height: 300px;
+        width: 100%;
+        flex: none;
     }
 
     .promo2-hero-content {
-        bottom: 20px;
-        left: 20px;
-        max-width: 70%;
+        top: auto;
+        bottom: 24px;
+        left: 24px;
+        transform: none;
+        max-width: 80%;
     }
 
     .promo2-hero-title {
-        font-size: 1.8rem;
+        font-size: 2rem;
+    }
+
+    .promo2-hero-logo {
+        max-width: 220px;
     }
 
     .promo2-row {
         flex-direction: column;
+        gap: 16px;
     }
 
     .promo2-card {
-        height: 180px;
+        height: auto;
+        flex: none;
+        /* Allow cards to stack naturally */
+    }
+
+    .promo2-card-img {
+        min-height: 140px;
     }
 }
 
 @media (max-width: 500px) {
     .promo2-hero {
-        height: 200px;
+        height: 250px;
+    }
+
+    .promo2-hero-content {
+        bottom: 16px;
+        left: 16px;
+        max-width: 90%;
+    }
+
+    .promo2-hero-title {
+        font-size: 1.5rem;
     }
 
     .promo2-hero-logo {
-        max-width: 180px;
+        max-width: 160px;
     }
 
     .promo2-card {
-        height: 160px;
+        flex-direction: column-reverse;
+        height: auto;
+    }
+
+    .promo2-card-img {
+        height: 120px;
+        flex: none;
     }
 
     .promo2-card-text {
-        padding: 14px 16px;
+        padding: 16px;
     }
 }
 

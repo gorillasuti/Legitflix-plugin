@@ -1371,3 +1371,118 @@
         transform: rotate(360deg);
     }
 }
+
+/* ── Mobile Responsive Adjustments ── */
+@media (max-width: 768px) {
+    .lf-series-hero {
+        height: auto;
+        min-height: 85vh;
+        /* Allow it to grow if content is long */
+        padding-top: 80px;
+        /* Navbar height */
+        align-items: flex-end;
+        /* Align content to bottom */
+    }
+
+    .lf-series-hero::after {
+        background: linear-gradient(to top, #141414 10%, rgba(20, 20, 20, 0.9) 25%, rgba(20, 20, 20, 0.4) 60%, transparent 100%);
+    }
+
+    .lf-series-hero__content {
+        flex-direction: column;
+        padding: 0;
+        gap: 20px;
+    }
+
+    .lf-series-hero__poster {
+        display: none;
+        /* Hide poster on mobile if desired, or adjust size */
+    }
+
+    .lf-series-hero__info {
+        padding-top: 20px;
+        width: 100%;
+    }
+
+    .lf-series-hero__title {
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
+    .lf-hero-title-logo {
+        max-width: 200px;
+        max-height: 100px;
+        margin-bottom: 10px;
+    }
+
+    .lf-series-hero__meta {
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.85rem;
+    }
+
+    .lf-series-hero__details {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .lf-series-hero__description {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .lf-series-hero__cast-info {
+        flex: 1 1 auto;
+        width: 100%;
+        margin-top: 0;
+    }
+
+    .lf-series-hero__actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .lf-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 12px;
+        min-width: fit-content;
+    }
+
+    .lf-btn--icon-only {
+        flex: 0 0 auto;
+    }
+
+    /* Content Section */
+    .lf-content-section {
+        padding: 20px 16px;
+    }
+
+    .lf-episodes-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .lf-season-selector {
+        width: 100%;
+    }
+
+    .lf-season-selector__button {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .lf-filter-controls {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    /* Grid Adjustments */
+    .lf-episode-grid {
+        grid-template-columns: 1fr;
+        /* Single column on mobile */
+        gap: 16px;
+    }
+}

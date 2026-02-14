@@ -95,7 +95,14 @@ class JellyfinService {
         }
 
         // Strip trailing slash
-        const baseUrl = cleanUrl.replace(/\/$/, "");
+        let baseUrl = cleanUrl.replace(/\/$/, "");
+
+        // Error handling for common typos (e.g. 'locahost')
+        if (baseUrl.includes('locahost') || baseUrl.includes('loacalhost') || baseUrl.includes('loaclhost')) {
+            console.warn("[LegitFlix] Detected potential typo in localhost URL:", baseUrl);
+            // We could auto-fix it, but showing a clear error is safer
+        }
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
@@ -113,23 +120,37 @@ class JellyfinService {
 
             // Fallback: If standard fetch failed (likely CORS), try 'no-cors' to verify reachability.
             // This allows connecting to vanilla servers even if the browser blocks the response reading.
-            if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))) {
+            const isNetworkError = e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('Network error'));
+
+            if (isNetworkError) {
+                console.warn(`[LegitFlix] Standard fetch failed for ${baseUrl}, attempting no-cors fallback...`, e.message);
                 try {
                     await fetch(`${baseUrl}/System/Info/Public`, {
                         method: 'GET',
                         mode: 'no-cors'
                     });
-                    console.warn("[LegitFlix] Server validation succeeded via no-cors fallback (CORS restricted).");
+                    console.warn("[LegitFlix] Server validation succeeded via no-cors fallback (Opaque response).");
                     return { valid: true, baseUrl, data: {} };
                 } catch (e2) {
-                    console.error("Fallback validation failed", e2);
+                    console.error("[LegitFlix] Fallback validation failed for", baseUrl, e2.message);
                 }
             }
 
-            console.error("Server validation failed", e);
+            console.error("[LegitFlix] Server validation failed for", baseUrl, e);
             let msg = "Connection failed.";
             if (e.name === 'AbortError') msg = "Connection timed out.";
-            else if (e.message.includes('Failed to fetch')) msg = "Network error or CORS blocked.";
+            else if (isNetworkError) {
+                msg = "Network error or CORS blocked.";
+                if (baseUrl.includes('locahost') || baseUrl.includes('loacalhost') || baseUrl.includes('loaclhost')) {
+                    msg = "Typo detected: Did you mean 'localhost'? (Currently: '" + baseUrl.split('//')[1].split(':')[0] + "')";
+                } else if (baseUrl.includes('localhost')) {
+                    msg += " Try using '127.0.0.1' instead of 'localhost', or ensure the server is running.";
+                } else if (window.location.protocol === 'https:' && baseUrl.startsWith('http:')) {
+                    msg += " Mixed Content blocked: Cannot connect to an HTTP server from an HTTPS site.";
+                } else {
+                    msg += " Ensure the server is running and reachable.";
+                }
+            }
             return { valid: false, error: msg };
         }
     }

@@ -13,7 +13,7 @@
 }
 
 .navbar.scrolled {
-    background-color: var(--clr-bg-nav, #272727);
+    background-color: var(--clr-bg-nav, #202020);
     /* Solid dark when scrolled */
 }
 
@@ -379,21 +379,6 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 900px) {
-
-    .primary-links,
-    .secondary-link {
-        display: none;
-    }
-
-    .nav-item-dropdown {
-        display: none;
-    }
-
-    /* We might want a hamburger menu button here if logic existed, 
-       but for now we rely on the user avatar or a simplified view */
-}
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -402,6 +387,253 @@
 
     to {
         opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Mobile Menu Styles --- */
+.desktop-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobile-hamburger {
+    display: none;
+}
+
+/* Overlay */
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    display: flex;
+    justify-content: flex-end;
+    /* Drawer from right */
+}
+
+.mobile-menu-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Drawer */
+.mobile-menu-drawer {
+    width: 80%;
+    max-width: 320px;
+    height: 100%;
+    background: #191919;
+    border-left: 1px solid #333;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.8);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-menu-overlay.active .mobile-menu-drawer {
+    transform: translateX(0);
+}
+
+/* Header */
+.mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #333;
+    background: #232323;
+}
+
+.mobile-menu-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mobile-menu-close {
+    background: transparent;
+    border: none;
+    color: #dadada;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.mobile-menu-close .material-icons {
+    font-size: 28px;
+}
+
+/* Content */
+.mobile-menu-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.mobile-menu-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mobile-section-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #888;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+/* Actions Grid (Search, Random, Favorites) */
+.mobile-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.mobile-action-btn {
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #eee;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mobile-action-btn:hover {
+    background: #333;
+    border-color: var(--clr-accent, #f47521);
+    color: var(--clr-accent, #f47521);
+}
+
+.mobile-action-btn .material-icons {
+    font-size: 24px;
+}
+
+.mobile-action-btn span:not(.material-icons) {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Links List */
+.mobile-links-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mobile-link-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: #e5e5e5;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.mobile-link-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+.mobile-link-item .material-icons {
+    color: var(--clr-accent, #f47521);
+    font-size: 22px;
+    opacity: 0.9;
+}
+
+/* --- Responsive Updates --- */
+@media (max-width: 900px) {
+
+    .primary-links,
+    .secondary-link,
+    .desktop-actions {
+        display: none;
+        /* Hide desktop nav and actions */
+    }
+
+    .mobile-hamburger {
+        display: flex;
+        /* Show hamburger */
+    }
+
+    .nav-item-dropdown {
+        display: none;
+    }
+}
+
+/* ── Mobile User Menu (Bottom Sheet) ── */
+@media (max-width: 768px) {
+    .nav-dropdown-menu.usermenu {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 80vh;
+        border-radius: 16px 16px 0 0;
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow-y: auto;
+        z-index: 2005;
+        /* Higher than everything else */
+        background: #1a1a1a;
+        padding-bottom: env(safe-area-inset-bottom);
+        transform-origin: bottom;
+    }
+
+    .nav-dropdown-menu.usermenu button {
+        padding: 16px 20px;
+        font-size: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .user-menu-header {
+        padding: 20px;
+        background: #202020;
+    }
+
+    /* Ensure backdrop if we can't add a real one easily, 
+       we rely on the fact that click-outside works in Navbar.jsx */
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
         transform: translateY(0);
     }
 }

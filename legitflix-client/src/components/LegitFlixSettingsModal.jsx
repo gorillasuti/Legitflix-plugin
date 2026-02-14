@@ -39,6 +39,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     // Random Button State
     const [showNavbarRandom, setShowNavbarRandom] = useState(config.showNavbarRandom !== false);
     const [randomFilters, setRandomFilters] = useState(config.randomContentFilters || { Movie: true, Series: true, Episode: true });
+    const [randomLibraries, setRandomLibraries] = useState(config.randomLibraries || []);
+    const [availableLibraries, setAvailableLibraries] = useState([]);
 
     const [sortMode, setSortMode] = useState(config.contentSortMode || 'latest');
     // Player Settings State
@@ -73,6 +75,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             // Random Config Reset
             setShowNavbarRandom(config.showNavbarRandom !== false);
             setRandomFilters(config.randomContentFilters || { Movie: true, Series: true, Episode: true });
+            setRandomLibraries(config.randomLibraries || []);
 
             setSortMode(config.contentSortMode || 'latest');
             setPlayerSeekForward(config.playerSeekForward || 30);
@@ -137,6 +140,8 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             // Random Config Save
             showNavbarRandom,
             randomContentFilters: randomFilters,
+            randomLibraries: randomLibraries,
+            showNavbarRandom: showNavbarRandom,
 
             heroMediaTypes: heroStr,
             promoMediaTypes: promoArr,
@@ -583,6 +588,78 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                             />
                             <span className="slider"></span>
                         </label>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'navbarRandom',
+            tab: 'navigation',
+            label: 'Random Button',
+            keywords: ['navigation', 'navbar', 'random', 'lucky', 'casino'],
+            render: () => (
+                <div className="setting-section" key="navbarRandom">
+                    <div className="setting-row">
+                        <div>
+                            <h3 className="setting-title">Show Random Button</h3>
+                            <p className="setting-desc">Display the "I'm Feeling Lucky" button in the navbar</p>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={showNavbarRandom}
+                                onChange={(e) => setShowNavbarRandom(e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+
+                    <div className="setting-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+                        <div>
+                            <h3 className="setting-title">Randomize From</h3>
+                            <p className="setting-desc">Select which libraries should be used for the random button. (None selected = All)</p>
+                        </div>
+                        <div className="library-chips-container">
+                            {availableLibraries.map(lib => {
+                                const isSelected = randomLibraries.includes(lib.Id);
+                                return (
+                                    <button
+                                        key={lib.Id}
+                                        className={`library-chip ${isSelected ? 'selected' : ''}`}
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                setRandomLibraries(prev => prev.filter(id => id !== lib.Id));
+                                            } else {
+                                                setRandomLibraries(prev => [...prev, lib.Id]);
+                                            }
+                                        }}
+                                    >
+                                        <span className="material-icons">{lib.Type === 'movies' ? 'movie' : (lib.Type === 'tvshows' ? 'tv' : 'folder')}</span>
+                                        {lib.Name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="setting-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px', marginTop: '10px' }}>
+                        <div>
+                            <h3 className="setting-title">Content Types</h3>
+                            <p className="setting-desc">Filter by content type</p>
+                        </div>
+                        <div className="type-filters">
+                            {['Movie', 'Series', 'Episode'].map(type => (
+                                <button
+                                    key={type}
+                                    className={`library-chip ${randomFilters[type] ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        setRandomFilters(prev => ({ ...prev, [type]: !prev[type] }));
+                                    }}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )

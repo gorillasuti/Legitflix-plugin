@@ -1096,3 +1096,37 @@ video {
         opacity: 1;
     }
 }
+
+/* ── Mobile Player Controls ── */
+@media (max-width: 768px) {
+
+    /* Hide custom controls overlay */
+    .lf-player-controls {
+        display: none !important;
+    }
+
+    /* Ensure video cursor is visible/auto so native controls can be interacted with if present */
+    .lf-player-video-container {
+        cursor: auto !important;
+    }
+
+    /* Ensure native video element is interactive */
+    video,
+    .vds-video {
+        pointer-events: auto !important;
+        z-index: 2000 !important;
+        /* Bring to front just in case */
+        /* Force native controls to appear? No, that requires HTML attribute. 
+           But if the user says it's compatible, maybe they mean general touch interaction works?
+           Or maybe we should try to force them visible?
+        */
+    }
+
+    /* Hide any other custom overlays that might separate user from native video */
+    .lf-player-center-icon,
+    .center-play-btn,
+    .vds-gesture,
+    .lf-player-loader {
+        display: none !important;
+    }
+}
