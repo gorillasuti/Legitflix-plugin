@@ -45,7 +45,7 @@
     /* Animation Initial State */
     /* Animation Initial State */
     opacity: 0;
-    transform: scale(0.9) translateY(20px);
+    transform: translateY(100vh) scale(0.9);
     will-change: transform, opacity;
     transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
     /* Expo out for premium feel */
@@ -53,7 +53,7 @@
 
 .legitflix-info-modal.visible .info-modal-content {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0) scale(1);
 }
 
 .btn-close-modal {

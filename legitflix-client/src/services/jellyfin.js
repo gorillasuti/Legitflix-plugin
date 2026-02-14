@@ -64,8 +64,15 @@ class JellyfinService {
                             const response = await this.api.user.getUserById({ userId: activeServer.UserId });
                             return response.data;
                         } catch (apiError) {
-                            console.error("[LegitFlix] Token invalid or user not found. Clearing credentials.", apiError);
-                            this.logout(); // Clear invalid creds
+                            console.error("[LegitFlix] Token check failed.", apiError);
+                            // Only logout if explicitly unauthorized (401)
+                            if (apiError.response && apiError.response.status === 401) {
+                                console.warn("[LegitFlix] Token expired or invalid (401). Logging out.");
+                                this.logout();
+                            }
+                            // Otherwise (network error, server down), keep the token.
+                            // The app will redirect to login because we return null, 
+                            // but the user won't have to re-enter credentials once the server is back.
                             return null;
                         }
                     }
@@ -81,8 +88,14 @@ class JellyfinService {
     // --- Auth Flow Methods ---
 
     async validateServer(url) {
+        let cleanUrl = url.trim();
+        // Auto-add protocol if missing
+        if (!cleanUrl.match(/^https?:\/\//)) {
+            cleanUrl = `http://${cleanUrl}`;
+        }
+
         // Strip trailing slash
-        const baseUrl = url.replace(/\/$/, "");
+        const baseUrl = cleanUrl.replace(/\/$/, "");
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
@@ -92,12 +105,33 @@ class JellyfinService {
             if (response.ok) {
                 const data = await response.json();
                 return { valid: true, data, baseUrl }; // Return cleaned URL
+            } else {
+                return { valid: false, error: `Server responded with ${response.status} ${response.statusText}` };
             }
         } catch (e) {
             clearTimeout(timeoutId);
+
+            // Fallback: If standard fetch failed (likely CORS), try 'no-cors' to verify reachability.
+            // This allows connecting to vanilla servers even if the browser blocks the response reading.
+            if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))) {
+                try {
+                    await fetch(`${baseUrl}/System/Info/Public`, {
+                        method: 'GET',
+                        mode: 'no-cors'
+                    });
+                    console.warn("[LegitFlix] Server validation succeeded via no-cors fallback (CORS restricted).");
+                    return { valid: true, baseUrl, data: {} };
+                } catch (e2) {
+                    console.error("Fallback validation failed", e2);
+                }
+            }
+
             console.error("Server validation failed", e);
+            let msg = "Connection failed.";
+            if (e.name === 'AbortError') msg = "Connection timed out.";
+            else if (e.message.includes('Failed to fetch')) msg = "Network error or CORS blocked.";
+            return { valid: false, error: msg };
         }
-        return { valid: false };
     }
 
     async getPublicUsers() {

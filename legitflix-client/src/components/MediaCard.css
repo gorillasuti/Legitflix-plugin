@@ -11,7 +11,7 @@
     position: relative;
     width: 100%;
     aspect-ratio: 2 / 3;
-    border-radius: 6px;
+    border-radius: 2px;
     overflow: hidden;
     background-color: #252525;
 }
@@ -26,6 +26,10 @@
 
 .media-card:hover .media-card-image {
     transform: scale(1.04);
+}
+
+.media-card:hover .media-card-title {
+    color: var(--clr-accent, #ff7e00);
 }
 
 .media-card-fallback-title {
@@ -76,7 +80,6 @@
 }
 
 .media-card-hover-overlay.closing {
-    transition: opacity 0.15s ease;
     pointer-events: none;
 }
 

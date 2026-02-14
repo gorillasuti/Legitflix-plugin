@@ -135,8 +135,8 @@
 
 .auth-input:focus {
     background: rgba(255, 255, 255, 0.08);
-    border-color: var(--clr-accent, #f47521);
-    box-shadow: 0 0 0 4px rgba(244, 117, 33, 0.15);
+    border-color: var(--clr-accent);
+    box-shadow: 0 0 0 4px var(--clr-accent-glow);
 }
 
 .auth-input::placeholder {

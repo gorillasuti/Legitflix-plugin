@@ -33,7 +33,6 @@ const CustomDropdown = ({ icon, value, options, onChange, label }) => {
                     {label && <span className="dropdown-label-tiny">{label}</span>}
                     <span className="dropdown-selected-text">{selectedOption ? selectedOption.label : 'Select...'}</span>
                 </div>
-                <span className="material-icons dropdown-arrow">expand_more</span>
             </div>
 
             {isOpen && (

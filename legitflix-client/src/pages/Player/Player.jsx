@@ -178,6 +178,7 @@ const VidstackPlayer = () => {
                 const user = await jellyfinService.getCurrentUser();
                 const data = await jellyfinService.getItemDetails(user.Id, id);
                 setItem(data);
+                document.title = `Legitflix - ${data.Name}`;
                 setChapters(data.Chapters || []);
                 setIsFavorite(data.UserData?.IsFavorite || false);
 

@@ -19,7 +19,7 @@
 /* The inner card */
 .media-card {
     position: relative;
-    border-radius: 8px;
+    border-radius: 2px;
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s;
@@ -34,7 +34,6 @@
 .media-card-image {
     width: 100%;
     height: 100%;
-    border-radius: 8px;
     overflow: hidden;
 }
 

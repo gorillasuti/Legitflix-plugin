@@ -30,7 +30,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName, itemTyp
                     <button className="btn-cancel" onClick={onClose}>
                         Cancel
                     </button>
-                    <button className="btn-delete-confirm" onClick={onConfirm}>
+                    <button className="lf-btn lf-btn--ring-hover" onClick={onConfirm}>
                         <span className="material-icons">delete_forever</span>
                         Delete Forever
                     </button>

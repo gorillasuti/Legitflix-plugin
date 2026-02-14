@@ -44,6 +44,7 @@ const Home = () => {
             try {
                 const user = await jellyfinService.getCurrentUser();
                 if (user) {
+                    document.title = `Legitflix - Home ${user.Name}`;
                     // Determine Sort Mode
                     const sortMode = config.contentSortMode || 'latest';
                     const sortMap = {

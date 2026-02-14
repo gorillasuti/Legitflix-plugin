@@ -25,7 +25,7 @@ const SelectServer = () => {
                 jellyfinService.initialize(null, res.baseUrl);
                 navigate('/login/select-user');
             } else {
-                setError('Could not connect to server. Please check the URL.');
+                setError(res?.error || 'Could not connect to server. Please check the URL.');
             }
         } catch (e) {
             console.error("Validation error", e);

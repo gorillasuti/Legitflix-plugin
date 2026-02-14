@@ -36,6 +36,10 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
     const [customHex, setCustomHex] = useState('');
     const [contentTypes, setContentTypes] = useState(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
 
+    // Random Button State
+    const [showNavbarRandom, setShowNavbarRandom] = useState(config.showNavbarRandom !== false);
+    const [randomFilters, setRandomFilters] = useState(config.randomContentFilters || { Movie: true, Series: true, Episode: true });
+
     const [sortMode, setSortMode] = useState(config.contentSortMode || 'latest');
     // Player Settings State
     const [playerSeekForward, setPlayerSeekForward] = useState(config.playerSeekForward || 30);
@@ -65,6 +69,11 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             setShowLibraryTitles(config.showLibraryTitles !== false);
             setShowNavbarRequests(config.showNavbarRequests !== false);
             setContentTypes(config.contentTypeFilters || { Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
+
+            // Random Config Reset
+            setShowNavbarRandom(config.showNavbarRandom !== false);
+            setRandomFilters(config.randomContentFilters || { Movie: true, Series: true, Episode: true });
+
             setSortMode(config.contentSortMode || 'latest');
             setPlayerSeekForward(config.playerSeekForward || 30);
             setPlayerSeekBackward(config.playerSeekBackward || 10);
@@ -124,6 +133,11 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
             showLibraryTitles,
             showNavbarRequests,
             contentTypeFilters: contentTypes,
+
+            // Random Config Save
+            showNavbarRandom,
+            randomContentFilters: randomFilters,
+
             heroMediaTypes: heroStr,
             promoMediaTypes: promoArr,
             contentSortMode: sortMode,
@@ -152,6 +166,11 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
         setShowLibraryTitles(true);
         setShowNavbarRequests(true);
         setContentTypes({ Movie: true, Series: true, MusicAlbum: false, Audio: false, MusicVideo: false });
+
+        // Random Config Reset
+        setShowNavbarRandom(true);
+        setRandomFilters({ Movie: true, Series: true, Episode: true });
+
         setSortMode('latest');
         setPlayerSeekForward(30);
         setPlayerSeekBackward(10);
@@ -447,7 +466,7 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                 return (
                     <div className="setting-section" key="displayOrder">
                         <h3>Display Order</h3>
-                        <p className="setting-desc">How content is sorted in the Hero Carousel and Promo Banner.</p>
+                        <p className="setting-desc">How content is sorted in the Carousel and Promo Banners.</p>
                         <div className="content-type-grid">
                             {SORT_MODES.map(m => (
                                 <label
@@ -512,6 +531,55 @@ const LegitFlixSettingsModal = ({ isOpen, onClose, userId }) => {
                                 type="checkbox"
                                 checked={showNavbarRequests}
                                 onChange={(e) => setShowNavbarRequests(e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            )
+
+        },
+        {
+            id: 'navbarSearch',
+            tab: 'navigation',
+            label: 'Show Search Button',
+            keywords: ['navigation', 'navbar', 'search', 'find'],
+            render: () => (
+                <div className="setting-section" key="navbarSearch">
+                    <div className="setting-row">
+                        <div>
+                            <h3 className="setting-title">Show Search Button</h3>
+                            <p className="setting-desc">Display the search icon in the navbar (Hotkey: F4)</p>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={config.showNavbarSearch !== false}
+                                onChange={(e) => updateConfig({ showNavbarSearch: e.target.checked })}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'navbarBookmarks',
+            tab: 'navigation',
+            label: 'Show Bookmarks Button',
+            keywords: ['navigation', 'navbar', 'bookmarks', 'favorites', 'list'],
+            render: () => (
+                <div className="setting-section" key="navbarBookmarks">
+                    <div className="setting-row">
+                        <div>
+                            <h3 className="setting-title">Show Bookmarks Button</h3>
+                            <p className="setting-desc">Display the bookmarks/favorites icon in the navbar</p>
+                        </div>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={config.showNavbarBookmarks !== false}
+                                onChange={(e) => updateConfig({ showNavbarBookmarks: e.target.checked })}
                             />
                             <span className="slider"></span>
                         </label>

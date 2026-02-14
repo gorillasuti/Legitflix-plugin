@@ -76,34 +76,24 @@ const Navbar = ({ alwaysFilled = false }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    // Detect Jellyfin Enhanced plugin
+    // Fetch User and Libraries
     useEffect(() => {
-        const detectEnhanced = async () => {
+        const fetchUserData = async () => {
             try {
-                if (!jellyfinService.api) return;
-                const token = jellyfinService.api.accessToken;
-                const baseUrl = jellyfinService.api.configuration?.basePath || jellyfinService.api.basePath;
-                if (!token || !baseUrl) return;
-
-                const authHeader = `MediaBrowser Client="${jellyfinService.jellyfin.clientInfo.name}", Device="${jellyfinService.jellyfin.deviceInfo.name}", DeviceId="${jellyfinService.jellyfin.deviceInfo.id}", Version="${jellyfinService.jellyfin.clientInfo.version}", Token="${token}"`;
-
-                const res = await fetch(`${baseUrl}/Plugins`, {
-                    headers: { 'X-Emby-Authorization': authHeader },
-                });
-                if (res.ok) {
-                    const plugins = await res.json();
-                    const found = plugins.some(p =>
-                        p.Name?.toLowerCase().includes('enhanced') ||
-                        p.Name?.toLowerCase().includes('random button')
-                    );
-                    setHasEnhancedPlugin(found);
+                const u = await jellyfinService.getCurrentUser();
+                setUser(u);
+                if (u && config.showNavbarCategories) {
+                    const libs = await jellyfinService.getUserViews(u.Id);
+                    if (libs && libs.Items) {
+                        setLibraries(libs.Items);
+                    }
                 }
-            } catch (e) {
-                // Plugin detection failed - not critical
+            } catch (err) {
+                console.error("Navbar fetch error", err);
             }
         };
-        detectEnhanced();
-    }, []);
+        fetchUserData();
+    }, [config.showNavbarCategories]); // Re-fetch if toggle changes
 
     const isAdmin = user?.Policy?.IsAdministrator;
 
@@ -142,7 +132,10 @@ const Navbar = ({ alwaysFilled = false }) => {
                         </Link>
 
                         <div className="nav-links primary-links">
-                            <Link to="/" className="nav-link">Home</Link>
+                            {/* Hide Home if Categories are disabled */}
+                            {config.showNavbarCategories && (
+                                <Link to="/" className="nav-link">Home</Link>
+                            )}
                             {/* Real Jellyfin library categories */}
                             {config.showNavbarCategories && libraries.map(lib => (
                                 <span
@@ -158,34 +151,84 @@ const Navbar = ({ alwaysFilled = false }) => {
                             {config.jellyseerrUrl && config.showNavbarRequests !== false && (
                                 <>
                                     <span className="nav-divider" />
-                                    <a
-                                        href={config.jellyseerrUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <span
                                         className="nav-link"
+                                        onClick={() => window.open(config.jellyseerrUrl, '_blank')}
                                     >
-                                        {config.jellyseerrText || 'Requests'}
-                                    </a>
+                                        {config.jellyseerrText || 'Request'}
+                                    </span>
                                 </>
                             )}
                         </div>
                     </div>
 
-                    {/* Right Section: Actions */}
+                    {/* Right Section: Icons & Profile */}
                     <div className="nav-end">
                         <div className="nav-actions">
-                            <button className="nav-icon-btn" onClick={() => setShowSearch(true)} title="Search">
-                                <span className="material-icons">search</span>
-                            </button>
+                            {/* Search Icon - Toggleable */}
+                            {config.showNavbarSearch !== false && (
+                                <button
+                                    className="nav-icon-btn"
+                                    onClick={() => setShowSearch(true)}
+                                    title="Search (F4)"
+                                >
+                                    <span className="material-icons">search</span>
+                                </button>
+                            )}
 
-                            <button className="nav-icon-btn" onClick={() => navigate('/favorites')} title="Watchlist">
-                                <span className="material-icons">bookmark_border</span>
-                            </button>
+                            {/* Favorites / Bookmarks - Toggleable */}
+                            {config.showNavbarBookmarks !== false && (
+                                <Link to="/favorites" className="nav-icon-btn" title="My List">
+                                    <span className="material-icons">bookmark_border</span>
+                                </Link>
+                            )}
 
-                            {/* Random button (Jellyfin Enhanced) */}
-                            {hasEnhancedPlugin && (
-                                <button className="nav-icon-btn" onClick={() => { window.location.href = '/web/index.html?classic#!/randomitems'; }} title="Random">
-                                    <span className="material-icons">shuffle</span>
+                            {/* Random Button */}
+                            {config.showNavbarRandom !== false && (
+                                <button
+                                    className="nav-icon-btn"
+                                    onClick={async () => {
+                                        try {
+                                            const filters = config.randomContentFilters || { Movie: true, Series: true, Episode: true };
+                                            const includeItemTypes = Object.entries(filters)
+                                                .filter(([_, enabled]) => enabled)
+                                                .map(([type]) => type);
+
+                                            if (includeItemTypes.length === 0) {
+                                                alert("Please select at least one content type in Theme Settings > Content.");
+                                                return;
+                                            }
+
+                                            const user = await jellyfinService.getCurrentUser();
+                                            if (!user) return;
+
+                                            const result = await jellyfinService.getItems(user.Id, {
+                                                sortBy: ['Random'],
+                                                limit: 1,
+                                                recursive: true,
+                                                includeItemTypes: includeItemTypes,
+                                                fields: ['MediaSources']
+                                            });
+
+                                            if (result && result.Items && result.Items.length > 0) {
+                                                const item = result.Items[0];
+                                                if (item.Type === 'Movie' || item.Type === 'Episode') {
+                                                    navigate(`/play/${item.Id}`);
+                                                } else if (item.Type === 'Series') {
+                                                    navigate(`/series/${item.Id}`);
+                                                } else {
+                                                    navigate(`/item/${item.Id}`);
+                                                }
+                                            } else {
+                                                alert("No items found to play randomly.");
+                                            }
+                                        } catch (e) {
+                                            console.error("Random play failed", e);
+                                        }
+                                    }}
+                                    title="Random - I'm feeling lucky"
+                                >
+                                    <span className="material-icons">casino</span>
                                 </button>
                             )}
 

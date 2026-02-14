@@ -11,104 +11,107 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
     const [isMuted, setIsMuted] = useState(true);
     const [isIdle, setIsIdle] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
+    const [isRendered, setIsRendered] = useState(false);
     const [userId, setUserId] = useState(null);
 
     // Fetch Details on Open
-    // Fetch Details on Open
     useEffect(() => {
-        if (!isOpen || !itemId) return;
+        if (isOpen && itemId) {
+            // OPENING
+            setIsRendered(true);
 
-        // Reset state
-        setIsVisible(false);
-        setDetails(null);
-        setTrailers([]);
-        setActiveTrailerId(null);
-
-        const fetchData = async () => {
-            // Delay visibility slightly to allow mount
-            setTimeout(() => setIsVisible(true), 10);
-
-            const user = await jellyfinService.getCurrentUser();
-            // --- HELPER FUNCTIONS ---
-            const getYoutubeId = (url) => {
-                if (!url) return null;
-                if (url.includes('v=')) return url.split('v=')[1].split('&')[0];
-                if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
-                if (url.includes('embed/')) return url.split('embed/')[1].split('?')[0];
-                return null;
-            };
-            if (user) {
-                setUserId(user.Id);
-                const data = await jellyfinService.getItemDetails(user.Id, itemId);
-                setDetails(data);
-
-                // --- TRAILER LOGIC ---
-                const foundTrailers = [];
-                // 1. Remote Trailers
-                if (data.RemoteTrailers) {
-                    data.RemoteTrailers.forEach(t => {
-                        const vid = getYoutubeId(t.Url);
-                        if (vid) foundTrailers.push({ title: 'Main Trailer', id: vid, type: 'Movie' });
-                    });
-                }
-                // 2. Season Trailers (if Series)
-                if (data.Type === 'Series') {
-                    const seasons = await jellyfinService.getSeasons(user.Id, itemId);
-                    seasons.forEach(s => {
-                        if (s.RemoteTrailers) {
-                            s.RemoteTrailers.forEach(t => {
-                                const vid = getYoutubeId(t.Url);
-                                if (vid) foundTrailers.push({ title: s.Name, id: vid });
-                            });
-                        }
-                    });
-                }
-
-                // 3. Local Trailers
-                if (data.LocalTrailers) {
-                    data.LocalTrailers.forEach(t => {
-                        foundTrailers.push({
-                            title: t.Name || 'Local Trailer',
-                            id: t.Id,
-                            type: 'Local'
-                        });
-                    });
-                }
-
-                setTrailers(foundTrailers);
-                if (foundTrailers.length > 0) {
-                    // Default to first trailer
-                    setActiveTrailerId(foundTrailers[0].id);
-                } else if (data.Type === 'Series' || data.Type === 'Movie') {
-                    // FALLBACK: If no trailers found, add a Search Trailer
-                    const fallbackId = `${data.Name} ${data.ProductionYear || ''} Trailer`;
-                    const fallbackTrailer = {
-                        title: 'Search YouTube',
-                        id: fallbackId,
-                        type: 'Search'
-                    };
-                    setTrailers([fallbackTrailer]);
-                    setActiveTrailerId(fallbackId);
-                }
-            }
-        };
-        fetchData();
-
-        // Lock Body Scroll
-        document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.body.style.overflow = '';
+            // If it's a new item or we don't have details, we might want to reset
+            // But if we reset immediately, we lose the old content if we are just switching.
+            // For now, let's assume we want fresh load visuals.
             setDetails(null);
             setTrailers([]);
             setActiveTrailerId(null);
-            setIsVisible(false);
-        }
 
+            const fetchData = async () => {
+                const user = await jellyfinService.getCurrentUser();
+                // ... Helper functions ...
+                const getYoutubeId = (url) => {
+                    if (!url) return null;
+                    if (url.includes('v=')) return url.split('v=')[1].split('&')[0];
+                    if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
+                    if (url.includes('embed/')) return url.split('embed/')[1].split('?')[0];
+                    return null;
+                };
+
+                if (user) {
+                    setUserId(user.Id);
+                    const data = await jellyfinService.getItemDetails(user.Id, itemId);
+                    setDetails(data);
+
+                    // ... Trailer Logic ...
+                    const foundTrailers = [];
+                    // 1. Remote Trailers
+                    if (data.RemoteTrailers) {
+                        data.RemoteTrailers.forEach(t => {
+                            const vid = getYoutubeId(t.Url);
+                            if (vid) foundTrailers.push({ title: 'Main Trailer', id: vid, type: 'Movie' });
+                        });
+                    }
+                    // 2. Season Trailers (if Series)
+                    if (data.Type === 'Series') {
+                        const seasons = await jellyfinService.getSeasons(user.Id, itemId);
+                        seasons.forEach(s => {
+                            if (s.RemoteTrailers) {
+                                s.RemoteTrailers.forEach(t => {
+                                    const vid = getYoutubeId(t.Url);
+                                    if (vid) foundTrailers.push({ title: s.Name, id: vid });
+                                });
+                            }
+                        });
+                    }
+                    // 3. Local Trailers
+                    if (data.LocalTrailers) {
+                        data.LocalTrailers.forEach(t => {
+                            foundTrailers.push({
+                                title: t.Name || 'Local Trailer',
+                                id: t.Id,
+                                type: 'Local'
+                            });
+                        });
+                    }
+
+                    setTrailers(foundTrailers);
+                    if (foundTrailers.length > 0) {
+                        setActiveTrailerId(foundTrailers[0].id);
+                    } else if (data.Type === 'Series' || data.Type === 'Movie') {
+                        // FALLBACK
+                        const fallbackId = `${data.Name} ${data.ProductionYear || ''} Trailer`;
+                        const fallbackTrailer = { title: 'Search YouTube', id: fallbackId, type: 'Search' };
+                        setTrailers([fallbackTrailer]);
+                        setActiveTrailerId(fallbackId);
+                    }
+
+                    // Trigger fade-in AFTER data is set
+                    setTimeout(() => setIsVisible(true), 50);
+                }
+            };
+            fetchData();
+
+            // Lock Body Scroll
+            document.body.style.overflow = 'hidden';
+
+        } else {
+            // CLOSING
+            setIsVisible(false);
+            const timer = setTimeout(() => {
+                setIsRendered(false);
+                setDetails(null);
+                setTrailers([]);
+                setActiveTrailerId(null);
+                document.body.style.overflow = '';
+            }, 500); // Wait for transition
+            return () => clearTimeout(timer);
+        }
     }, [isOpen, itemId]);
 
     // Idle Timer (Hide UI)
     useEffect(() => {
+        if (!isOpen) return;
         let timer;
         const resetIdle = () => {
             setIsIdle(false);
@@ -128,7 +131,7 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
     }, [isOpen]);
 
 
-    if (!isOpen || !details) return null;
+    if (!isRendered || !details) return null;
 
     // --- HELPER FUNCTIONS ---
 
@@ -266,7 +269,7 @@ const InfoModal = ({ itemId, onClose, isOpen }) => {
                                 className={`h-12 px-6 text-lg rounded-md gap-2 border-2 bg-transparent hover:bg-white/10 ${details.UserData?.IsFavorite ? 'border-primary text-primary' : 'border-white/40 text-white'}`}
                                 onClick={toggleFavorite}
                             >
-                                <span className="material-icons">{details.UserData?.IsFavorite ? 'check' : 'add'}</span> My List
+                                <span className="material-icons">{details.UserData?.IsFavorite ? 'check' : 'add'}</span> Favorite
                             </Button>
                         </div>
                     </div>
