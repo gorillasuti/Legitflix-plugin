@@ -166,8 +166,14 @@ const MovieDetail = () => {
         }
 
         setIsTrailerPlaying(true);
-        setIsCleanView(false); // Reset clean view start state
-        startCleanViewTimer();
+
+        // Mobile: Hide UI immediately
+        if (window.innerWidth <= 768) {
+            setIsCleanView(true);
+        } else {
+            setIsCleanView(false); // Reset clean view start state
+            startCleanViewTimer();
+        }
 
         // YouTube Blocking Detection
         let receivedMessage = false;
@@ -324,15 +330,31 @@ const MovieDetail = () => {
                 {/* Trailer Container */}
                 <div className={`lf-movie-hero__trailer ${isTrailerPlaying ? 'is-playing' : ''}`}>
                     {isTrailerPlaying && trailerKey && (
-                        <iframe
-                            ref={trailerIframeRef}
-                            src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1&playlist=${trailerKey}&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerPolicy="strict-origin-when-cross-origin"
-                            allowFullScreen
-                            title="Trailer"
-                        />
+                        <>
+                            <iframe
+                                ref={trailerIframeRef}
+                                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&color=white&controls=0&disablekb=1&playlist=${trailerKey}&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                                title="Trailer"
+                            />
+                            {/* Click to stop overlay */}
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    zIndex: 10,
+                                    cursor: 'pointer'
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStopTrailer();
+                                }}
+                                title="Click to stop trailer"
+                            />
+                        </>
                     )}
                 </div>
 
@@ -458,7 +480,7 @@ const MovieDetail = () => {
 
             {/* Movie Header & Player Section */}
             <div className="lf-content-section" style={{ paddingBottom: 0 }}>
-                <div className="lf-movies-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <div className="lf-movies-header">
                     <div className="lf-section-title" style={{ fontSize: '1.5rem' }}>{movie.Name}</div>
 
                     <div className="lf-filter-controls">

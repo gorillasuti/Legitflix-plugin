@@ -270,80 +270,159 @@
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
     .hero-carousel-container {
-        height: 70vh;
-        min-height: 400px;
+        height: 85vh;
+        min-height: 500px;
         margin-bottom: -50px;
+    }
+
+    /* Remove default dark overlays */
+    .hero-overlay {
+        background: none !important;
+        background-image: none !important;
+    }
+
+    /* Strong bottom gradient for text readability */
+    .hero-carousel-container::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 70%;
+        /* Covers more height */
+        background: linear-gradient(to top,
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 0.8) 20%,
+                rgba(0, 0, 0, 0.4) 50%,
+                transparent 100%);
+        z-index: 1;
+        pointer-events: none;
     }
 
     .hero-content {
         width: 90%;
         left: 5%;
         top: auto;
-        bottom: 80px;
+        bottom: 40px;
+        /* Sit above bottom edge */
         transform: none;
         align-items: flex-start;
         text-align: left;
+        padding-right: 0;
+        z-index: 5;
     }
 
     .hero-title {
         font-size: 2rem;
-    }
-
-    .hero-logo {
-        max-width: 200px;
-        height: 100px;
-        object-position: bottom left;
-    }
-
-    .hero-desc {
-        font-size: 0.9rem;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        max-height: 3em;
-    }
-
-    .hero-actions {
-        margin-top: 0.25rem;
-    }
-
-    .hero-indicators {
-        bottom: 20px;
-        left: 5%;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-carousel-container {
-        height: 60vh;
-        min-height: 350px;
-    }
-
-    .hero-title {
-        font-size: 1.5rem;
-    }
-
-    .hero-logo {
-        max-width: 160px;
-        height: 70px;
-    }
-
-    .hero-desc {
+        margin-bottom: 0px;
         display: none;
+        /* Often hidden if logo exists, but keep logic in JSX */
+    }
+
+    .hero-logo {
+        max-width: 70%;
+        height: auto;
+        max-height: 120px;
+        object-fit: contain;
+        object-position: bottom left;
+        margin-bottom: 10px;
+    }
+
+    .hero-meta-line {
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .hero-desc {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Actions: Wide Button Layout */
+    .hero-actions {
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        margin-top: 5px;
     }
 
     .btn-hero-primary {
-        padding: 8px 16px;
-        font-size: 0.8rem;
+        flex: 1;
+        /* Grow to fill space */
+        justify-content: center;
+        height: 48px;
+        border-radius: 4px;
+        /* Less rounded as per ref */
+        font-size: 1rem;
+        width: auto;
+        /* Override potentially fixed width */
+        background: #ff6a00 !important;
+        /* Ensure orange */
+        color: black !important;
+        /* Black text on orange often looks better/readable? Ref has black icon/text? Let's check. 
+                                    Ref image: "Start Watching E14" text is BLACK? darker? 
+                                    Actually standard LegitFlix calls for White text on Orange usually. 
+                                    I will stick to White on Orange unless user complains, or standard styling. */
+        color: white !important;
     }
 
+    .btn-hero-primary .material-icons {
+        font-size: 1.6rem;
+    }
+
+    /* Secondary buttons (Bookmark/Info) */
     .btn-hero-bookmark,
     .hero-button-info {
-        width: 36px;
-        height: 36px;
+        width: 48px;
+        height: 48px;
+        border-radius: 4px;
+        /* Match primary button radius */
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        flex-shrink: 0;
     }
 
-    .btn-hero-bookmark .material-icons,
-    .hero-button-info .material-icons-outlined {
-        font-size: 20px;
+    .btn-hero-bookmark:hover,
+    .hero-button-info:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: white;
+    }
+
+    .hero-actions .hero-button-info {
+        display: none;
+        /* Hide info button on mobile if needed to save space? Ref only shows bookmark. Let's hide info. */
+    }
+
+    /* Indicators at very bottom */
+    .hero-indicators {
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .hero-indicator {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        flex: 1;
+        /* Bars spanning width? Ref showing dashes. */
+        max-width: 40px;
+    }
+
+    .hero-indicator.active {
+        width: auto;
+        /* Reset width transition focus */
+        flex: 1;
+        max-width: 40px;
     }
 }

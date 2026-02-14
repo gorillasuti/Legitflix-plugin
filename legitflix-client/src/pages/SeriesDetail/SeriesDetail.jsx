@@ -631,13 +631,6 @@ const SeriesDetail = () => {
                             >
                                 <span className="material-icons">{isFavorite ? 'bookmark' : 'bookmark_border'}</span>
                             </button>
-                            <button
-                                className="lf-btn lf-btn--glass lf-btn--icon-only"
-                                onClick={() => setIsSubtitleModalOpen(true)}
-                                title="Edit Subtitles"
-                            >
-                                <span className="material-icons">subtitles</span>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -647,7 +640,7 @@ const SeriesDetail = () => {
 
             {/* Episodes Section */}
             <div className="lf-content-section">
-                <div className="lf-episodes-header">
+                <div className="lf-series-header">
                     {/* Season Selector */}
                     <div className={`lf-season-selector ${isSeasonDropdownOpen ? 'is-open' : ''}`} ref={dropdownRef}>
                         <div

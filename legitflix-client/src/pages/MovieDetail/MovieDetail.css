@@ -419,6 +419,26 @@
     color: var(--clr-text-main);
 }
 
+.lf-movies-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .lf-movies-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .lf-filter-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
 /* ============================================
    HEADER CONTROLS (Audio/Subs, Watched)
    Copied from SeriesDetail for consistency

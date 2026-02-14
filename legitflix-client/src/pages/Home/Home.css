@@ -304,21 +304,62 @@
 
 @media (max-width: 500px) {
     .promo2-hero {
-        height: 250px;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        background: rgba(30, 30, 30, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .promo2-hero-img {
+        height: 140px;
+        /* Slightly larger than small cards (120px) or match? Let's go 140px for hero distinction or 120px for purely same */
+        width: 100%;
+        object-fit: cover;
+        flex: none;
+    }
+
+    .promo2-hero-gradient {
+        display: none;
     }
 
     .promo2-hero-content {
-        bottom: 16px;
-        left: 16px;
-        max-width: 90%;
+        position: relative;
+        top: auto;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        transform: none;
+        max-width: 100%;
+        width: 100%;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .promo2-hero-title {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
+        /* Match card title */
+        margin-bottom: 6px;
     }
 
     .promo2-hero-logo {
-        max-width: 160px;
+        max-width: 180px;
+        /* Match card logo max-width */
+    }
+
+    .promo2-hero-desc {
+        font-size: 0.84rem;
+        /* Match card desc */
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        /* Match card desc */
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.55);
+        margin-bottom: 10px;
     }
 
     .promo2-card {

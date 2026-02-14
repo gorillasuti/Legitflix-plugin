@@ -247,9 +247,7 @@ const Navbar = ({ alwaysFilled = false }) => {
                             {/* Mobile Hamburger */}
                             <button
                                 className="nav-icon-btn mobile-hamburger"
-                                onClick={() => setShowMenu(true)} // Reusing showMenu for simplicity or create new state? Let's check existing usage.
-                            // Existing showMenu is for Profile Dropdown. We should create a separate state for Mobile Menu or unify. 
-                            // Let's use a new state: showMobileMenu
+                                onClick={() => setShowMobileMenu(true)}
                             >
                                 <span className="material-icons">menu</span>
                             </button>

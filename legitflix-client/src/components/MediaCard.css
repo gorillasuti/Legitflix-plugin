@@ -56,6 +56,18 @@
     align-items: center;
 }
 
+@media (max-width: 768px) {
+    .media-card-info {
+        padding: 8px 2px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        align-content: center;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+}
+
 .media-card-subtitle {
     font-size: 0.72rem;
     color: #888;
@@ -239,4 +251,10 @@
 
 .btn-action-icon.play-icon .material-icons {
     font-size: 38px;
+}
+
+@media (max-width: 768px) {
+    .media-card-hover-overlay {
+        display: none !important;
+    }
 }

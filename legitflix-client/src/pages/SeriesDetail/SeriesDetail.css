@@ -461,6 +461,49 @@
 /* ============================================
    SEASON SELECTOR
    ============================================ */
+.lf-series-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .lf-series-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .lf-series-header .lf-season-selector,
+    .lf-series-header .lf-season-selector__button {
+        width: 100%;
+    }
+
+    .lf-series-header .lf-season-selector__button {
+        justify-content: space-between;
+    }
+
+    .lf-series-header .lf-filter-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    /* Ensure dropdowns and direct buttons take full width of grid cell */
+    .lf-series-header .lf-filter-controls .lf-filter-dropdown,
+    .lf-series-header .lf-filter-controls>button {
+        width: 100%;
+    }
+
+    /* Ensure inner buttons fill the container */
+    .lf-series-header .lf-filter-controls .lf-filter-btn {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
 .lf-episodes-header {
     display: flex;
     align-items: center;
