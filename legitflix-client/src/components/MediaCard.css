@@ -63,22 +63,20 @@
     position: absolute;
     background-color: #111;
     border-radius: 6px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    z-index: 9999;
+    box-shadow: 0 10px 30px #000c;
+    z-index: 999;
     overflow: hidden;
     cursor: pointer;
     background-size: cover;
     background-position: center;
-    /* Animation for the "pop" effect */
-    /* Animation for the "pop" effect */
-    animation: cardEntrance 0.3s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    transition: opacity .15s ease;
     transform-origin: center center;
     display: flex;
     flex-direction: column;
 }
 
 .media-card-hover-overlay.closing {
-    animation: cardExit 0.2s ease-in forwards;
+    transition: opacity 0.15s ease;
     pointer-events: none;
 }
 

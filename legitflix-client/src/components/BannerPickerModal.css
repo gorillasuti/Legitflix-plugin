@@ -32,12 +32,106 @@
     overflow: hidden;
 }
 
+.banner-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 16px;
+}
+
 .banner-picker-title {
     font-size: 1.5rem;
     font-weight: 700;
     color: white;
-    padding: 24px 28px 16px;
     margin: 0;
+    padding: 0;
+}
+
+.banner-picker-tabs {
+    display: flex;
+    gap: 12px;
+}
+
+.picker-tab {
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.picker-tab.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.picker-tab:hover:not(.active) {
+    color: #eee;
+}
+
+/* Upload UI */
+.banner-upload-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.upload-box {
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+}
+
+.upload-box:hover {
+    border-color: var(--clr-accent, #ff7e00);
+}
+
+.upload-icon {
+    font-size: 64px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.hidden-input {
+    display: none;
+}
+
+.btn-upload {
+    background: var(--clr-accent, #ff7e00);
+    color: white;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+    display: inline-block;
+}
+
+.btn-upload:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+.upload-hint {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 12px;
 }
 
 .banner-picker-loading {

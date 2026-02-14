@@ -11,35 +11,48 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
     const [showAvatarPicker, setShowAvatarPicker] = useState(false);
     const avatarInputRef = useRef(null);
 
+    const [manualBannerUrl, setManualBannerUrl] = useState(null);
+
     // Calculate Banner URL for display
-    // We prioritize the user's actual banner from the API.
-    const currentBannerUrl = user ? (
+    // Priority: Manual override (just uploaded/selected) > User Banner > User Backdrop
+    const displayBannerUrl = manualBannerUrl || (user ? (
         user.ImageTags?.Banner ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Banner?tag=${user.ImageTags.Banner}&quality=90` :
             (user.BackdropImageTags?.[0] ? `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Backdrop/0?tag=${user.BackdropImageTags[0]}&quality=90` : '')
-    ) : '';
+    ) : '');
 
     const handleBannerSave = async (url) => {
         if (!user || !url) return;
+
+        // If the URL comes from our own upload (BannerPickerModal), it might already be the correct User Backdrop URL.
+        // Check if the URL points to This User's Backdrop
+        if (url.includes(`/Users/${user.Id}/Images/Backdrop`)) {
+            setManualBannerUrl(url); // Immediate update
+            return;
+        }
 
         setStatus('Updating banner...');
         setUploading(true);
 
         try {
-            // Fetch blob from local/remote URL
+            // It's a gallery item (Movie/Show backdrop). Fetch and upload as User Backdrop.
             const response = await fetch(url);
             if (!response.ok) throw new Error("Failed to download selected banner");
 
             const blob = await response.blob();
             if (blob.size === 0) throw new Error("Downloaded banner is empty");
 
-            // Optional: Delete existing banner first to be safe
-            try { await jellyfinService.deleteUserImage(user.Id, 'Banner'); } catch (e) { /* ignore */ }
+            // Upload as 'Backdrop' to match the custom upload behavior
+            await jellyfinService.uploadUserImage(user.Id, 'Backdrop', blob);
 
-            // Use service to upload
-            await jellyfinService.uploadUserImage(user.Id, 'Banner', blob);
+            // Construct new URL for immediate display
+            const token = jellyfinService.api?.accessToken;
+            const newUrl = `${jellyfinService.api.basePath}/Users/${user.Id}/Images/Backdrop/0?tag=${Date.now()}&quality=90&api_key=${token}`;
 
-            setStatus('Banner updated! Reloading...');
-            setTimeout(() => window.location.reload(), 1000);
+            setManualBannerUrl(newUrl);
+            setStatus('Banner updated!');
+
+            // Clear status after a delay
+            setTimeout(() => setStatus(''), 3000);
         } catch (err) {
             console.error('Banner upload error:', err);
             setStatus('Banner upload failed.');
@@ -98,9 +111,9 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
 
                     {/* Cover Image Section */}
                     <div className="pm-cover">
-                        {currentBannerUrl ? (
+                        {displayBannerUrl ? (
                             <img
-                                src={currentBannerUrl}
+                                src={displayBannerUrl}
                                 alt="Banner"
                                 className="pm-cover-img"
                             />
